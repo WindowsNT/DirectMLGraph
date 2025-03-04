@@ -25,7 +25,25 @@ std::map<HWND, winrt::Windows::Foundation::IInspectable> windows;
 
 LRESULT CALLBACK cbx(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
 {
+    if (mm == WM_USER + 5)
+    {
+        for (auto& w : windows)
+        {
+            w.second.as<winrt::DirectMLGraph::MainWindow>().Resize();
+        }
+    }
 
+    if (mm == WM_USER + 10)
+    {
+        // Finished
+		auto i = windows[hh];
+        if (i)
+        {
+			auto mw = i.as<winrt::DirectMLGraph::MainWindow>();
+			if (mw)
+				mw.Finished();
+        }
+    }
     if (mm == WM_KEYDOWN)
     {
         MessageBeep(0);
@@ -43,6 +61,16 @@ LRESULT CALLBACK cbx(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
 
     }
     return CallWindowProc(wProc, hh, mm, ww, ll);
+}
+
+
+void PostUpdateScreen()
+{
+
+	for (auto& w : windows)
+	{
+        PostMessage(w.first, WM_USER + 5, 0, 0);
+	}
 }
 
 winrt::DirectMLGraph::MainWindow CreateWi()
@@ -126,9 +154,11 @@ namespace winrt::DirectMLGraph::implementation
 }
 
 
+extern DWORD MainTID;
 
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR t, int)
 {
+	MainTID = GetCurrentThreadId();
     //    MessageBox(0, 0, 0, 0);
     if (t)
     {

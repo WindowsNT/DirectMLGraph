@@ -14,6 +14,7 @@ namespace winrt::DirectMLGraph::implementation
 
         void Refresh();
         void Resize();
+        void Finished();
         void OnLoad(IInspectable, IInspectable);
         void ItemInvoked(IInspectable, winrt::Microsoft::UI::Xaml::Controls::NavigationViewItemInvokedEventArgs);
 

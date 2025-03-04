@@ -9,7 +9,7 @@
     mc:Ignorable="d"
     Title="DirectMLGraph">
 
-    <NavigationView x:Name="xMain" PaneDisplayMode="LeftCompact" Loaded="OnLoad" ItemInvoked="ItemInvoked"  >
+    <NavigationView x:Name="xMain" PaneDisplayMode="LeftCompact" Loaded="OnLoad" ItemInvoked="ItemInvoked" IsSettingsVisible="False"  >
         <NavigationView.MenuItems>
             <NavigationViewItem  Icon="Link" Content="Graph" x:Name="ViewGraph" >
                 <NavigationViewItem.KeyboardAccelerators>

@@ -725,6 +725,9 @@ struct XLOP : public XLNODE
 struct XL : public XLNODE
 {
     std::wstring n;
+    std::shared_ptr<ML> ml;
+    std::shared_ptr<std::thread> running;
+
     std::vector<XLOP> ops;
     std::vector<VARIABLE> variables;
     virtual std::wstring name() { return L"DML"; }
@@ -839,9 +842,7 @@ namespace winrt::DirectMLGraph::implementation
         void Refresh(const wchar_t* s = L"");
         void FullRefresh();
 
-        ML ml;
         PROJECT prj;
-//        XL xl;
         std::stack<XML3::XMLElement> undo_list;
         std::stack<XML3::XMLElement> redo_list;
         size_t ActiveOperator2 = (size_t)-1;
@@ -909,6 +910,9 @@ namespace winrt::DirectMLGraph::implementation
         void OnClean(IInspectable const&, IInspectable const&);
         void OnCompile(IInspectable const&, IInspectable const&);
         void OnRun(IInspectable const&, IInspectable const&);
+        void Run();
+        void Compile();
+        void Clean();
         void OnAddOp(IInspectable const&, IInspectable const&);
         void OnAddSet(IInspectable const&, IInspectable const&);
         void Tip(const wchar_t*);
@@ -926,6 +930,7 @@ namespace winrt::DirectMLGraph::implementation
         std::wstring current_file;
         void Paint();
         void Resize();
+        void Finished();
         void LoadAdapters();
 
         DXGI_QUERY_VIDEO_MEMORY_INFO vmi = {};

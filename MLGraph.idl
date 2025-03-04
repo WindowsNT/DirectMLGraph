@@ -8,6 +8,7 @@ namespace DirectMLGraph
         void Key(Int64 k,Boolean FromCMD);
         void Refresh();
         void Resize();
+        void Finished();
         String i0;
         String i1;
     }

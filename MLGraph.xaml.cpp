@@ -914,13 +914,17 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
 
 
 extern std::wstring fil;
-
+DWORD MainTID = 0;
 namespace winrt::DirectMLGraph::implementation
 {
-
-
     void MLGraph::FullRefresh()
     {
+		if (GetCurrentThreadId() != MainTID)
+		{
+            void PostUpdateScreen();
+            PostUpdateScreen();
+			return;
+		}   
         Refresh();
         RefreshMenu();
         Paint();
@@ -1289,6 +1293,7 @@ namespace winrt::DirectMLGraph::implementation
 											auto i3 = winrt::unbox_value<size_t>(tag);
                                             if (i3 >= 0x100000000)
                                             {
+                                                Push();
                                                 ULARGE_INTEGER ul;
 												ul.QuadPart = i3;
                                                 auto low = ul.LowPart;
@@ -1303,6 +1308,7 @@ namespace winrt::DirectMLGraph::implementation
                                                 auto pidx = i3 - 2000;
                                                 if (nod->Params[pidx].minv == 0 && nod->Params[pidx].maxv == 1)
                                                 {
+                                                    Push();
                                                     if ((int)nod->Params[pidx] == 0)
 														nod->Params[pidx].v = L"1";
 													else
@@ -2370,8 +2376,8 @@ namespace winrt::DirectMLGraph::implementation
 			{
                 auto& node = op.nodes[j];
                 MLOP* mlop = 0;
-                if (ml.ops.size() > i)
-					mlop = &ml.ops[i];
+                if (xl.ml && xl.ml->ops.size() > i)
+					mlop = &xl.ml->ops[i];
 				node->Draw(mlop,ActiveOperator2 == i,r, d2d.get(),i);   
 			}
 //            r->SetTransform(&m1);
@@ -2456,6 +2462,18 @@ namespace winrt::DirectMLGraph::implementation
 			r->DrawLine(red_from, red_to, d2d->RedBrush);
 		}
 
+        // Running 
+        if (xl.running)
+        {
+			TEXTALIGNPUSH textalign(d2d->Text2, DWRITE_TEXT_ALIGNMENT_LEADING, DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+            D2F rf = rfull;
+			D2D1_RECT_F r1 = { rfull.left,rf.top + 30,rfull.right,rf.top + 70};
+			d2d->RedBrush->SetOpacity(0.2f);
+			r->FillRectangle(r1, d2d->RedBrush);
+			d2d->RedBrush->SetOpacity(1.0f);
+			swprintf_s(wt, L" Running");
+			r->DrawTextW(wt, (UINT32)wcslen(wt), d2d->Text2, r1, d2d->BlackBrush);   
+        }
 
         [[maybe_unused]] auto hr = d2d->m_d2dContext->EndDraw();
         if (d2d->m_swapChain1)
@@ -2846,17 +2864,47 @@ namespace winrt::DirectMLGraph::implementation
         op.nodes.push_back(node);
         FullRefresh();
     }
-
     void MLGraph::OnRun(IInspectable const&, IInspectable const&)
     {
         auto& xl = prj.xl();
+        if (xl.running)
+        {
+            return;
+        }
+        xl.running = std::make_shared<std::thread>([this](HWND h)
+            {
+                Run();
+//                Sleep(5000);
+                PostMessage(h, WM_USER + 10, 0, 0);
+            },(HWND)wnd());
+        FullRefresh();
+    }
+
+    void MLGraph::Finished()
+    {
+        auto& xl = prj.xl();
+        if (xl.running)
+        {
+            xl.running->join();
+            xl.running = 0;
+        }
+        FullRefresh();
+    }
+
+    void MLGraph::Run()
+    {
+		CoInitializeEx(0, COINIT_MULTITHREADED);
+        auto& xl = prj.xl();
+        if (!xl.ml)
+			xl.ml = std::make_shared<ML>();
+        auto& ml = *xl.ml;
         try
         {
             void Locate(const wchar_t* fi);
 
             // Initialize
             if (ml.d3D12Device == 0)
-                OnCompile({}, {});
+                Compile();
             if (ml.d3D12Device == 0)
                 return;
             if (ml.ops.size() != xl.ops.size())
@@ -3119,24 +3167,27 @@ namespace winrt::DirectMLGraph::implementation
 			MessageBox(0, L"Run failed!", L"Error", MB_ICONERROR);
 		}
     }
-
-    void MLGraph::OnClean(IInspectable const&, IInspectable const&)
+    void MLGraph::Clean()
     {
-        ml = {};
         auto& xl = prj.xl();
+        xl.ml = nullptr;
         for (auto& op : xl.ops)
-		{
-			for (auto& node : op.nodes)
-			{
-				if (auto it = std::dynamic_pointer_cast<XLNODE>(node))
-				{
-					it->tidx = -1;
-				}
-			}
-		}
+        {
+            for (auto& node : op.nodes)
+            {
+                if (auto it = std::dynamic_pointer_cast<XLNODE>(node))
+                {
+                    it->tidx = -1;
+                }
+            }
+        }
 
         UpdateVideoMemory();
         FullRefresh();
+    }
+    void MLGraph::OnClean(IInspectable const&, IInspectable const&)
+    {
+        Clean();
     }
 
     class PUSHPOPVAR
@@ -3192,11 +3243,18 @@ namespace winrt::DirectMLGraph::implementation
         }
 
     };
-
     void MLGraph::OnCompile(IInspectable const&, IInspectable const&)
     {
-		OnClean({}, {});
+        Compile();
+    }
+
+    void MLGraph::Compile()
+    {
+		Clean();
         auto& xl = prj.xl();
+        if (!xl.ml)
+            xl.ml = std::make_shared<ML>();
+        auto& ml = *xl.ml;
         PUSHPOPVAR ppv(&xl);
 
         try
@@ -3574,7 +3632,7 @@ namespace winrt::DirectMLGraph::implementation
 //            auto ce = std::current_exception();
   //          auto tye = typeid(ce).name();
             auto w = "Compilation error!";// e.what();
-            OnClean({}, {});
+            Clean();
             MessageBoxA((HWND)wnd(), w, "Compile error", MB_ICONERROR);
         }
         FullRefresh();

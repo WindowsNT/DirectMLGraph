@@ -98,6 +98,27 @@ namespace winrt::DirectMLGraph::implementation
 		}
 	}
 
+	void MainWindow::Finished()
+	{
+		auto nv = Content().as<NavigationView>();
+		if (nv)
+		{
+			auto fr = nv.Content().as<Frame>();
+			if (fr)
+			{
+				auto n = fr.Content().as<Page>();
+				if (n)
+				{
+					auto s = n.as<winrt::DirectMLGraph::MLGraph>();
+					if (s)
+					{
+						s.Finished();
+					}
+				}
+			}
+		}
+	}
+
 
 	void MainWindow::Refresh()
 	{

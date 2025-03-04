@@ -5,6 +5,7 @@ namespace DirectMLGraph
     {
         MainWindow();
         void Resize();
+        void Finished();
         Int64 wnd;
 
     }
