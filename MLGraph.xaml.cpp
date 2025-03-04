@@ -505,6 +505,15 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem ATanYX; ATanYX.Text(L"ATanYX"); ATanYX.Click(fooo);
         A.Items().Append(ATanYX);
 
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSeparator s;
+        A.Items().Append(s);
+        if (1)
+        {
+                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"ActivationIdentity"); Neg.Click(fooo);
+                A.Items().Append(Neg);
+
+        }
+
 
         r1.Items().Append(A);
     }
@@ -1516,6 +1525,15 @@ namespace winrt::VisualDML::implementation
                                 {
                                     OnAddInput({}, {});
                                 }
+
+                                if (t == L"ActivationIdentity")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_IDENTITY);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    op.nodes.push_back(node);
+                                }
+
                                 if (t == L"Abs")
                                 {
                                     auto node = std::make_shared<XLNODE_ANY>(1,TYPE_ABS);
@@ -1797,6 +1815,7 @@ namespace winrt::VisualDML::implementation
                                     node->hit.top = pos.Y;
                                     op.nodes.push_back(node);
                                 }
+
 
                                 if (t == L"Identity")
                                 {
@@ -3527,6 +3546,11 @@ namespace winrt::VisualDML::implementation
                             continue;
                         if (whati.size() < it->ninreq())
                             continue;
+
+
+                        if (it->what == TYPE_ACT_IDENTITY)
+                            expr = (dml::ActivationIdentity(mop.Item(whati[0])));
+
 
                         if (it->what == TYPE_ABS && whati.size() > 0)
                             expr = dml::Abs(mop.Item(whati[0]));

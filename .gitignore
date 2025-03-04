@@ -17,7 +17,7 @@
 mono_crash.*
 
 inst.bat
-DirectMLGraph.exe
+VisualDML.exe
 
 # Build results
 [Dd]ebug/

@@ -1,7 +1,7 @@
 # DirectML Graph
 
 A tool to visually-design DirectML operators that run in the GPU.
-
+Uses my [DirectML Lib](https://github.com/WindowsNT/directmllib).
 
 ## Features
 
@@ -20,6 +20,8 @@ Adapter Selection
 Show Adapter Memory Consumed
 
 ## Supported Operators
+
+Activation: Identity
 
 A: Abs,ACos,ACosh,Add,And,ASin,ASinh,ATan,ATanh,ATanYX
 
@@ -61,6 +63,6 @@ X: Xor
 All other operators
 
 Activation, Batch, 
-quantizer  Recip,Span Split, Tile Topk, 
+quantizer  Split, Tile Topk, 
 
 ![screenshot](graph1.jpg)

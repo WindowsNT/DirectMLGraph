@@ -143,8 +143,8 @@ struct XLNODE
 enum XLNODE_TYPE
 {
     TYPE_INPUT = 1,
+    TYPE_ACT_IDENTITY,
     TYPE_ABS,TYPE_ACOS,TYPE_ACOSH, TYPE_ADD,TYPE_ASIN,TYPE_ASINH,TYPE_ATAN,TYPE_ATANH, TYPE_ATANYX,
-
     TYPE_BITAND,TYPE_BITCOUNT,TYPE_BITNOT,TYPE_BITOR,TYPE_BITSL,TYPE_BITSR,TYPE_BITXOR,
 	TYPE_CAST,TYPE_CEIL, TYPE_CLIP, TYPE_CONSTANT, TYPE_COS, TYPE_COSH, TYPE_CONVOLUTION,TYPE_CUMSUM, TYPE_CUMPROD,
     TYPE_DIVIDE,
@@ -165,6 +165,7 @@ enum XLNODE_TYPE
 
 inline std::map<int, std::string> TypesToNames = {
 	{TYPE_INPUT,"Input"},
+	{TYPE_ACT_IDENTITY,"ActivationIdentity"},
 	{TYPE_ABS,"Abs"},
 	{TYPE_ACOS,"ACos"},
 	{TYPE_ACOSH,"ACosh"},
@@ -277,6 +278,8 @@ struct XLNODE_ANY : public XLNODE
 
     virtual std::wstring opname()
     {
+		if (what == TYPE_ACT_IDENTITY)
+			return L"ActivationIdentity";
 		if (what == TYPE_ABS)
 			return L"Abs";
         if (what == TYPE_ACOS)
