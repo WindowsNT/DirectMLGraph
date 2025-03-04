@@ -41,7 +41,7 @@ J: Join
 
 L: Log, LessThan, LessThanOrEqual
 
-M: Max,Mean,Min,Multiply
+M: Max,Mean,Min,Multiply,Modulus Floor,Modulus Truncate
 
 N: Neg, Not
 
@@ -49,7 +49,7 @@ O: Or
 
 P: Pow
 
-R: Round, Reintrerpret
+R: Recip, Reduce, Resample, Round, Reintrerpret
 
 S: Slice, Subtract, Sqrt, Sign
 
@@ -60,7 +60,7 @@ X: Xor
 
 All other operators
 
-Activiation, Batch, 
-Modulus quantizer  Recip,Reduce,Resample, Span Split, Tile Topk, 
+Activation, Batch, 
+quantizer  Recip,Span Split, Tile Topk, 
 
 ![screenshot](graph1.jpg)

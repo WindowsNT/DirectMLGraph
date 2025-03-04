@@ -17,11 +17,11 @@ BEGIN
 BLOCK "040904E4"
 BEGIN
 VALUE "CompanyName", "TURBO-PLAY.COM"
-VALUE "FileDescription", "DirectML Graph"
+VALUE "FileDescription", "VisualDML"
 VALUE "FileVersion", "1.0.0.0"
-VALUE "InternalName", "DirectML Graph"
+VALUE "InternalName", "VisualDML"
 VALUE "LegalCopyright", "Chourdakis Michael"
-VALUE "OriginalFilename", "dmlg.EXE"
+VALUE "OriginalFilename", "VisualDML.EXE"
 VALUE "ProductName", ""
 VALUE "ProductVersion", "1"
 END

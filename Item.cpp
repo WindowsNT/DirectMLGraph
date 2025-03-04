@@ -3,7 +3,7 @@
 #include "Item.g.cpp"
 
 
-namespace winrt::DirectMLGraph::implementation
+namespace winrt::VisualDML::implementation
 {
 
 }

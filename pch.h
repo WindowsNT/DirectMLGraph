@@ -258,7 +258,7 @@ bool PutFile(const wchar_t* f, std::vector<T>& d, bool Fw = true)
 }
 
 inline std::shared_ptr<XML3::XML> Settings;
-inline const wchar_t* ttitle = L"DirectML Graph Editor";
+inline const wchar_t* ttitle = L"Visual DML";
 
 template <typename T = unsigned int>
 std::vector<T> TensorFromString(const wchar_t* str)

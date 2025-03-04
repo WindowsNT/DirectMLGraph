@@ -59,30 +59,44 @@ struct PARAM
     }
     operator float()
     {
+		if (v.empty())
+			return 0;
 		return std::stof(v.c_str());
     }
     operator double()
     {
-		return std::stod(v.c_str());
+        if (v.empty())
+            return 0;
+        return std::stod(v.c_str());
     }
     operator int()
     {
+        if (v.empty())
+            return 0;
         return std::stoi(v.c_str());
     }
     operator unsigned int()
     {
+        if (v.empty())
+            return 0;
         return std::stoul(v.c_str());
     }
     operator bool()
 	{
-		return std::stoi(v.c_str()) == 1;
+        if (v.empty())
+            return 0;
+        return std::stoi(v.c_str()) == 1;
 	}
     operator long long()
     {
-		return std::stoll(v.c_str());
+        if (v.empty())
+            return 0;
+        return std::stoll(v.c_str());
     }
     operator unsigned long long()
     {
+        if (v.empty())
+            return 0;
         return std::stoull(v.c_str());
     }
 };
@@ -140,10 +154,10 @@ enum XLNODE_TYPE
     TYPE_IDENTITY,TYPE_IF,TYPE_ISINFINITY,TYPE_ISNAN,
     TYPE_JOIN,
 	TYPE_LAND, TYPE_LOR, TYPE_LXOR, TYPE_LNOT, TYPE_LOG, TYPE_LESSTHAN, TYPE_LESSTHANOREQUAL,
-    TYPE_MAX,TYPE_MEAN,TYPE_MIN,TYPE_MULTIPLY,
+    TYPE_MAX,TYPE_MEAN,TYPE_MIN,TYPE_MULTIPLY,TYPE_MODULUSFLOOR,TYPE_MODULUSTRUNCATE,
     TYPE_NEGATE,
     TYPE_POW,
-    TYPE_REINTERPRET,TYPE_ROUND,
+    TYPE_REINTERPRET,TYPE_RECIP,TYPE_REDUCE,TYPE_RESAMPLE,TYPE_ROUND,
     TYPE_SLICE,TYPE_SUBTRACT,TYPE_SQRT,TYPE_SIGN,
     TYPE_THRESHOLD,
     TYPE_OUTPUT = 999999
@@ -200,9 +214,14 @@ inline std::map<int, std::string> TypesToNames = {
     {TYPE_MEAN,"Mean"},
     {TYPE_MIN,"Min"},
     {TYPE_MULTIPLY,"Multiply"},
+	{TYPE_MODULUSFLOOR,"ModulusFloor"},
+	{TYPE_MODULUSTRUNCATE,"ModulusTruncate"},
 	{TYPE_NEGATE,"Negate"},
     {TYPE_POW,"Pow"},
 	{TYPE_REINTERPRET,"Reinterpret"},
+	{TYPE_RECIP,"Recip"},
+	{TYPE_REDUCE,"Reduce"},
+	{TYPE_RESAMPLE,"Resample"},
 	{TYPE_ROUND,"Round"},
 	{TYPE_SLICE,"Slice"},
     {TYPE_SUBTRACT,"Subtract"},
@@ -220,7 +239,7 @@ struct XLNODE_ANY : public XLNODE
     int howi = 0;
 
     virtual bool AsksType() {
-        if (what == TYPE_CAST || what == TYPE_LESSTHAN || what == TYPE_LESSTHANOREQUAL || what == TYPE_GREATERTHAN || what == TYPE_GREATERTHANOREQUAL || what == TYPE_REINTERPRET || what == TYPE_ISINFINITY || what == TYPE_ISNAN)
+        if (what == TYPE_CAST || what == TYPE_LESSTHAN || what == TYPE_LESSTHANOREQUAL || what == TYPE_GREATERTHAN || what == TYPE_GREATERTHANOREQUAL || what == TYPE_REINTERPRET || what == TYPE_ISINFINITY || what == TYPE_ISNAN || what == TYPE_REDUCE)
             return true;
         return false;
     }
@@ -370,6 +389,10 @@ struct XLNODE_ANY : public XLNODE
 
 		if (what == TYPE_MULTIPLY)
 			return L"Multiply";
+		if (what == TYPE_MODULUSFLOOR)
+			return L"ModulusFloor";
+		if (what == TYPE_MODULUSTRUNCATE)
+			return L"ModulusTruncate";
 
         if (what == TYPE_NEGATE)
             return L"Neg";
@@ -381,6 +404,12 @@ struct XLNODE_ANY : public XLNODE
 			return L"Reinterpret";
 		if (what == TYPE_ROUND)
 			return L"Round";
+		if (what == TYPE_RESAMPLE)
+			return L"Resample";
+		if (what == TYPE_REDUCE)
+			return L"Reduce";
+		if (what == TYPE_RECIP)
+			return L"Recip";
 
 		if (what == TYPE_SLICE)
 			return L"Slice";
@@ -825,7 +854,7 @@ struct PROJECT
 
 
 
-namespace winrt::DirectMLGraph::implementation
+namespace winrt::VisualDML::implementation
 {
     struct MLGraph : MLGraphT<MLGraph>
     {
@@ -940,7 +969,7 @@ namespace winrt::DirectMLGraph::implementation
     };
 }
 
-namespace winrt::DirectMLGraph::factory_implementation
+namespace winrt::VisualDML::factory_implementation
 {
     struct MLGraph : MLGraphT<MLGraph, implementation::MLGraph>
     {

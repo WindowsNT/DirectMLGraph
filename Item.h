@@ -1,7 +1,7 @@
 #pragma once
 #include "Item.g.h"
 
-namespace winrt::DirectMLGraph::implementation
+namespace winrt::VisualDML::implementation
 {
     struct Item : ItemT<Item>
     {
@@ -73,7 +73,7 @@ namespace winrt::DirectMLGraph::implementation
 
     };
 }
-namespace winrt::DirectMLGraph::factory_implementation
+namespace winrt::VisualDML::factory_implementation
 {
     struct Item : ItemT<Item, implementation::Item>
     {

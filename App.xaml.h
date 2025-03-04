@@ -2,7 +2,7 @@
 
 #include "App.xaml.g.h"
 
-namespace winrt::DirectMLGraph::implementation
+namespace winrt::VisualDML::implementation
 {
     struct App : AppT<App>
     {

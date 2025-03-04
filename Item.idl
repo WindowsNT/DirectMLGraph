@@ -1,4 +1,4 @@
-namespace DirectMLGraph
+namespace VisualDML
 {
 	[default_interface]
 	runtimeclass Item : Microsoft.UI.Xaml.Data.INotifyPropertyChanged

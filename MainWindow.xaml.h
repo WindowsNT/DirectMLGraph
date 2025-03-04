@@ -2,7 +2,7 @@
 
 #include "MainWindow.g.h"
 
-namespace winrt::DirectMLGraph::implementation
+namespace winrt::VisualDML::implementation
 {
     struct MainWindow : MainWindowT<MainWindow>
     {
@@ -32,7 +32,7 @@ namespace winrt::DirectMLGraph::implementation
     };
 }
 
-namespace winrt::DirectMLGraph::factory_implementation
+namespace winrt::VisualDML::factory_implementation
 {
     struct MainWindow : MainWindowT<MainWindow, implementation::MainWindow>
     {

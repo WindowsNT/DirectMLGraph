@@ -29,7 +29,7 @@ LRESULT CALLBACK cbx(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
     {
         for (auto& w : windows)
         {
-            w.second.as<winrt::DirectMLGraph::MainWindow>().Resize();
+            w.second.as<winrt::VisualDML::MainWindow>().Resize();
         }
     }
 
@@ -39,7 +39,7 @@ LRESULT CALLBACK cbx(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
 		auto i = windows[hh];
         if (i)
         {
-			auto mw = i.as<winrt::DirectMLGraph::MainWindow>();
+			auto mw = i.as<winrt::VisualDML::MainWindow>();
 			if (mw)
 				mw.Finished();
         }
@@ -53,7 +53,7 @@ LRESULT CALLBACK cbx(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
         auto i = windows[hh];
         if (i)
         {
-            auto mw = i.as<winrt::DirectMLGraph::MainWindow>();
+            auto mw = i.as<winrt::VisualDML::MainWindow>();
             if (mw)
                 mw.Resize();
         }
@@ -73,9 +73,9 @@ void PostUpdateScreen()
 	}
 }
 
-winrt::DirectMLGraph::MainWindow CreateWi()
+winrt::VisualDML::MainWindow CreateWi()
 {
-    winrt::DirectMLGraph::MainWindow j;
+    winrt::VisualDML::MainWindow j;
     j.Activate();
     static int One = 0;
 
@@ -94,7 +94,7 @@ winrt::DirectMLGraph::MainWindow CreateWi()
             SetWindowLongPtr(hh, GWLP_WNDPROC, (LONG_PTR)cbx);
 
 
-            SetWindowText(hh, L"DirectML Graph");
+            SetWindowText(hh, ttitle);
             if (One == 0)
                 ShowWindow(hh, SW_SHOWMAXIMIZED);
             One = 1;
@@ -119,7 +119,7 @@ winrt::DirectMLGraph::MainWindow CreateWi()
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace winrt::DirectMLGraph::implementation
+namespace winrt::VisualDML::implementation
 {
     /// <summary>
     /// Initializes the singleton application object.  This is the first line of authored code
@@ -203,7 +203,7 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR t, int)
     ::winrt::Microsoft::UI::Xaml::Application::Start(
         [](auto&&)
         {
-            ::winrt::make<::winrt::DirectMLGraph::implementation::App>();
+            ::winrt::make<::winrt::VisualDML::implementation::App>();
         });
 
     Settings->Save();

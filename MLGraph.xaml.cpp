@@ -19,6 +19,8 @@ int MovingNode = 0;
 int WhatInput = 0;
 PARAM* WhatParam = 0;
 VARIABLE* WhatVariable = 0;
+float ScaleX = 1.0f;
+
 D2D1_POINT_2F red_from = { 0,0 }, red_to = { 0,0 };
 void XLNODE::Ser(XML3::XMLElement& e)
 {
@@ -777,6 +779,18 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Multiply"); Neg.Click(fooo);
             A.Items().Append(Neg);
         }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"ModulusFloor"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"ModulusTruncate"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+
+
         r1.Items().Append(A);
     }
 
@@ -835,6 +849,21 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
             A.Items().Append(Neg);
         }
 
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Recip"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Reduce"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Resample"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
         if (1)
         {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Round"); Neg.Click(fooo);
@@ -915,7 +944,7 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
 
 extern std::wstring fil;
 DWORD MainTID = 0;
-namespace winrt::DirectMLGraph::implementation
+namespace winrt::VisualDML::implementation
 {
     void MLGraph::FullRefresh()
     {
@@ -967,7 +996,7 @@ namespace winrt::DirectMLGraph::implementation
 
         if (k >= 0x31 && k <= 0x39)
         {
-            if (!Alt && Shift && Control)
+            if (Alt && !Shift && Control)
             {
 				if (prj.xls.size() > (unsigned long long)(k - 0x31))
 				{
@@ -1870,6 +1899,20 @@ namespace winrt::DirectMLGraph::implementation
                                     node->hit.top = pos.Y;
                                     op.nodes.push_back(node);
                                 }
+                                if (t == L"ModulusFloor")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(2, TYPE_MODULUSFLOOR);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    op.nodes.push_back(node);
+                                }
+								if (t == L"ModulusTruncate")
+								{
+									auto node = std::make_shared<XLNODE_ANY>(2, TYPE_MODULUSTRUNCATE);
+									node->hit.left = pos.X;
+									node->hit.top = pos.Y;
+									op.nodes.push_back(node);
+								}
                                 if (t == L"Neg")
                                 {
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_NEGATE);
@@ -1905,6 +1948,58 @@ namespace winrt::DirectMLGraph::implementation
                                     node->hit.top = pos.Y;
                                     op.nodes.push_back(node);
                                 }
+
+                                if (t == L"Recip")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_RECIP);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    op.nodes.push_back(node);
+                                }
+
+
+                                if (t == L"Reduce")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_REDUCE);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(2);
+                                    node->Params[0].n = L"Function";
+                                    node->Params[0].minv = 0;
+                                    node->Params[0].maxv = 1;
+                                    node->Params[0].list_names = { L"ArgMax",L"ArgMin",L"Average",L"L1",L"L2",L"LogSum",L"LogSumExp",L"Max",L"Min",L"Multiply",L"Sum",L"SumSquare"};
+                                    node->Params[1].n = L"Axes";
+                                    node->Params[1].v = L"1x1";
+                                    node->Params[1].minv = -1;
+                                    node->Params[1].maxv = -1;
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"Resample")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_RESAMPLE);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(4);
+                                    node->Params[0].n = L"Output Tensor";
+                                    node->Params[0].v = L"1x1";
+                                    node->Params[0].minv = -1;
+                                    node->Params[0].maxv = -1;
+                                    node->Params[1].n = L"Interpolation";
+                                    node->Params[1].minv = 0;
+                                    node->Params[1].maxv = 1;
+                                    node->Params[1].list_names = { L"Nearest",L"Linear" };
+                                    node->Params[2].n = L"Axis Direction";
+                                    node->Params[2].minv = 0;
+                                    node->Params[2].maxv = 1;
+                                    node->Params[2].list_names = { L"Increasing",L"Decreasing" };
+                                    node->Params[3].n = L"Scales";
+                                    node->Params[3].v = L"1x1";
+                                    node->Params[3].minv = -1;
+                                    node->Params[3].maxv = -1;
+
+                                    op.nodes.push_back(node);
+                                }
+
 
                                 if (t == L"Round")
                                 {
@@ -2125,17 +2220,16 @@ namespace winrt::DirectMLGraph::implementation
 
 //        scp.Focus(FocusState::Keyboard);
 
-        float ActualSize = 2.0f;
 
-        scp.Width(wi*ActualSize);
-        scp.Height(he * ActualSize);
+        scp.Width(wi*ScaleX);
+        scp.Height(he * ScaleX);
 
         scv.Width(wi);
         scv.Height(he);
 
         if (d2d)
         {
-            if (d2d->SizeCreated.cx != (wi * ActualSize) || d2d->SizeCreated.cy != (he * ActualSize))
+            if (d2d->SizeCreated.cx != (wi * ScaleX) || d2d->SizeCreated.cy != (he * ScaleX))
             {
                 d2d->Off();
                 d2d = 0;
@@ -2153,10 +2247,10 @@ namespace winrt::DirectMLGraph::implementation
         if (!d2d)
         {
             d2d = std::make_shared<D2D>();
-            d2d->CreateD2X(adapter,0, (int)(wi * ActualSize), (int)(he * ActualSize), 1, 0, 0, 1);
+            d2d->CreateD2X(adapter,0, (int)(wi * ScaleX), (int)(he * ScaleX), 1, 0, 0, 1);
         }
         else
-            d2d->Resize((int)(wi * ActualSize), (int)(he * ActualSize));
+            d2d->Resize((int)(wi * ScaleX), (int)(he * ScaleX));
 
 
         IInspectable i = (IInspectable)scp;
@@ -2347,7 +2441,7 @@ namespace winrt::DirectMLGraph::implementation
                 d2d->CyanBrush->SetOpacity(0.2f);
                 r->FillRoundedRectangle(D2D1::RoundedRect(r1, 5, 5), d2d->CyanBrush);
                 d2d->CyanBrush->SetOpacity(1.0f);
-                TEXTALIGNPUSH textalign(d2d->Text2, DWRITE_TEXT_ALIGNMENT_LEADING, DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+                TEXTALIGNPUSH textalign(d2d->Text2, ScaleX <= 1 ? DWRITE_TEXT_ALIGNMENT_CENTER : DWRITE_TEXT_ALIGNMENT_LEADING, DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
                 r1.left += 5;
                 r->DrawText(wt, (UINT32)wcslen(wt), d2d->Text2, r1, d2d->BlackBrush);
             }
@@ -2465,9 +2559,14 @@ namespace winrt::DirectMLGraph::implementation
         // Running 
         if (xl.running)
         {
-			TEXTALIGNPUSH textalign(d2d->Text2, DWRITE_TEXT_ALIGNMENT_LEADING, DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+            TEXTALIGNPUSH textalign(d2d->Text2, ScaleX <= 1 ? DWRITE_TEXT_ALIGNMENT_CENTER : DWRITE_TEXT_ALIGNMENT_LEADING, DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
             D2F rf = rfull;
 			D2D1_RECT_F r1 = { rfull.left,rf.top + 30,rfull.right,rf.top + 70};
+            if (ScaleX <= 1)
+            {
+                r1.top = rf.MiddleY() - 30;
+                r1.bottom = rf.MiddleY() + 30;
+            }
 			d2d->RedBrush->SetOpacity(0.2f);
 			r->FillRectangle(r1, d2d->RedBrush);
 			d2d->RedBrush->SetOpacity(1.0f);
@@ -2668,7 +2767,7 @@ namespace winrt::DirectMLGraph::implementation
             {
                 winrt::Microsoft::UI::Xaml::Input::KeyboardAccelerator kba;
                 kba.Key((winrt::Windows::System::VirtualKey)(i + 0x31));
-                kba.Modifiers((winrt::Windows::System::VirtualKeyModifiers)5);
+                kba.Modifiers((winrt::Windows::System::VirtualKeyModifiers)3);
                 mi.KeyboardAccelerators().Append(kba);
             }
 
@@ -3558,14 +3657,32 @@ namespace winrt::DirectMLGraph::implementation
                         if (it->what == TYPE_MULTIPLY)
                             expr = (dml::Multiply(mop.Item(whati[0]), mop.Item(whati[1])));
 
+                        if (it->what == TYPE_MODULUSFLOOR)
+                            expr = (dml::ModulusFloor(mop.Item(whati[0]), mop.Item(whati[1])));
+                        if (it->what == TYPE_MODULUSTRUNCATE)
+                            expr = (dml::ModulusTruncate(mop.Item(whati[0]), mop.Item(whati[1])));
+
+
                         if (it->what == TYPE_NEGATE)
                             expr = (dml::Negate(mop.Item(whati[0])));
 
                         if (it->what == TYPE_POW)
                             expr = (dml::Pow(mop.Item(whati[0]),it->Params[0]));
 
+                        if (it->what == TYPE_RECIP)
+                            expr = (dml::Recip(mop.Item(whati[0])));
+
                         if (it->what == TYPE_ROUND)
                             expr = (dml::Round(mop.Item(whati[0]),(DML_ROUNDING_MODE)(int)(it->Params[0])));
+
+                        if (it->what == TYPE_REDUCE)
+                            expr = dml::Reduce(mop.Item(whati[0]), (DML_REDUCE_FUNCTION)(int)(it->Params[0]),TensorFromString<unsigned int>(it->Params[1]),(DML_TENSOR_DATA_TYPE)it->OpType);
+
+                        if (it->what == TYPE_RESAMPLE)
+                        {
+                            expr = dml::Resample(mop.Item(whati[0]), TensorFromString<unsigned int>(it->Params[0]),(DML_INTERPOLATION_MODE)(int)it->Params[1],
+                                (DML_AXIS_DIRECTION)(int)it->Params[2],TensorFromString<float>(it->Params[3]));
+                        }
 
                         if (it->what == TYPE_REINTERPRET)
                         {
@@ -3653,7 +3770,7 @@ namespace winrt::DirectMLGraph::implementation
 
     void MLGraph::OnNew(IInspectable const&, IInspectable const&)
     {
-//        winrt::DirectMLGraph::MainWindow CreateWi();
+//        winrt::VisualDML::MainWindow CreateWi();
  //       CreateWi();
 		std::vector<wchar_t> fnx(10000);
 		GetModuleFileName(0, fnx.data(), 10000);    

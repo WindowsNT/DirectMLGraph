@@ -14,7 +14,7 @@ using namespace winrt::Microsoft::UI::Xaml::Controls;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace winrt::DirectMLGraph::implementation
+namespace winrt::VisualDML::implementation
 {
 
 	void MainWindow::ItemInvoked(IInspectable, NavigationViewItemInvokedEventArgs ar)
@@ -51,8 +51,8 @@ namespace winrt::DirectMLGraph::implementation
 			Frame fr = topnv.FindName(L"contentFrame").as<Frame>();
 			if (fr)
 			{
-				fr.Navigate(winrt::xaml_typename<winrt::DirectMLGraph::MLGraph>());
-				fr.Content().as<winrt::DirectMLGraph::MLGraph>().wnd((wnd()));
+				fr.Navigate(winrt::xaml_typename<winrt::VisualDML::MLGraph>());
+				fr.Content().as<winrt::VisualDML::MLGraph>().wnd((wnd()));
 			}
 
 			topnv.KeyDown([this](IInspectable const& , Microsoft::UI::Xaml::Input::KeyRoutedEventArgs const& a)
@@ -63,7 +63,7 @@ namespace winrt::DirectMLGraph::implementation
 							Frame fr = topnv.FindName(L"contentFrame").as<Frame>();
 							if (fr)
 							{
-								auto co = fr.Content().try_as<winrt::DirectMLGraph::MLGraph>();
+								auto co = fr.Content().try_as<winrt::VisualDML::MLGraph>();
 								if (co)
 								{
 									co.Key((long long)a.Key(),false);
@@ -88,7 +88,7 @@ namespace winrt::DirectMLGraph::implementation
 				auto n = fr.Content().as<Page>();
 				if (n)
 				{
-					auto s = n.as<winrt::DirectMLGraph::MLGraph>();
+					auto s = n.as<winrt::VisualDML::MLGraph>();
 					if (s)
 					{
 						s.Resize();
@@ -109,7 +109,7 @@ namespace winrt::DirectMLGraph::implementation
 				auto n = fr.Content().as<Page>();
 				if (n)
 				{
-					auto s = n.as<winrt::DirectMLGraph::MLGraph>();
+					auto s = n.as<winrt::VisualDML::MLGraph>();
 					if (s)
 					{
 						s.Finished();

@@ -1,4 +1,4 @@
-namespace DirectMLGraph
+namespace VisualDML
 {
     [default_interface]
     runtimeclass MLGraph : Microsoft.UI.Xaml.Controls.Page, Microsoft.UI.Xaml.Data.INotifyPropertyChanged
