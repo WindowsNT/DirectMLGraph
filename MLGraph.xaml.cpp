@@ -20,6 +20,7 @@ int WhatInput = 0;
 PARAM* WhatParam = 0;
 VARIABLE* WhatVariable = 0;
 float ScaleX = 1.0f;
+bool MustStop = 0;
 
 D2D1_POINT_2F red_from = { 0,0 }, red_to = { 0,0 };
 void XLNODE::Ser(XML3::XMLElement& e)
@@ -2963,6 +2964,16 @@ namespace winrt::VisualDML::implementation
         op.nodes.push_back(node);
         FullRefresh();
     }
+    void MLGraph::OnStop(IInspectable const&, IInspectable const&)
+    {
+        Stop();
+    }
+    void MLGraph::Stop()
+    {
+        MustStop = 1;
+    }
+
+
     void MLGraph::OnRun(IInspectable const&, IInspectable const&)
     {
         auto& xl = prj.xl();
@@ -2970,6 +2981,8 @@ namespace winrt::VisualDML::implementation
         {
             return;
         }
+
+        MustStop = 0;
         xl.running = std::make_shared<std::thread>([this](HWND h)
             {
                 Run();
@@ -3086,6 +3099,11 @@ namespace winrt::VisualDML::implementation
             {
                 if (WillBeLast == 1)
                     break;
+                if (MustStop)
+                {
+                    MustStop = 0;
+                    break;
+                }
 				WillBeLast = 1;
                 for (size_t iop = 0; iop < xl.ops.size(); iop++)
                 {

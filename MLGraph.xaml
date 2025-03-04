@@ -209,6 +209,14 @@
                         <KeyboardAccelerator Key="F5" />
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Stop" Click="OnStop" >
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon Glyph="&#xE71A;"/>
+                    </MenuFlyoutItem.Icon>
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F5" Modifiers="Shift" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
 
             </MenuBarItem>
 

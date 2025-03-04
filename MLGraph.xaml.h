@@ -939,7 +939,9 @@ namespace winrt::VisualDML::implementation
         void OnClean(IInspectable const&, IInspectable const&);
         void OnCompile(IInspectable const&, IInspectable const&);
         void OnRun(IInspectable const&, IInspectable const&);
+        void OnStop(IInspectable const&, IInspectable const&);
         void Run();
+        void Stop();
         void Compile();
         void Clean();
         void OnAddOp(IInspectable const&, IInspectable const&);
