@@ -18,6 +18,7 @@ mono_crash.*
 
 inst.bat
 VisualDML.exe
+VisualDML.msix
 
 # Build results
 [Dd]ebug/
