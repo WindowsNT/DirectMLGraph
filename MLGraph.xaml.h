@@ -143,7 +143,7 @@ struct XLNODE
 enum XLNODE_TYPE
 {
     TYPE_INPUT = 1,
-    TYPE_ACT_IDENTITY,TYPE_ACT_CELU,TYPE_ACT_ELU,TYPE_ACT_GELU,TYPE_ACT_HARDMAX,TYPE_ACT_HARDSIGMOID,TYPE_ACT_LEAKYRELU,TYPE_ACT_LINEAR,
+    TYPE_ACT_IDENTITY,TYPE_ACT_CELU,TYPE_ACT_ELU,TYPE_ACT_GELU,TYPE_ACT_HARDMAX,TYPE_ACT_HARDSIGMOID,TYPE_ACT_LEAKYRELU,TYPE_ACT_LINEAR,TYPE_ACT_LOGSOFTMAX,TYPE_ACT_PRELU, TYPE_ACT_PSOFTPLUS, TYPE_ACT_RELU, TYPE_ACT_SELU, TYPE_ACT_STANH, TYPE_ACT_SHRINK, TYPE_ACT_SIGMOID, TYPE_ACT_SOFTMAX, TYPE_ACT_SOFTPLUS, TYPE_ACT_SOFTSIGN, TYPE_ACT_TANH, TYPE_ACT_TRELU,
     TYPE_ABS,TYPE_ACOS,TYPE_ACOSH, TYPE_ADD,TYPE_ASIN,TYPE_ASINH,TYPE_ATAN,TYPE_ATANH, TYPE_ATANYX,
     TYPE_BITAND,TYPE_BITCOUNT,TYPE_BITNOT,TYPE_BITOR,TYPE_BITSL,TYPE_BITSR,TYPE_BITXOR,
 	TYPE_CAST,TYPE_CEIL, TYPE_CLIP, TYPE_CONSTANT, TYPE_COS, TYPE_COSH, TYPE_CONVOLUTION,TYPE_CUMSUM, TYPE_CUMPROD,
@@ -165,14 +165,29 @@ enum XLNODE_TYPE
 
 inline std::map<int, std::string> TypesToNames = {
 	{TYPE_INPUT,"Input"},
+
 	{TYPE_ACT_IDENTITY,"ActivationIdentity"},
 	{TYPE_ACT_CELU,"ActivationCelu"},
 	{TYPE_ACT_ELU,"ActivationElu"},
 	{TYPE_ACT_GELU,"ActivationGelu"},
 	{TYPE_ACT_HARDMAX,"ActivationHardmax"},
 	{TYPE_ACT_HARDSIGMOID,"ActivationHardSigmoid"},
-	{TYPE_ACT_LEAKYRELU,"LeakyRelu"},
-	{TYPE_ACT_LINEAR,"Linear"},
+	{TYPE_ACT_LEAKYRELU,"ActivationLeakyRelu"},
+	{TYPE_ACT_LINEAR,"ActivationLinear"},
+	{TYPE_ACT_LOGSOFTMAX,"ActivationLogSoftmax"},
+	{TYPE_ACT_PRELU,"ActivationParameterizedRelu"},
+	{TYPE_ACT_PSOFTPLUS,"ActivationParametricSoftplus"},
+	{TYPE_ACT_RELU,"ActivationRelu"},
+	{TYPE_ACT_SELU,"ActivationScaledElu"},
+	{TYPE_ACT_STANH,"ActivationScaledTanh"},
+	{TYPE_ACT_SHRINK,"ActivationShrink"},
+	{TYPE_ACT_SIGMOID,"ActivationSigmoid"},
+	{TYPE_ACT_SOFTMAX,"ActivationSoftmax"},
+	{TYPE_ACT_SOFTPLUS,"ActivationSoftplus"},
+	{TYPE_ACT_SOFTSIGN,"ActivationSoftsign"},
+	{TYPE_ACT_TANH,"ActivationTanh"},
+	{TYPE_ACT_TRELU,"ActivationThresholdedRelu"},
+       
 	{TYPE_ABS,"Abs"},
 	{TYPE_ACOS,"ACos"},
 	{TYPE_ACOSH,"ACosh"},
@@ -301,6 +316,33 @@ struct XLNODE_ANY : public XLNODE
 			return L"ActivationLeakyRelu";
 		if (what == TYPE_ACT_LINEAR)
 			return L"ActivationLinear";
+		if (what == TYPE_ACT_LOGSOFTMAX)
+			return L"ActivationLogSoftmax";
+		if (what == TYPE_ACT_PRELU)
+			return L"ActivationParameterizedRelu";
+		if (what == TYPE_ACT_PSOFTPLUS)
+			return L"ActivationParametricSoftplus";
+		if (what == TYPE_ACT_RELU)
+			return L"ActivationRelu";
+		if (what == TYPE_ACT_SELU)
+			return L"ActivationScaledElu";
+		if (what == TYPE_ACT_STANH)
+			return L"ActivationScaledTanh";
+		if (what == TYPE_ACT_SHRINK)
+			return L"ActivationShrink";
+		if (what == TYPE_ACT_SIGMOID)
+			return L"ActivationSigmoid";
+		if (what == TYPE_ACT_SOFTMAX)
+			return L"ActivationSoftmax";
+		if (what == TYPE_ACT_SOFTPLUS)
+			return L"ActivationSoftplus";
+		if (what == TYPE_ACT_SOFTSIGN)
+			return L"ActivationSoftsign";
+		if (what == TYPE_ACT_TANH)
+			return L"ActivationTanh";
+		if (what == TYPE_ACT_TRELU)
+			return L"ActivationThresholdedRelu";
+
 
         if (what == TYPE_ABS)
 			return L"Abs";

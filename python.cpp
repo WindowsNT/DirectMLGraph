@@ -560,7 +560,7 @@ bool IsCudaAvailable()
 
 std::wstring PythonFolder()
 {
-	auto pyf = Settings->GetRootElement().vv("pyf").GetWideValue();
+	auto pyf = SettingsX->GetRootElement().vv("pyf").GetWideValue();
 	if (pyf.empty())
 	{
 		return datafolder + L"\\python";

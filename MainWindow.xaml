@@ -9,7 +9,7 @@
     mc:Ignorable="d"
     Title="VisualDML">
 
-    <NavigationView x:Name="xMain" PaneDisplayMode="LeftCompact" Loaded="OnLoad" ItemInvoked="ItemInvoked" IsSettingsVisible="False"  >
+    <NavigationView x:Name="xMain" PaneDisplayMode="LeftCompact" Loaded="OnLoad" ItemInvoked="ItemInvoked" IsSettingsVisible="True"  >
         <NavigationView.MenuItems>
             <NavigationViewItem  Icon="Link" Content="Graph" x:Name="ViewGraph" >
                 <NavigationViewItem.KeyboardAccelerators>
@@ -18,7 +18,7 @@
             </NavigationViewItem>
             <NavigationViewItem  Icon="Globe" Content="Network" x:Name="ViewNetwork" >
                 <NavigationViewItem.KeyboardAccelerators>
-                    <KeyboardAccelerator Key="F4" />
+                    <KeyboardAccelerator Key="F6" />
                 </NavigationViewItem.KeyboardAccelerators>
             </NavigationViewItem>
         </NavigationView.MenuItems>

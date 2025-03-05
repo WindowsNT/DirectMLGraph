@@ -7,6 +7,7 @@
 
 #include "MLGraph.xaml.h"
 #include "Network.xaml.h"
+#include "Settings.xaml.h"
 
 using namespace winrt;
 using namespace winrt::Microsoft::UI::Xaml;
@@ -28,7 +29,7 @@ namespace winrt::VisualDML::implementation
 			return;
 		if (ar.IsSettingsInvoked())
 		{
-//			fr.Navigate(winrt::xaml_typename<winrt::NN::Settings>());
+			fr.Navigate(winrt::xaml_typename<winrt::VisualDML::Settings>());
 			return;
 		}
 		auto it = ar.InvokedItemContainer().as<NavigationViewItem>();
@@ -48,6 +49,8 @@ namespace winrt::VisualDML::implementation
 
 	void MainWindow::OnLoad(IInspectable, IInspectable)
 	{
+		void InitProject();
+		InitProject();
 		auto topnv = Content().as<NavigationView>();
 		if (topnv)
 		{

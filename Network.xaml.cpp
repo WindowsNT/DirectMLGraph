@@ -24,7 +24,6 @@ void NNToPythonPTH(::NN&, const wchar_t*);
 
 extern int CurrentBatch;
 extern int NumEpochsX;
-extern PROJECT project;
 
 void LoadNetworkFile();
 // To learn more about WinUI, the WinUI project structure,
@@ -52,10 +51,10 @@ namespace winrt::VisualDML::implementation
 
     long  Network::IndexOfAct()
     {
-        for (size_t i = 0; i < project.nn.Layers.size(); i++)
+        for (size_t i = 0; i < nn.Layers.size(); i++)
         {
-            if (project.nn.Layers[i].Sel)
-                return (long)project.nn.Layers[i].ActType;
+            if (nn.Layers[i].Sel)
+                return (long)nn.Layers[i].ActType;
         }
         return 0;
     }
@@ -63,10 +62,10 @@ namespace winrt::VisualDML::implementation
     {
         if (l < 0)
             return;
-        for (size_t i = 0; i < project.nn.Layers.size(); i++)
+        for (size_t i = 0; i < nn.Layers.size(); i++)
         {
-            if (project.nn.Layers[i].Sel)
-                project.nn.Layers[i].ActType = (ACT_TYPE)l;
+            if (nn.Layers[i].Sel)
+                nn.Layers[i].ActType = (ACT_TYPE)l;
         }
     }
 
@@ -92,13 +91,13 @@ namespace winrt::VisualDML::implementation
     winrt::Windows::Foundation::Collections::IObservableVector<winrt::VisualDML::Item> Network::LayerList()
     {
         auto children = single_threaded_observable_vector<VisualDML::Item>();
-        for (size_t i = 0; i < project.nn.Layers.size(); i++)
+        for (size_t i = 0; i < nn.Layers.size(); i++)
         {
             auto item = winrt::make<VisualDML::implementation::Item>();
             if (i == 0)
                 item.Name1(std::wstring(s(14)) + std::wstring(L" ") + std::wstring(s(17)));
             else
-                if (i == (project.nn.Layers.size() - 1))
+                if (i == (nn.Layers.size() - 1))
                     item.Name1(std::wstring(s(15)) + std::wstring(L" ") + std::wstring(s(17)));
                 else
                     item.Name1(std::wstring(s(16)) + std::wstring(L" ") + std::to_wstring(i));
@@ -126,29 +125,29 @@ namespace winrt::VisualDML::implementation
 
     bool Network::InputsVisible()
     {
-        for (size_t i = 0; i < project.nn.Layers.size() && i < 1; i++)
+        for (size_t i = 0; i < nn.Layers.size() && i < 1; i++)
         {
-            if (project.nn.Layers[i].Sel)
+            if (nn.Layers[i].Sel)
                 return 1;
         }
         return 0;
     }
     bool Network::CountVisible()
     {
-        if (project.nn.Layers.empty())
+        if (nn.Layers.empty())
             return 0;
-        for (size_t i = 1; i < (project.nn.Layers.size() - 1); i++)
+        for (size_t i = 1; i < (nn.Layers.size() - 1); i++)
         {
-            if (project.nn.Layers[i].Sel)
+            if (nn.Layers[i].Sel)
                 return 1;
         }
         return 0;
     }
     bool Network::OutputsVisible()
     {
-        for (size_t i = 0; i < project.nn.Layers.size(); i++)
+        for (size_t i = 0; i < nn.Layers.size(); i++)
         {
-            if (i == (project.nn.Layers.size() - 1) && project.nn.Layers[i].Sel)
+            if (i == (nn.Layers.size() - 1) && nn.Layers[i].Sel)
                 return 1;
         }
         return 0;
@@ -156,52 +155,52 @@ namespace winrt::VisualDML::implementation
 
     double Network::NumNeurons()
     {
-        for (size_t i = 0; i < project.nn.Layers.size(); i++)
+        for (size_t i = 0; i < nn.Layers.size(); i++)
         {
-            if (project.nn.Layers[i].Sel)
+            if (nn.Layers[i].Sel)
             {
                 if (i == 0)
-                    return (double)project.nn.Layers[i + 1].weights.rows();
-                if (i == (project.nn.Layers.size() - 1))
-                    return (double)project.nn.Layers[i].biases.cols();
-                return (double)project.nn.Layers[i].weights.cols();
+                    return (double)nn.Layers[i + 1].weights.rows();
+                if (i == (nn.Layers.size() - 1))
+                    return (double)nn.Layers[i].biases.cols();
+                return (double)nn.Layers[i].weights.cols();
             }
         }
         return 0;
     }
     void Network::NumNeurons(double n)
     {
-        for (size_t i = 0; i < project.nn.Layers.size(); i++)
+        for (size_t i = 0; i < nn.Layers.size(); i++)
         {
-            if (project.nn.Layers[i].Sel)
+            if (nn.Layers[i].Sel)
             {
                 if (i == 0) // input
                 {
-                    if (project.nn.Layers[i + 1].weights.rows() != (int)n)
+                    if (nn.Layers[i + 1].weights.rows() != (int)n)
                     {
-                        project.nn.Layers[i + 1].weights.init((int)n, project.nn.Layers[i + 1].weights.cols());
-                        project.nn.RecalculateWB();
+                        nn.Layers[i + 1].weights.init((int)n, nn.Layers[i + 1].weights.cols());
+                        nn.RecalculateWB();
                         Refresh({ L"WeightsText",L"BiasesText" });
                     }
                 }
                 else
-                    if (i == (project.nn.Layers.size() - 1)) // output
+                    if (i == (nn.Layers.size() - 1)) // output
                     {
-                        if (project.nn.Layers[i].biases.cols() != n)
+                        if (nn.Layers[i].biases.cols() != n)
                         {
-                            project.nn.Layers[i].weights.init(project.nn.Layers[i].weights.rows(), (int)n);
-                            project.nn.Layers[i].biases.init(1, (int)n);
-                            project.nn.RecalculateWB();
+                            nn.Layers[i].weights.init(nn.Layers[i].weights.rows(), (int)n);
+                            nn.Layers[i].biases.init(1, (int)n);
+                            nn.RecalculateWB();
                             Refresh({ L"WeightsText",L"BiasesText" });
                         }
                     }
                     else
                     {
-                        if (project.nn.Layers[i].weights.rows() != (int)n)
+                        if (nn.Layers[i].weights.rows() != (int)n)
                         {
-                            project.nn.Layers[i].weights.init(project.nn.Layers[i].weights.rows(), (int)n);
-                            project.nn.Layers[i].biases.init(1, (int)n);
-                            project.nn.RecalculateWB();
+                            nn.Layers[i].weights.init(nn.Layers[i].weights.rows(), (int)n);
+                            nn.Layers[i].biases.init(1, (int)n);
+                            nn.RecalculateWB();
                             Refresh({ L"WeightsText",L"BiasesText" });
                         }
                     }
@@ -214,6 +213,7 @@ namespace winrt::VisualDML::implementation
     void Network::OnLoaded(IInspectable, IInspectable)
     {
         Resize();
+        nn.Init();
 
         // And the adapters
         auto sp = Content().as<Panel>();
@@ -230,8 +230,8 @@ namespace winrt::VisualDML::implementation
                     mi.IsChecked(adapter == 0);
                     mi.Click([this](IInspectable const&, RoutedEventArgs const&)
                         {
-                            Settings->GetRootElement().vv("iAdapter").SetValueInt(0);
-                            Settings->Save();
+                            SettingsX->GetRootElement().vv("iAdapter").SetValueInt(0);
+                            SettingsX->Save();
                             MessageBox(0, L"Restart the application to apply the changes.", L"NN", MB_OK);
                         });
                     m31.Items().Append(mi);
@@ -247,8 +247,8 @@ namespace winrt::VisualDML::implementation
                 mi.IsChecked(adapter == all_adapters[i - 1]);
                 mi.Click([this, i](IInspectable const&, RoutedEventArgs const&)
                     {
-                        Settings->GetRootElement().vv("iAdapter").SetValueInt((int)i);
-                        Settings->Save();
+                        SettingsX->GetRootElement().vv("iAdapter").SetValueInt((int)i);
+                        SettingsX->Save();
                         MessageBox(0, L"Restart the application to apply the changes.", L"NN", MB_OK);
                     });
                 m31.Items().Append(mi);
@@ -271,7 +271,7 @@ namespace winrt::VisualDML::implementation
                 all_adapters.push_back(adapterq);
                 adapterq = 0;
             }
-            auto iAdapter = Settings->GetRootElement().vv("iAdapter").GetValueInt(0);
+            auto iAdapter = SettingsX->GetRootElement().vv("iAdapter").GetValueInt(0);
             if (iAdapter > 0 && iAdapter <= all_adapters.size())
                 adapter = all_adapters[iAdapter - 1];
         }
@@ -357,8 +357,8 @@ namespace winrt::VisualDML::implementation
         auto numneurons = l->weights.cols();
         if (numneurons == 0)
             numneurons = l->output.cols();
-        if (numneurons == 0 && lidx < (project.nn.Layers.size() - 1))
-            numneurons = project.nn.Layers[lidx + 1].weights.rows();
+        if (numneurons == 0 && lidx < (nn.Layers.size() - 1))
+            numneurons = nn.Layers[lidx + 1].weights.rows();
         if (numneurons == 0)
             return;
 
@@ -546,14 +546,14 @@ namespace winrt::VisualDML::implementation
             int n;
         };
         std::vector<LA> NeuronsPerLayer;
-        for (size_t i = 0; i < project.nn.Layers.size(); i++)
+        for (size_t i = 0; i < nn.Layers.size(); i++)
         {
-            auto& l = project.nn.Layers[i];
+            auto& l = nn.Layers[i];
             auto numneurons = l.weights.cols();
             if (numneurons == 0)
                 numneurons = l.output.cols();
-            if (numneurons == 0 && i < (project.nn.Layers.size() - 1))
-                numneurons = project.nn.Layers[i + 1].weights.rows();
+            if (numneurons == 0 && i < (nn.Layers.size() - 1))
+                numneurons = nn.Layers[i + 1].weights.rows();
             LA la;
             la.i = i;
             la.n = numneurons;
@@ -566,9 +566,9 @@ namespace winrt::VisualDML::implementation
                 return false;
             });
 
-        for (size_t i = 0; i < project.nn.Layers.size(); i++)
+        for (size_t i = 0; i < nn.Layers.size(); i++)
         {
-            auto& ly = project.nn.Layers[i];
+            auto& ly = nn.Layers[i];
             D2D1_RECT_F r1 = rfull;
             r1.left += NextX;
             r1.right = r1.left + 100;
@@ -585,10 +585,10 @@ namespace winrt::VisualDML::implementation
             PaintALayer(r1, &ly, i);
         }
 
-        for (size_t i = 1; i < project.nn.Layers.size(); i++)
+        for (size_t i = 1; i < nn.Layers.size(); i++)
         {
-            auto& prev = project.nn.Layers[i - 1];
-            auto& curr = project.nn.Layers[i];
+            auto& prev = nn.Layers[i - 1];
+            auto& curr = nn.Layers[i];
 
             // Lines
             for (auto& p : prev.DrawnNeurons)
@@ -612,11 +612,11 @@ namespace winrt::VisualDML::implementation
     winrt::hstring Network::WeightsText()
     {
         std::vector<wchar_t> s(10000);
-        for (size_t i = 1; i < project.nn.Layers.size(); i++)
+        for (size_t i = 1; i < nn.Layers.size(); i++)
         {
-            if (project.nn.Layers[i].Sel)
+            if (nn.Layers[i].Sel)
             {
-                swprintf_s(s.data(), 10000, L"%ix%i", project.nn.Layers[i].weights.rows(), project.nn.Layers[i].weights.cols());
+                swprintf_s(s.data(), 10000, L"%ix%i", nn.Layers[i].weights.rows(), nn.Layers[i].weights.cols());
                 break;
             }
         }
@@ -626,11 +626,11 @@ namespace winrt::VisualDML::implementation
     winrt::hstring Network::BiasesText()
     {
         std::vector<wchar_t> s(10000);
-        for (size_t i = 1; i < project.nn.Layers.size(); i++)
+        for (size_t i = 1; i < nn.Layers.size(); i++)
         {
-            if (project.nn.Layers[i].Sel)
+            if (nn.Layers[i].Sel)
             {
-                swprintf_s(s.data(), 10000, L"%ix%i", project.nn.Layers[i].biases.rows(), project.nn.Layers[i].biases.cols());
+                swprintf_s(s.data(), 10000, L"%ix%i", nn.Layers[i].biases.rows(), nn.Layers[i].biases.cols());
                 break;
             }
         }
@@ -644,22 +644,22 @@ namespace winrt::VisualDML::implementation
                      hidden : 128 neurons * 784 weights each
                      output : 10 neurons * 128 weights each
                      */
-        for (size_t i = 0; i < project.nn.Layers.size() - 1; i++)
+        for (size_t i = 0; i < nn.Layers.size() - 1; i++)
         {
-            if (project.nn.Layers[i].Sel)
+            if (nn.Layers[i].Sel)
             {
-                auto lr = project.nn.Layers[i].lr;
+                auto lr = nn.Layers[i].lr;
                 if (lr <= 0.000f)
                     lr = 0.01f;
-                int num_neurons = project.nn.Layers[i + 1].weights.cols();
-                int num_weights_per_neuron = project.nn.Layers[i].output.cols();
+                int num_neurons = nn.Layers[i + 1].weights.cols();
+                int num_weights_per_neuron = nn.Layers[i].output.cols();
                 if (i == 0)
                     num_weights_per_neuron = 128;
                 Layer l(lr, ACT_TYPE::RELU, num_neurons, num_weights_per_neuron);
 
-                project.nn.Layers.insert(project.nn.Layers.begin() + i + 1, l);
+                nn.Layers.insert(nn.Layers.begin() + i + 1, l);
 
-                project.nn.RecalculateWB();
+                nn.RecalculateWB();
                 Refresh();
                 break;
             }
@@ -669,10 +669,10 @@ namespace winrt::VisualDML::implementation
 
     double Network::LearningRate()
     {
-        for (size_t i = 1; i < project.nn.Layers.size(); i++)
+        for (size_t i = 1; i < nn.Layers.size(); i++)
         {
-            if (project.nn.Layers[i].Sel)
-                return project.nn.Layers[i].lr;
+            if (nn.Layers[i].Sel)
+                return nn.Layers[i].lr;
 
         }
         return 0;
@@ -681,10 +681,10 @@ namespace winrt::VisualDML::implementation
 
     void Network::LearningRate(double v)
     {
-        for (size_t i = 1; i < project.nn.Layers.size(); i++)
+        for (size_t i = 1; i < nn.Layers.size(); i++)
         {
-            if (project.nn.Layers[i].Sel)
-                project.nn.Layers[i].lr = v;
+            if (nn.Layers[i].Sel)
+                nn.Layers[i].lr = v;
         }
         return;
     }
@@ -692,24 +692,24 @@ namespace winrt::VisualDML::implementation
 
     long Network::IndexOfLayer()
     {
-        for (size_t i = 0; i < project.nn.Layers.size(); i++)
+        for (size_t i = 0; i < nn.Layers.size(); i++)
         {
-            if (project.nn.Layers[i].Sel)
+            if (nn.Layers[i].Sel)
                 return (long)i;
         }
-        if (project.nn.Layers.empty())
+        if (nn.Layers.empty())
             return 0;
-        project.nn.Layers[0].Sel = 1;
+        nn.Layers[0].Sel = 1;
         return 0;
     }
     void Network::IndexOfLayer(long idx)
     {
-        for (size_t i = 0; i < project.nn.Layers.size(); i++)
+        for (size_t i = 0; i < nn.Layers.size(); i++)
         {
             if (i == idx)
-                project.nn.Layers[i].Sel = 1;
+                nn.Layers[i].Sel = 1;
             else
-                project.nn.Layers[i].Sel = 0;
+                nn.Layers[i].Sel = 0;
         }
         Refresh({ L"LearningRate",L"LearningRateVisible",L"ActFuncVisible",L"IndexOfAct",L"InputsVisible",L"CountVisible",L"OutputsVisible",L"NumNeurons",L"WeightsText",L"BiasesText" });
     }
@@ -717,9 +717,9 @@ namespace winrt::VisualDML::implementation
 
     bool Network::LearningRateVisible()
     {
-        for (size_t i = 1; i < project.nn.Layers.size(); i++)
+        for (size_t i = 1; i < nn.Layers.size(); i++)
         {
-            if (project.nn.Layers[i].Sel)
+            if (nn.Layers[i].Sel)
                 return 1;
         }
         return 0;
@@ -727,9 +727,9 @@ namespace winrt::VisualDML::implementation
 
     bool Network::ActFuncVisible()
     {
-        for (size_t i = 1; i < project.nn.Layers.size(); i++)
+        for (size_t i = 1; i < nn.Layers.size(); i++)
         {
-            if (project.nn.Layers[i].Sel)
+            if (nn.Layers[i].Sel)
                 return 1;
         }
         return 0;
@@ -769,7 +769,7 @@ namespace winrt::VisualDML::implementation
         if (!GetSaveFileName(&of))
             return;
 
-        NNToPythonPTH(project.nn, fnx.data());
+        NNToPythonPTH(nn, fnx.data());
 
     }
 
@@ -818,7 +818,7 @@ namespace winrt::VisualDML::implementation
         if (!GetSaveFileName(&of))
             return;
 
-        NNToPythonOnnx(project.nn, fnx.data());
+        NNToPythonOnnx(nn, fnx.data());
     }
 
     void Network::OnNew(IInspectable, IInspectable)

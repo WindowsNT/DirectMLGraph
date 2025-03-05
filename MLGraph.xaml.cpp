@@ -220,7 +220,8 @@ void XLNODE::Draw(MLOP* mlop,bool Active,bool Enabled,ID2D1DeviceContext5* r, si
     for (int i = 0; i < 2; i++)
     {
         size_t Total_Bullets = i == 0 ? nin() : nout();
-        float TotalHeight = Total_Bullets * 15.0f;
+        float HPerBullet = 15.0f;
+        float TotalHeight = Total_Bullets * HPerBullet;
         float NextY = hit.top + 5;
         float FullHeight = hit.Height();
         NextY = (FullHeight - TotalHeight) / 2.0f + hit.top;
@@ -230,12 +231,12 @@ void XLNODE::Draw(MLOP* mlop,bool Active,bool Enabled,ID2D1DeviceContext5* r, si
             if (ch.O == (bool)i)
             {
                 ch.hit.top = NextY;
-				ch.hit.bottom = NextY + 10;
+				ch.hit.bottom = NextY + (HPerBullet - 5);
                 ch.hit.left = hit.left;
                 if (i == 1)
                     ch.hit.left = hit.right - elr / 2.0f;
                 ch.hit.right = ch.hit.left + elr / 2.0f;
-				NextY += 15;
+				NextY += HPerBullet;
             }
         }
     }
@@ -482,44 +483,12 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
     if (1)
     {
         winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
-        A.Text(L"A");
-
-
-		winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Abs; Abs.Text(L"Abs"); Abs.Click(fooo);
-		A.Items().Append(Abs);   
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem ACos; ACos.Text(L"ACos"); ACos.Click(fooo);
-        A.Items().Append(ACos);
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem ACosh; ACosh.Text(L"ACosh"); ACosh.Click(fooo);
-        A.Items().Append(ACosh);
-
-
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Add; Add.Text(L"Add"); Add.Click(fooo);
-        A.Items().Append(Add);
-
+        A.Text(L"Activation");
 
         if (1)
         {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"And"); N.Click(fooo);
-            A.Items().Append(N);
-        }
-        
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem ASin; ASin.Text(L"ASin"); ASin.Click(fooo);
-        A.Items().Append(ASin);
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem ASinh; ASinh.Text(L"ASinh"); ASinh.Click(fooo);
-        A.Items().Append(ASinh);
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem ATan; ATan.Text(L"ATan"); ATan.Click(fooo);
-        A.Items().Append(ATan);
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem ATanh; ATanh.Text(L"ATanh"); ATanh.Click(fooo);
-        A.Items().Append(ATanh);
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem ATanYX; ATanYX.Text(L"ATanYX"); ATanYX.Click(fooo);
-        A.Items().Append(ATanYX);
-
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSeparator s;
-        A.Items().Append(s);
-        if (1)
-        {
-                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"ActivationCelu"); Neg.Click(fooo);
-                A.Items().Append(Neg);
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"ActivationCelu"); Neg.Click(fooo);
+            A.Items().Append(Neg);
         }
         if (1)
         {
@@ -556,6 +525,58 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"ActivationLinear"); Neg.Click(fooo);
             A.Items().Append(Neg);
         }
+        for (auto& j : { L"ActivationLogSoftmax",L"ActivationParameterizedRelu",L"ActivationParametricSoftplus", L"ActivationRelu", L"ActivationScaledElu", L"ActivationScaledTanh", L"ActivationShrink", L"ActivationSigmoid", L"ActivationSoftmax", L"ActivationSoftplus", L"ActivationSoftsign", L"ActivationTanh", L"ActivationThresholdedRelu" })
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(j); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+
+
+
+
+
+        r1.Items().Append(A);
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSeparator s;
+        r1.Items().Append(s);
+    }
+    if (1)
+    {
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
+        A.Text(L"A");
+
+
+		winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Abs; Abs.Text(L"Abs"); Abs.Click(fooo);
+		A.Items().Append(Abs);   
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem ACos; ACos.Text(L"ACos"); ACos.Click(fooo);
+        A.Items().Append(ACos);
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem ACosh; ACosh.Text(L"ACosh"); ACosh.Click(fooo);
+        A.Items().Append(ACosh);
+
+
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Add; Add.Text(L"Add"); Add.Click(fooo);
+        A.Items().Append(Add);
+
+
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"And"); N.Click(fooo);
+            A.Items().Append(N);
+        }
+        
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem ASin; ASin.Text(L"ASin"); ASin.Click(fooo);
+        A.Items().Append(ASin);
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem ASinh; ASinh.Text(L"ASinh"); ASinh.Click(fooo);
+        A.Items().Append(ASinh);
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem ATan; ATan.Text(L"ATan"); ATan.Click(fooo);
+        A.Items().Append(ATan);
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem ATanh; ATanh.Text(L"ATanh"); ATanh.Click(fooo);
+        A.Items().Append(ATanh);
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem ATanYX; ATanYX.Text(L"ATanYX"); ATanYX.Click(fooo);
+        A.Items().Append(ATanYX);
+
+        
+
+          
 
 
         r1.Items().Append(A);
@@ -1670,6 +1691,125 @@ namespace winrt::VisualDML::implementation
                                     node->Params[1].v = L"0";
                                     op.nodes.push_back(node);
                                 }
+								if (t == L"ActivationLogSoftmax")
+								{
+									auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_LOGSOFTMAX);
+									node->hit.left = pos.X;
+									node->hit.top = pos.Y;
+									op.nodes.push_back(node);
+								}
+								if (t == L"ActivationParameterizedRelu")
+								{
+									auto node = std::make_shared<XLNODE_ANY>(2, TYPE_ACT_PRELU);
+									node->hit.left = pos.X;
+									node->hit.top = pos.Y;
+									op.nodes.push_back(node);
+								}
+                                if (t == L"ActivationParametricSoftplus")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_PSOFTPLUS);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(2);
+                                    node->Params[0].n = L"Alpha";
+                                    node->Params[0].v = L"0";
+                                    node->Params[1].n = L"Beta";
+                                    node->Params[1].v = L"0";
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"ActivationRelu")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_RELU);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"ActivationScaledElu")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_SELU);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(2);
+                                    node->Params[0].n = L"Alpha";
+                                    node->Params[0].v = L"1.67326319217681884765625";
+                                    node->Params[1].n = L"Gamma";
+                                    node->Params[1].v = L"1.05070102214813232421875";
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"ActivationScaledTanh")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_STANH);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(2);
+                                    node->Params[0].n = L"Alpha";
+                                    node->Params[0].v = L"1.0";
+                                    node->Params[1].n = L"Beta";
+                                    node->Params[1].v = L"0.5";
+                                    op.nodes.push_back(node);
+                                }
+								if (t == L"ActivationShrink")
+								{
+									auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_SHRINK);
+									node->hit.left = pos.X;
+									node->hit.top = pos.Y;
+                                    node->Params.resize(2);
+                                    node->Params[0].n = L"Bias";
+                                    node->Params[0].v = L"0";
+                                    node->Params[1].n = L"Threshold";
+                                    node->Params[1].v = L"0.5";
+                                    op.nodes.push_back(node);
+								}
+                                if (t == L"ActivationSigmoid")
+                                {
+									auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_SIGMOID);
+									node->hit.left = pos.X;
+									node->hit.top = pos.Y;
+									op.nodes.push_back(node);
+                                }
+								if (t == L"ActivationSoftmax")
+								{
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_SOFTMAX);
+									node->hit.left = pos.X;
+									node->hit.top = pos.Y;
+									op.nodes.push_back(node);
+								}
+								if (t == L"ActivationSoftplus")
+								{
+									auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_SOFTPLUS);
+									node->hit.left = pos.X;
+									node->hit.top = pos.Y;
+                                    node->Params.resize(1);
+                                    node->Params[0].n = L"Steepness";
+                                    node->Params[0].v = L"1.0";
+									op.nodes.push_back(node);
+								}
+                                if (t == L"ActivationSoftsign")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_SOFTSIGN);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    op.nodes.push_back(node);
+                                }
+								if (t == L"ActivationTanh")
+								{
+    								auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_TANH);
+									node->hit.left = pos.X;
+									node->hit.top = pos.Y;
+									op.nodes.push_back(node);
+								}
+								if (t == L"ActivationThresholdedRelu")
+								{
+									auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_TRELU);
+									node->hit.left = pos.X;
+									node->hit.top = pos.Y;
+									node->Params.resize(1);
+									node->Params[0].n = L"Alpha";
+									node->Params[0].v = L"1";
+									op.nodes.push_back(node);
+								}
+
+
 
 
 
@@ -2338,7 +2478,7 @@ namespace winrt::VisualDML::implementation
 				all_adapters.push_back(adapterq);
                 adapterq = 0;
 			}
-            auto iAdapter = Settings->GetRootElement().vv("iAdapter").GetValueInt(0);
+            auto iAdapter = SettingsX->GetRootElement().vv("iAdapter").GetValueInt(0);
             if (iAdapter > 0 && iAdapter <= all_adapters.size())
                 adapter = all_adapters[iAdapter - 1];
         }
@@ -3008,8 +3148,8 @@ namespace winrt::VisualDML::implementation
                     mi.IsChecked(adapter == 0);
                     mi.Click([this](IInspectable const&, RoutedEventArgs const&)
                         {
-							Settings->GetRootElement().vv("iAdapter").SetValueInt(0);
-                            Settings->Save();
+							SettingsX->GetRootElement().vv("iAdapter").SetValueInt(0);
+                            SettingsX->Save();
                             MessageBox((HWND)wnd(),L"Restart the application to apply the changes.",ttitle,MB_OK);
                         });
                     m31.Items().Append(mi);
@@ -3025,8 +3165,8 @@ namespace winrt::VisualDML::implementation
                 mi.IsChecked(adapter == all_adapters[i - 1]);
                 mi.Click([this, i](IInspectable const&, RoutedEventArgs const&)
                     {
-                        Settings->GetRootElement().vv("iAdapter").SetValueInt((int)i);
-                        Settings->Save();
+                        SettingsX->GetRootElement().vv("iAdapter").SetValueInt((int)i);
+                        SettingsX->Save();
                         MessageBox((HWND)wnd(), L"Restart the application to apply the changes.", ttitle, MB_OK);
                     });
                 m31.Items().Append(mi);
@@ -3745,6 +3885,34 @@ namespace winrt::VisualDML::implementation
 							expr = (dml::ActivationLeakyRelu(mop.Item(whati[0]), it->Params[0]));
 						if (it->what == TYPE_ACT_LINEAR)
 							expr = (dml::ActivationLinear(mop.Item(whati[0]), it->Params[0], it->Params[1]));
+						if (it->what == TYPE_ACT_LOGSOFTMAX)
+							expr = dml::ActivationLogSoftmax(mop.Item(whati[0]));
+						if (it->what == TYPE_ACT_PRELU)
+							expr = (dml::ActivationParameterizedRelu(mop.Item(whati[0]), mop.Item(whati[1])));
+						if (it->what == TYPE_ACT_PSOFTPLUS)
+							expr = (dml::ActivationParametricSoftplus(mop.Item(whati[0]), it->Params[0], it->Params[1]));
+						if (it->what == TYPE_ACT_RELU)
+							expr = (dml::ActivationRelu(mop.Item(whati[0])));
+                        if (it->what == TYPE_ACT_SELU)
+							expr = (dml::ActivationScaledElu(mop.Item(whati[0]), it->Params[0], it->Params[1]));
+                        if (it->what == TYPE_ACT_STANH)
+							expr = (dml::ActivationScaledTanh(mop.Item(whati[0]), it->Params[0], it->Params[1]));
+						if (it->what == TYPE_ACT_SHRINK)
+							expr = (dml::ActivationShrink(mop.Item(whati[0]), it->Params[0], it->Params[1]));
+						if (it->what == TYPE_ACT_SIGMOID)
+							expr = (dml::ActivationSigmoid(mop.Item(whati[0])));
+						if (it->what == TYPE_ACT_SOFTMAX)
+							expr = (dml::ActivationSoftmax(mop.Item(whati[0])));
+						if (it->what == TYPE_ACT_SOFTPLUS)
+							expr = (dml::ActivationSoftplus(mop.Item(whati[0]),it->Params[0]));
+						if (it->what == TYPE_ACT_SOFTSIGN)
+							expr = (dml::ActivationSoftsign(mop.Item(whati[0])));
+						if (it->what == TYPE_ACT_TANH)
+							expr = (dml::ActivationTanh(mop.Item(whati[0])));
+						if (it->what == TYPE_ACT_TRELU)
+							expr = (dml::ActivationThresholdedRelu(mop.Item(whati[0]), it->Params[0]));
+
+
 
                         if (it->what == TYPE_ABS && whati.size() > 0)
                             expr = dml::Abs(mop.Item(whati[0]));

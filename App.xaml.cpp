@@ -254,7 +254,7 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR t, int)
     SHCreateDirectory(0, de.c_str());
     datafolder = de.c_str();
     std::wstring sf = de + L"\\settings.xml";
-    Settings = std::make_shared<XML3::XML>(sf.c_str());
+    SettingsX = std::make_shared<XML3::XML>(sf.c_str());
     
 
     winrt::init_apartment(winrt::apartment_type::single_threaded);
@@ -264,7 +264,7 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR t, int)
             ::winrt::make<::winrt::VisualDML::implementation::App>();
         });
 
-    Settings->Save();
+    SettingsX->Save();
     return 0;
 }
 

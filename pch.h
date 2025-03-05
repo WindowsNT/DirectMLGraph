@@ -257,7 +257,7 @@ bool PutFile(const wchar_t* f, std::vector<T>& d, bool Fw = true)
 	return true;
 }
 
-inline std::shared_ptr<XML3::XML> Settings;
+inline std::shared_ptr<XML3::XML> SettingsX;
 inline std::wstring datafolder;
 inline const wchar_t* ttitle = L"Visual DML";
 
