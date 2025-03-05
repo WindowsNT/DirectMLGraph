@@ -93,6 +93,8 @@ UINT64 MLBUFFER::Upload(ML* ml,void* data, size_t by)
 
 void MLOP::tape()
 {
+	if (!dmlOperatorInitializer)
+		return;
 	auto bp = dmlCompiledOperator->GetBindingProperties();
 	if (bp.TemporaryResourceSize)
 	{
@@ -128,6 +130,8 @@ bool MLOP::ResetToExecute()
 
 UINT MLOP::FindDescriptorCount()
 {
+	if (!dmlOperatorInitializer)
+		return 0;
 	auto  initializeBindingProperties = dmlOperatorInitializer->GetBindingProperties();
 	auto executeBindingProperties = dmlCompiledOperator->GetBindingProperties();
 	descriptorCount = 0;
@@ -139,6 +143,8 @@ UINT MLOP::FindDescriptorCount()
 
 bool MLOP::CreateBindingTable(IDMLDevice* dmlDevice, ID3D12DescriptorHeap* descriptorHeap)
 {
+	if (!dmlDevice || !dmlOperatorInitializer)
+		return false;
 	dmlBindingTableDesc.Dispatchable = dmlOperatorInitializer;
 	dmlBindingTableDesc.CPUDescriptorHandle = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	dmlBindingTableDesc.GPUDescriptorHandle = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
@@ -217,6 +223,9 @@ void MLOP::Bind()
 
 void MLOP::tapi()
 {
+	if (!dmlOperatorInitializer)
+		return;
+
 	auto bp = dmlOperatorInitializer->GetBindingProperties();
 	if (bp.TemporaryResourceSize)
 	{
@@ -284,15 +293,23 @@ void ML::SetDescriptorHeaps()
 
 void  ML::Record(int what)
 {
+	if (!dmlCommandRecorder)
+		return;
 	if (what == 0)
 	{
 		for (auto& op : ops)
-			dmlCommandRecorder->RecordDispatch(commandList, op.dmlOperatorInitializer, op.dmlBindingTable);
+		{
+			if (op.dmlOperatorInitializer)
+				dmlCommandRecorder->RecordDispatch(commandList, op.dmlOperatorInitializer, op.dmlBindingTable);
+		}
 	}
 	if (what == 1)
 	{
 		for (auto& op : ops)
-			dmlCommandRecorder->RecordDispatch(commandList, op.dmlCompiledOperator, op.dmlBindingTable);
+		{
+			if (op.dmlCompiledOperator)
+				dmlCommandRecorder->RecordDispatch(commandList, op.dmlCompiledOperator, op.dmlBindingTable);
+		}
 	}
 }
 

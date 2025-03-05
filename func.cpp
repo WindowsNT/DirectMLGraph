@@ -4,6 +4,34 @@
 
 // Functions
 
+struct RECTANDTIP
+{
+    D2D1_RECT_F r = {};
+    std::wstring tip;
+};
+std::vector<RECTANDTIP> RectsAndTips;
+
+void ClearRectsAndTips()
+{
+    RectsAndTips.clear();
+    RectsAndTips.reserve(200);
+}
+void AddRectAndTip(D2D1_RECT_F r, const wchar_t* t)
+{
+    if (!t)
+        return;
+    if (wcslen(t) == 0)
+        return;
+    RECTANDTIP rt;
+    if (wcslen(t) <= 57)
+    {
+        rt.r = r;
+        rt.tip = t;
+        RectsAndTips.push_back(rt);
+    }
+}
+
+
 std::vector<std::string>& split(const std::string& s, char delim, std::vector<std::string>& elems) {
     std::stringstream ss(s);
     std::string item;
@@ -121,4 +149,15 @@ void CsvToBinary(const wchar_t* csv, const wchar_t* binout)
     }
 	CloseHandle(hF);
 }
+
+
+#include "en.hpp"
+
+const wchar_t* s(size_t idx)
+{
+    if (idx > MAX_LANG)
+        return L"";
+    return z_strings[idx];
+}
+
 

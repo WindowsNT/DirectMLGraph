@@ -8,6 +8,9 @@
 #pragma comment(lib,"dwmapi.lib")
 #pragma comment(lib,"comctl32.lib")
 #pragma comment(lib,"comdlg32.lib")
+#pragma comment(lib,"crypt32.lib")
+#pragma comment(lib,"wininet.lib")
+#pragma comment(lib,"dxgi.lib")
 
 
 using namespace winrt;
@@ -23,8 +26,23 @@ std::wstring fil;
 std::map<HWND, winrt::Windows::Foundation::IInspectable> windows;
 
 
+void CallbackUpdate(WPARAM param, LPARAM msg);
+POINT MouseHoverPT = {};
 LRESULT CALLBACK cbx(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
 {
+    if (mm == WM_USER + 1)
+    {
+        // Post update to dialog
+        CallbackUpdate(ww, ll);
+        return 0;
+    }
+    if (mm == WM_USER + 2)
+    {
+        void TrainingEnds();
+        TrainingEnds();
+
+    }
+
     if (mm == WM_USER + 5)
     {
         for (auto& w : windows)
@@ -44,6 +62,29 @@ LRESULT CALLBACK cbx(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
 				mw.Finished();
         }
     }
+
+    if (mm == WM_MOUSEMOVE)
+    {
+    }
+
+    if (mm == WM_MOUSEHOVER)
+    {
+ //       GetCursorPos(&MouseHoverPT);
+  //      POINT pt = MouseHoverPT;
+   //     ScreenToClient(hh, &pt);
+/*        CalculateTooltipText((float)pt.x, (float)pt.y);
+        if (ctip[0] != 0)
+        {
+            FixTipTabs();
+            if (ProjectWindowWinUI3SwapChainPanel)
+                WUIEnableDisableTooltip(ctip);
+            else
+                SendMessage(ae().hTip, TTM_POPUP, 0, 0);
+        }
+        */
+     //   return 0;
+    }
+
     if (mm == WM_KEYDOWN)
     {
         MessageBeep(0);
@@ -63,6 +104,23 @@ LRESULT CALLBACK cbx(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
     return CallWindowProc(wProc, hh, mm, ww, ll);
 }
 
+
+void PostTrainEnd()
+{
+    for (auto& w : windows)
+        PostMessage(w.first, WM_USER + 2, 0, 0);
+}
+
+
+HWND mw()
+{
+    for (auto& w : windows)
+    {
+        if (1)
+            return w.first;
+    }
+	return 0;
+}
 
 void PostUpdateScreen()
 {
@@ -194,7 +252,7 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR t, int)
 
     de += L"\\2DB07F9B-547B-4376-8977-95DFC014B99C";
     SHCreateDirectory(0, de.c_str());
-//    datafolder = de.c_str();
+    datafolder = de.c_str();
     std::wstring sf = de + L"\\settings.xml";
     Settings = std::make_shared<XML3::XML>(sf.c_str());
     

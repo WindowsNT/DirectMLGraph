@@ -120,6 +120,11 @@
       <DependentUpon>MLGraph.xaml</DependentUpon>
       <SubType>Code</SubType>
     </ClInclude>
+    <ClInclude Include="Network.xaml.h">
+      <DependentUpon>Network.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </ClInclude>
+    <ClInclude Include="nn.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="App.xaml.h">
       <DependentUpon>App.xaml</DependentUpon>
@@ -134,8 +139,12 @@
     <Page Include="MLGraph.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Network.xaml">
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="d2d.cpp" />
     <ClCompile Include="dmllib.cpp" />
     <ClCompile Include="func.cpp" />
     <ClCompile Include="Item.cpp" />
@@ -143,6 +152,11 @@
       <DependentUpon>MLGraph.xaml</DependentUpon>
       <SubType>Code</SubType>
     </ClCompile>
+    <ClCompile Include="Network.xaml.cpp">
+      <DependentUpon>Network.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </ClCompile>
+    <ClCompile Include="nn.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -153,6 +167,7 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+    <ClCompile Include="python.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Item.idl" />
@@ -162,6 +177,10 @@
     </Midl>
     <Midl Include="MLGraph.idl">
       <DependentUpon>MLGraph.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Midl>
+    <Midl Include="Network.idl">
+      <DependentUpon>Network.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Midl>
   </ItemGroup>

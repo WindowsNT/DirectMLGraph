@@ -21,7 +21,7 @@ Show Adapter Memory Consumed
 
 ## Supported Operators
 
-Activation: Identity
+Activation: Celu,Elu,Gelu,HardMax,HardSigmoid,Identity,LeakyRelu,Linear
 
 A: Abs,ACos,ACosh,Add,And,ASin,ASinh,ATan,ATanh,ATanYX
 

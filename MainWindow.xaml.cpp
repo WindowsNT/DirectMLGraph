@@ -6,6 +6,7 @@
 
 
 #include "MLGraph.xaml.h"
+#include "Network.xaml.h"
 
 using namespace winrt;
 using namespace winrt::Microsoft::UI::Xaml;
@@ -34,8 +35,10 @@ namespace winrt::VisualDML::implementation
 		if (!it)
 			return;
 		auto n = it.Name();
-//		if (n == L"ViewGraph")
-//			fr.Navigate(winrt::xaml_typename<winrt::NN::Network>());
+		if (n == L"ViewGraph")
+			fr.Navigate(winrt::xaml_typename<winrt::VisualDML::MLGraph>());
+		if (n == L"ViewNetwork")
+			fr.Navigate(winrt::xaml_typename<winrt::VisualDML::Network>());
 		/*		if (n == L"ViewAudio")
 			fr.Navigate(winrt::xaml_typename<winrt::tsed::Audio>());
 		if (n == L"ViewLinks")

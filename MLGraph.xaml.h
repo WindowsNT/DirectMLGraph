@@ -136,14 +136,14 @@ struct XLNODE
 
     virtual int nin() { return 0; }
     virtual int nout() { return 0; }
-    virtual void Draw(MLOP*mlop,bool Active,ID2D1DeviceContext5* r, D2D* d2d,size_t iop);
+    virtual void Draw(MLOP*mlop,bool Active,bool Enabled,ID2D1DeviceContext5* r, size_t iop);
 
 };
 
 enum XLNODE_TYPE
 {
     TYPE_INPUT = 1,
-    TYPE_ACT_IDENTITY,
+    TYPE_ACT_IDENTITY,TYPE_ACT_CELU,TYPE_ACT_ELU,TYPE_ACT_GELU,TYPE_ACT_HARDMAX,TYPE_ACT_HARDSIGMOID,TYPE_ACT_LEAKYRELU,TYPE_ACT_LINEAR,
     TYPE_ABS,TYPE_ACOS,TYPE_ACOSH, TYPE_ADD,TYPE_ASIN,TYPE_ASINH,TYPE_ATAN,TYPE_ATANH, TYPE_ATANYX,
     TYPE_BITAND,TYPE_BITCOUNT,TYPE_BITNOT,TYPE_BITOR,TYPE_BITSL,TYPE_BITSR,TYPE_BITXOR,
 	TYPE_CAST,TYPE_CEIL, TYPE_CLIP, TYPE_CONSTANT, TYPE_COS, TYPE_COSH, TYPE_CONVOLUTION,TYPE_CUMSUM, TYPE_CUMPROD,
@@ -166,6 +166,13 @@ enum XLNODE_TYPE
 inline std::map<int, std::string> TypesToNames = {
 	{TYPE_INPUT,"Input"},
 	{TYPE_ACT_IDENTITY,"ActivationIdentity"},
+	{TYPE_ACT_CELU,"ActivationCelu"},
+	{TYPE_ACT_ELU,"ActivationElu"},
+	{TYPE_ACT_GELU,"ActivationGelu"},
+	{TYPE_ACT_HARDMAX,"ActivationHardmax"},
+	{TYPE_ACT_HARDSIGMOID,"ActivationHardSigmoid"},
+	{TYPE_ACT_LEAKYRELU,"LeakyRelu"},
+	{TYPE_ACT_LINEAR,"Linear"},
 	{TYPE_ABS,"Abs"},
 	{TYPE_ACOS,"ACos"},
 	{TYPE_ACOSH,"ACosh"},
@@ -280,7 +287,22 @@ struct XLNODE_ANY : public XLNODE
     {
 		if (what == TYPE_ACT_IDENTITY)
 			return L"ActivationIdentity";
-		if (what == TYPE_ABS)
+		if (what == TYPE_ACT_CELU)
+			return L"ActivationCelu";
+		if (what == TYPE_ACT_ELU)
+			return L"ActivationElu";
+        if (what == TYPE_ACT_GELU)
+            return L"ActivationGelu";
+		if (what == TYPE_ACT_HARDMAX)
+			return L"ActivationHardmax";
+		if (what == TYPE_ACT_HARDSIGMOID)
+			return L"ActivationHardSigmoid";
+		if (what == TYPE_ACT_LEAKYRELU)
+			return L"ActivationLeakyRelu";
+		if (what == TYPE_ACT_LINEAR)
+			return L"ActivationLinear";
+
+        if (what == TYPE_ABS)
 			return L"Abs";
         if (what == TYPE_ACOS)
             return L"ACos";
@@ -670,6 +692,7 @@ struct XLNODE_INPUT : public XLNODE
 
 struct XLOP : public XLNODE
 {
+    bool Active = 1;
     bool Visible = 1;
     float Zoom = 1.0f;
     std::vector<std::shared_ptr<XLNODE>> nodes;
@@ -682,6 +705,7 @@ struct XLOP : public XLNODE
     {
 		ee.vv("DataType").SetValueInt((int)data_type);
 		ee.vv("Zoom").SetValueFloat(Zoom);
+        ee.vv("Active").SetValueInt(Active);
 		for (auto& n : nodes)
 		{
 			auto& ne = ee["Nodes"].AddElement("Node");
@@ -751,6 +775,7 @@ struct XLOP : public XLNODE
 		}
 		data_type = (DML_TENSOR_DATA_TYPE)e.vv("DataType").GetValueInt();
 		Zoom = e.vv("Zoom").GetValueFloat(1.0f);
+		Active = e.vv("Active").GetValueInt(1);
 	}
 };
 
@@ -878,7 +903,6 @@ namespace winrt::VisualDML::implementation
         std::stack<XML3::XMLElement> undo_list;
         std::stack<XML3::XMLElement> redo_list;
         size_t ActiveOperator2 = (size_t)-1;
-        std::shared_ptr<D2D> d2d;
         MLGraph()
         {
         }

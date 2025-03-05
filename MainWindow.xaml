@@ -16,6 +16,11 @@
                     <KeyboardAccelerator Key="F2" />
                 </NavigationViewItem.KeyboardAccelerators>
             </NavigationViewItem>
+            <NavigationViewItem  Icon="Globe" Content="Network" x:Name="ViewNetwork" >
+                <NavigationViewItem.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="F4" />
+                </NavigationViewItem.KeyboardAccelerators>
+            </NavigationViewItem>
         </NavigationView.MenuItems>
         <Frame x:Name="contentFrame"/>
     </NavigationView>

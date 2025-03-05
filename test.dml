@@ -3,7 +3,7 @@
 	<Pages>
 		<Page n="">
 			<Operators>
-				<Operator DataType="1" Zoom="1.000000">
+				<Operator DataType="1" Zoom="1.000000" Active="1">
 					<Nodes>
 						<Node Name="Input" xx="64.702393" yy="262.968750" CSV="" CSVI="floats.csv" bf="0" sm="45" optype="1" Type="1">
 							<Children>
@@ -14,7 +14,7 @@
 								<Dimension Size="10"/>
 							</Dimensions>
 						</Node>
-						<Node xx="274.442383" yy="80.968750" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="0" Type="21" Name="Constant">
+						<Node xx="274.442383" yy="80.968750" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="0" Type="29" Name="Constant">
 							<Children>
 								<Child idx="0" io="1" u="34"/>
 							</Children>
@@ -26,7 +26,7 @@
 								<Dimension Size="10"/>
 							</Dimensions>
 						</Node>
-						<Node xx="524.000000" yy="146.107422" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="2" Type="5" Name="Add">
+						<Node xx="524.000000" yy="146.107422" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="2" Type="13" Name="Add">
 							<Children>
 								<Child idx="0" io="0" u="34"/>
 								<Child idx="0" io="0" u="7"/>
@@ -40,7 +40,7 @@
 						</Node>
 					</Nodes>
 				</Operator>
-				<Operator DataType="1" Zoom="1.000000">
+				<Operator DataType="1" Zoom="1.000000" Active="1">
 					<Nodes>
 						<Node Name="Input" xx="514.774658" yy="372.722656" CSV="" CSVI="" bf="0" sm="-45" optype="1" Type="1">
 							<Children>
@@ -51,13 +51,13 @@
 								<Dimension Size="10"/>
 							</Dimensions>
 						</Node>
-						<Node xx="733.000000" yy="398.107422" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="1" Type="35" Name="Identity">
+						<Node xx="733.000000" yy="398.107422" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="1" Type="43" Name="Identity">
 							<Children>
 								<Child idx="0" io="0" u="30"/>
 								<Child idx="0" io="1" u="135"/>
 							</Children>
 						</Node>
-						<Node xx="881.648438" yy="370.599609" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="1" Type="52" Name="Pow">
+						<Node xx="881.648438" yy="370.599609" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="1" Type="62" Name="Pow">
 							<Children>
 								<Child idx="0" io="0" u="135"/>
 								<Child idx="0" io="1" u="136"/>
@@ -73,7 +73,7 @@
 						</Node>
 					</Nodes>
 				</Operator>
-				<Operator DataType="1" Zoom="1.000000">
+				<Operator DataType="1" Zoom="1.000000" Active="1">
 					<Nodes>
 						<Node Name="Input" xx="40.136719" yy="729.845703" CSV="" CSVI="" bf="0" sm="-45" optype="1" Type="1">
 							<Children>
@@ -97,7 +97,7 @@
 								<Dimension Size="2"/>
 							</Dimensions>
 						</Node>
-						<Node xx="556.353760" yy="629.337891" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="3" Type="32" Name="Gemm">
+						<Node xx="556.353760" yy="629.337891" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="3" Type="40" Name="Gemm">
 							<Children>
 								<Child idx="0" io="0" u="127"/>
 								<Child idx="0" io="0" u="128"/>
@@ -125,7 +125,7 @@
 		</Page>
 		<Page n="">
 			<Operators>
-				<Operator DataType="1" Zoom="1.000000">
+				<Operator DataType="1" Zoom="1.000000" Active="1">
 					<Nodes>
 						<Node Name="Input" xx="119.050049" yy="203.968750" CSV="" CSVI="&quot;Random&quot;" bf="0" sm="0" optype="1" Type="1">
 							<Children>
@@ -138,7 +138,7 @@
 								<Dimension Size="4"/>
 							</Dimensions>
 						</Node>
-						<Node xx="380.938477" yy="583.460938" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="0" Type="21" Name="Constant">
+						<Node xx="380.938477" yy="583.460938" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="0" Type="29" Name="Constant">
 							<Children>
 								<Child idx="0" io="1" u="153"/>
 							</Children>
@@ -152,13 +152,13 @@
 								<Dimension Size="4"/>
 							</Dimensions>
 						</Node>
-						<Node xx="457.000000" yy="185.599609" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="1" Type="22" Name="Cos">
+						<Node xx="457.000000" yy="185.599609" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="1" Type="30" Name="Cos">
 							<Children>
 								<Child idx="0" io="0" u="149"/>
 								<Child idx="0" io="1" u="155,166,175"/>
 							</Children>
 						</Node>
-						<Node xx="814.000000" yy="256.599609" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="2" Type="27" Name="Divide">
+						<Node xx="814.000000" yy="256.599609" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="2" Type="35" Name="Divide">
 							<Children>
 								<Child idx="0" io="0" u="155"/>
 								<Child idx="0" io="0" u="153"/>

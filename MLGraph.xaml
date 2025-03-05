@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="VisualDML.MLGraph"
+    NavigationCacheMode="Required"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:VisualDML"
@@ -148,7 +149,8 @@
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
                 <MenuFlyoutSeparator/>
-                <MenuFlyoutSubItem x:Name="ActiveOperatorSubmenu" Text="Active operator" />
+                <MenuFlyoutSubItem x:Name="ActiveOperatorSubmenu" Text="Editable operator" />
+                <MenuFlyoutSubItem x:Name="EnableOperatorSubmenu" Text="Enabled operator" />
                 <MenuFlyoutSubItem x:Name="VisibleOperatorSubmenu" Text="Visible operator" />
                 <MenuFlyoutSubItem x:Name="DeleteOperatorSubmenu" Text="Remove operator" />
 

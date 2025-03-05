@@ -12,7 +12,12 @@ using namespace winrt::Microsoft::UI::Xaml::Controls;
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
 extern std::map<HWND, winrt::Windows::Foundation::IInspectable> windows;
+std::vector<CComPtr<IDXGIAdapter1>> all_adapters;
+CComPtr<IDXGIAdapter1> adapter;
 
+extern POINT MouseHoverPT;
+void ClearRectsAndTips();
+void AddRectAndTip(D2D1_RECT_F r, const wchar_t* t);
 
 std::shared_ptr<XLNODE> MovingNodeP = nullptr;
 int MovingNode = 0;
@@ -86,7 +91,7 @@ void XLNODE::Unser(XML3::XMLElement& e)
     }
 }
 
-void XLNODE::Draw(MLOP* mlop,bool Active,ID2D1DeviceContext5* r, D2D* d2d, size_t iop)
+void XLNODE::Draw(MLOP* mlop,bool Active,bool Enabled,ID2D1DeviceContext5* r, size_t iop)
 {
     TEXTALIGNPUSH tep(d2d->Text, DWRITE_TEXT_ALIGNMENT_CENTER, DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
     TEXTALIGNPUSH tep2(d2d->Text2, DWRITE_TEXT_ALIGNMENT_CENTER, DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
@@ -101,11 +106,13 @@ void XLNODE::Draw(MLOP* mlop,bool Active,ID2D1DeviceContext5* r, D2D* d2d, size_
     if (name2.length() == 0)
         std::get<1>(msr2) = 0;
 
+    auto DefBrush = Enabled ? d2d->BlackBrush : d2d->SnapBrush2;
+
 
     wchar_t hdr[100] = {};
     wchar_t ftr[200] = {};
     swprintf_s(hdr, 100, L"OP %zi", iop + 1);
-    if (tidx >= 0 && mlop)
+    if (tidx >= 0 && mlop && Enabled)
     {
         if (mlop->Count() > tidx)
         {
@@ -147,15 +154,15 @@ void XLNODE::Draw(MLOP* mlop,bool Active,ID2D1DeviceContext5* r, D2D* d2d, size_
         if (name2.length())
         {
             TEXTALIGNPUSH tep3(d2d->Text, DWRITE_TEXT_ALIGNMENT_CENTER, DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
-            r->DrawTextW(name1.c_str(), (UINT32)name1.length(), d2d->Text, rtext, d2d->BlackBrush);
+            r->DrawTextW(name1.c_str(), (UINT32)name1.length(), d2d->Text, rtext, DefBrush);
         }
         else
-            r->DrawTextW(name1.c_str(), (UINT32)name1.length(), d2d->Text, rtext, d2d->BlackBrush);
+            r->DrawTextW(name1.c_str(), (UINT32)name1.length(), d2d->Text, rtext, DefBrush);
     }
     if (name2.length())
     {
         TEXTALIGNPUSH tep3(d2d->Text2, DWRITE_TEXT_ALIGNMENT_CENTER, DWRITE_PARAGRAPH_ALIGNMENT_FAR);
-        r->DrawTextW(name2.c_str(), (UINT32)name2.length(), d2d->Text2, rtext, d2d->BlackBrush);
+        r->DrawTextW(name2.c_str(), (UINT32)name2.length(), d2d->Text2, rtext, DefBrush);
     }
 //    r->DrawRectangle(rtext, Active ? d2d->RedBrush : d2d->BlackBrush);
     D2D1_ROUNDED_RECT rr = { hit, 10,10 };
@@ -190,22 +197,21 @@ void XLNODE::Draw(MLOP* mlop,bool Active,ID2D1DeviceContext5* r, D2D* d2d, size_
     {
 		D2D1_POINT_2F left = { hit.left, hit.top + std::get<1>(msrheader) + 5};
 		D2D1_POINT_2F right = { hit.right, left.y };
-		r->DrawLine(left, right, d2d->BlackBrush,0.3f);
+		r->DrawLine(left, right, DefBrush,0.3f);
         auto fr = D2D1_RECT_F({ hit.left, hit.top, hit.right, hit.top + std::get<1>(msrheader) + 5 });
         //r->FillRoundedRectangle(D2D1_ROUNDED_RECT{ fr, 5, 5 }, d2d->SnapBrush2);
-		r->DrawTextW(hdr, (UINT32)wcslen(hdr), d2d->Text, fr, Active ? d2d->RedBrush : d2d->BlackBrush);
-        d2d->BlackBrush->SetOpacity(1.0f);
+		r->DrawTextW(hdr, (UINT32)wcslen(hdr), d2d->Text, fr, Active ? d2d->RedBrush : DefBrush);
     }
 
     if (wcslen(ftr))
     {
         D2D1_POINT_2F left = { hit.left + 5, hit.bottom - std::get<1>(msrfooter) - 5 };
         D2D1_POINT_2F right = { hit.right - 5, left.y };
-        r->DrawLine(left, right, d2d->BlackBrush, 0.3f);
-        r->DrawTextW(ftr, (UINT32)wcslen(ftr), d2d->Text2, D2D1_RECT_F({ hit.left + 5, hit.bottom, hit.right - 5, hit.bottom - std::get<1>(msrfooter) - 5 }), d2d->BlackBrush);
+        r->DrawLine(left, right, DefBrush, 0.3f);
+        r->DrawTextW(ftr, (UINT32)wcslen(ftr), d2d->Text2, D2D1_RECT_F({ hit.left + 5, hit.bottom, hit.right - 5, hit.bottom - std::get<1>(msrfooter) - 5 }), DefBrush);
     }
 
-    r->DrawRoundedRectangle(rr, S ? d2d->RedBrush : d2d->BlackBrush);
+    r->DrawRoundedRectangle(rr, S ? d2d->RedBrush : DefBrush);
 
 	children.resize(nin() + nout());    
 
@@ -249,7 +255,7 @@ void XLNODE::Draw(MLOP* mlop,bool Active,ID2D1DeviceContext5* r, D2D* d2d, size_
 				Red = 1;
 			}
             bool Connected = false;
-            r->FillEllipse(el, Red ? d2d->RedBrush : Connected ? d2d->CyanBrush : d2d->BlackBrush);
+            r->FillEllipse(el, Red ? d2d->RedBrush : Connected ? d2d->CyanBrush : DefBrush);
             ch.hit = D2D1_RECT_F({ el.point.x - el.radiusX, el.point.y - el.radiusY, el.point.x + el.radiusX, el.point.y + el.radiusY });
         }
 
@@ -275,7 +281,7 @@ void XLNODE::Draw(MLOP* mlop,bool Active,ID2D1DeviceContext5* r, D2D* d2d, size_
 
 
             D2D1_ELLIPSE el = { { hit.right, tc }, elr, elr };
-            r->FillEllipse(el, ch.S ? d2d->RedBrush : d2d->BlackBrush);
+            r->FillEllipse(el, ch.S ? d2d->RedBrush : DefBrush);
             ch.hit =  D2D1_RECT_F({ el.point.x - el.radiusX, el.point.y - el.radiusY, el.point.x + el.radiusX, el.point.y + el.radiusY });
         }
     }
@@ -288,7 +294,7 @@ void XLNODE::Draw(MLOP* mlop,bool Active,ID2D1DeviceContext5* r, D2D* d2d, size_
 		bhit.bottom = hit.bottom + 5;
 		D2D1_ROUNDED_RECT rr4 = { bhit, 5,5 };
         if (ShareMemory >= 0)   
-    		r->FillRoundedRectangle(rr4, bSelected ? d2d->RedBrush : ShareMemory > 0 ? d2d->CyanBrush : d2d->BlackBrush);
+    		r->FillRoundedRectangle(rr4, bSelected ? d2d->RedBrush : ShareMemory > 0 ? d2d->CyanBrush : DefBrush);
     }
 
     if (IsInput())
@@ -303,7 +309,7 @@ void XLNODE::Draw(MLOP* mlop,bool Active,ID2D1DeviceContext5* r, D2D* d2d, size_
         {
             Red = 1;
         }
-        r->FillRoundedRectangle(rr4, Red ? d2d->RedBrush : ShareMemory < 0 ? d2d->CyanBrush : d2d->BlackBrush);
+        r->FillRoundedRectangle(rr4, Red ? d2d->RedBrush : ShareMemory < 0 ? d2d->CyanBrush : DefBrush);
     }
 }
 
@@ -311,6 +317,14 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildNodeRightMenu(std::shared_
 {
     winrt::Microsoft::UI::Xaml::Controls::MenuFlyout r1;
 
+    auto SepIf = [&]()
+        {
+            if (r1.Items().Size())
+            {
+                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSeparator s;
+                r1.Items().Append(s);
+            }
+        };
 
     if (Type == 1)
     {
@@ -339,12 +353,11 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildNodeRightMenu(std::shared_
         }
 
         r1.Items().Append(A);
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSeparator s;
-        r1.Items().Append(s);
     }
 
     if (nd->AsksType())
     {
+        SepIf();
         winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
         A.Text(L"Type");
         for(int i = 1 ; i <= MAX_OP_TYPES ; i++)
@@ -355,13 +368,11 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildNodeRightMenu(std::shared_
             A.Items().Append(O);
         }
         r1.Items().Append(A);
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSeparator s;
-        r1.Items().Append(s);
-
     }
 
-    if (1)
+    if (nd->Params.size())
     {
+        SepIf();
         for (size_t i = 0; i < nd->Params.size(); i++)
         {
             if (nd->Params[i].list_names.size())
@@ -413,13 +424,9 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildNodeRightMenu(std::shared_
 
     if (Type  == 1 || Type == 2 || Type == 3)
     {
-        if (nd->Params.size())
+        if (Type != 1 && Type != 2)
         {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSeparator s;
-            r1.Items().Append(s);
-        }
-        if (1)
-        {
+            SepIf();
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
             A.Text(L"Output");
 
@@ -445,11 +452,13 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildNodeRightMenu(std::shared_
             }
 
             r1.Items().Append(A);
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSeparator s;
-            r1.Items().Append(s);
         }
-		winrt::Microsoft::UI::Xaml::Controls::ToggleMenuFlyoutItem O1; O1.Text(L"Visible Buffer"); O1.Click(fooo); O1.IsChecked(nd->BufferVisible);
-        r1.Items().Append(O1);
+        if (Type != 1 && Type != 3)
+        {
+            SepIf();
+            winrt::Microsoft::UI::Xaml::Controls::ToggleMenuFlyoutItem O1; O1.Text(L"Visible Buffer"); O1.Click(fooo); O1.IsChecked(nd->BufferVisible);
+            r1.Items().Append(O1);
+        }
     }
 
     return r1;
@@ -509,9 +518,43 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         A.Items().Append(s);
         if (1)
         {
-                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"ActivationIdentity"); Neg.Click(fooo);
+                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"ActivationCelu"); Neg.Click(fooo);
                 A.Items().Append(Neg);
-
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"ActivationElu"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"ActivationGelu"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"ActivationHardmax"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"ActivationHardSigmoid"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"ActivationIdentity"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"ActivationLeakyRelu"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"ActivationLinear"); Neg.Click(fooo);
+            A.Items().Append(Neg);
         }
 
 
@@ -1040,10 +1083,12 @@ namespace winrt::VisualDML::implementation
 				if (xl.ops.size() > (unsigned long long)(k - 0x31))
 				{
                     Push();
-                    xl.ops.erase(xl.ops.begin() + (k - 0x31));
+                    xl.ops[k - 0x31].Active = !xl.ops[k - 0x31].Active;
+/*                    xl.ops.erase(xl.ops.begin() + (k - 0x31));
                     if (ActiveOperator2 >= xl.ops.size())
                         ActiveOperator2 = xl.ops.size() - 1;
-					FullRefresh();
+	*/
+                    FullRefresh();
 				}
 				return;
             }
@@ -1150,12 +1195,36 @@ namespace winrt::VisualDML::implementation
         if (xl.ops.empty())
             xl.ops.push_back(XLOP());
 
+
         scp.PointerMoved([this](IInspectable const& sender, winrt::Microsoft::UI::Xaml::Input::PointerRoutedEventArgs const& a)
             {
                 bool Left = ((GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0);
                 if (!Left)
+                {
+/*                    if (MouseHoverPT.x > 0)
+                    {
+                        POINT pt2 = {};
+                        GetCursorPos(&pt2);
+                        if (pt2.x != MouseHoverPT.x || pt2.y != MouseHoverPT.y)
+                        {
+                            MouseHoverPT.x = 0;
+                            MouseHoverPT.y = 0;
+                            //                    WUIEnableDisableTooltip(nullptr);
+                              //              ctip[0] = 0;
+                        }
+                    }
+                    else
+                    {
+                        TRACKMOUSEEVENT tme = {};
+                        tme.cbSize = sizeof(tme);
+                        tme.hwndTrack = (HWND)wnd();
+                        tme.dwFlags = TME_HOVER;
+                        tme.dwHoverTime = HOVER_DEFAULT;
+                        TrackMouseEvent(&tme);
+                    }
+*/
                     return;
-
+                }
                 auto scp = sender.as<SwapChainPanel>();
                 auto pt = a.GetCurrentPoint(scp);
                 auto pos = pt.Position();
@@ -1526,6 +1595,52 @@ namespace winrt::VisualDML::implementation
                                     OnAddInput({}, {});
                                 }
 
+                                if (t == L"ActivationCelu")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_CELU);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(1);
+                                    node->Params[0].n = L"Alpha";
+                                    node->Params[0].v = L"1";
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"ActivationElu")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_ELU);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(1);
+                                    node->Params[0].n = L"Alpha";
+                                    node->Params[0].v = L"1";
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"ActivationGelu")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_GELU);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"ActivationHardmax")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_HARDMAX);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"ActivationHardSigmoid")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_HARDSIGMOID);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(2);
+                                    node->Params[0].n = L"Alpha";
+                                    node->Params[0].v = L"0.2";
+                                    node->Params[1].n = L"Beta";
+                                    node->Params[1].v = L"0.5";
+                                    op.nodes.push_back(node);
+                                }
                                 if (t == L"ActivationIdentity")
                                 {
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_IDENTITY);
@@ -1533,6 +1648,30 @@ namespace winrt::VisualDML::implementation
                                     node->hit.top = pos.Y;
                                     op.nodes.push_back(node);
                                 }
+                                if (t == L"ActivationLeakyRelu")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_LEAKYRELU);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(1);
+                                    node->Params[0].n = L"Alpha";
+                                    node->Params[0].v = L"0.01";
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"ActivationLinear")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_LINEAR);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(2);
+                                    node->Params[0].n = L"Alpha";
+                                    node->Params[0].v = L"0";
+                                    node->Params[1].n = L"Beta";
+                                    node->Params[1].v = L"0";
+                                    op.nodes.push_back(node);
+                                }
+
+
 
                                 if (t == L"Abs")
                                 {
@@ -1677,7 +1816,7 @@ namespace winrt::VisualDML::implementation
 
                                     node->Params.resize(2);
                                     node->Params[0].n = L"Min";
-                                    node->Params[1].n = L"Max";
+                                    node->Params[0].n = L"Max";
                                     node->Params[1].v = L"1";
 
                                     node->hit.left = pos.X;
@@ -2185,8 +2324,6 @@ namespace winrt::VisualDML::implementation
         RefreshMenu();
     }
 
-	std::vector<CComPtr<IDXGIAdapter1>> all_adapters;
-    CComPtr<IDXGIAdapter1> adapter;
     void MLGraph::LoadAdapters()
     {
 		if (all_adapters.empty())
@@ -2251,6 +2388,10 @@ namespace winrt::VisualDML::implementation
         {
             if (d2d->SizeCreated.cx != (wi * ScaleX) || d2d->SizeCreated.cy != (he * ScaleX))
             {
+//                d2d->Resize((int)(wi * ScaleX), (int)(wi * ScaleX));
+ //               d2d->Resize2((int)(wi*ScaleX),(int)(wi*ScaleX));
+//				d2d->SizeCreated.cx = (int)(wi * ScaleX);
+//				d2d->SizeCreated.cy = (int)(he * ScaleX);
                 d2d->Off();
                 d2d = 0;
             }
@@ -2276,6 +2417,7 @@ namespace winrt::VisualDML::implementation
         IInspectable i = (IInspectable)scp;
         auto p2 = i.as<ISwapChainPanelNative>();
         p2->SetSwapChain(d2d->m_swapChain1);
+        iVisiblePage = 0;
 
         Paint();
     }
@@ -2387,6 +2529,7 @@ namespace winrt::VisualDML::implementation
     void MLGraph::Paint()
     {
         wchar_t wt[1000] = {};
+
         LoadAdapters();
 
         auto sp = Content().as<Panel>();
@@ -2407,6 +2550,14 @@ namespace winrt::VisualDML::implementation
             return;
         if (!d2d->m_d2dContext)
             return;
+
+        if (iVisiblePage != 0)
+        {
+            Resize();
+            return;
+        }
+
+        ClearRectsAndTips();
         d2d->m_d2dContext->BeginDraw();
         d2d->m_d2dContext->Clear({ 1,1,1,1 });
 
@@ -2464,6 +2615,7 @@ namespace winrt::VisualDML::implementation
                 TEXTALIGNPUSH textalign(d2d->Text2, ScaleX <= 1 ? DWRITE_TEXT_ALIGNMENT_CENTER : DWRITE_TEXT_ALIGNMENT_LEADING, DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
                 r1.left += 5;
                 r->DrawText(wt, (UINT32)wcslen(wt), d2d->Text2, r1, d2d->BlackBrush);
+				AddRectAndTip(r1, L"GPU Information");
             }
         }
 
@@ -2492,7 +2644,8 @@ namespace winrt::VisualDML::implementation
                 MLOP* mlop = 0;
                 if (xl.ml && xl.ml->ops.size() > i)
 					mlop = &xl.ml->ops[i];
-				node->Draw(mlop,ActiveOperator2 == i,r, d2d.get(),i);   
+                bool Active = op.Active;
+				node->Draw(mlop,ActiveOperator2 == i,Active, r,i);   
 			}
 //            r->SetTransform(&m1);
 
@@ -2595,6 +2748,10 @@ namespace winrt::VisualDML::implementation
         }
 
         [[maybe_unused]] auto hr = d2d->m_d2dContext->EndDraw();
+        if (FAILED(hr))
+        {
+            MessageBeep(0);
+        }
         if (d2d->m_swapChain1)
             hr = d2d->m_swapChain1->Present(1, 0);
     }
@@ -2707,6 +2864,32 @@ namespace winrt::VisualDML::implementation
             m3.Items().Append(mi);
         }
 
+        // Visible
+        if (1)
+        {
+            auto m5 = sp.FindName(L"EnableOperatorSubmenu").as<MenuFlyoutSubItem>();
+            m5.Items().Clear();
+            for (size_t i = 0; i < xl.ops.size(); i++)
+            {
+                auto mi = winrt::Microsoft::UI::Xaml::Controls::ToggleMenuFlyoutItem();
+                mi.Text(ystring().Format(L"Operator %zi", i + 1));
+                mi.IsChecked(xl.ops[i].Active);
+                mi.Click([this, i](IInspectable const&, RoutedEventArgs const&)
+                    {
+                        auto& xl = prj.xl();
+                        xl.ops[i].Active = !xl.ops[i].Active;
+                        Refresh();
+                    });
+                if (i <= 9)
+                {
+                    winrt::Microsoft::UI::Xaml::Input::KeyboardAccelerator kba;
+                    kba.Key((winrt::Windows::System::VirtualKey)(i + 0x31));
+                    kba.Modifiers(winrt::Windows::System::VirtualKeyModifiers::Shift);
+                    mi.KeyboardAccelerators().Append(kba);
+                }
+                m5.Items().Append(mi);
+            }
+        }
 
         // And to the remove menu
 		auto m2 = sp.FindName(L"DeleteOperatorSubmenu").as<MenuFlyoutSubItem>();
@@ -2716,13 +2899,6 @@ namespace winrt::VisualDML::implementation
             auto mi = MenuFlyoutItem();
 			mi.Text(ystring().Format(L"Operator %zi", i + 1));
 
-            if (i <= 9)
-            {
-                winrt::Microsoft::UI::Xaml::Input::KeyboardAccelerator kba;
-                kba.Key((winrt::Windows::System::VirtualKey)(i + 0x31));
-                kba.Modifiers(winrt::Windows::System::VirtualKeyModifiers::Shift);
-                mi.KeyboardAccelerators().Append(kba);
-            }
 
 			mi.Click([this, i](IInspectable const&, RoutedEventArgs const&)
 				{
@@ -3052,6 +3228,9 @@ namespace winrt::VisualDML::implementation
             for (size_t iop = 0; iop < xl.ops.size(); iop++)
             {
                 auto& op = xl.ops[iop];
+                if (op.Active == 0)
+                    continue;
+
                 for (auto& node : op.nodes)
                 {
                     if (auto it = std::dynamic_pointer_cast<XLNODE_INPUT>(node))
@@ -3127,6 +3306,8 @@ namespace winrt::VisualDML::implementation
                 for (size_t iop = 0; iop < xl.ops.size(); iop++)
                 {
                     auto& op = xl.ops[iop];
+                    if (op.Active == 0)
+                        continue;
                     auto& mlop = ml.ops[iop];
                     for (auto& node : op.nodes)
                     {
@@ -3548,9 +3729,22 @@ namespace winrt::VisualDML::implementation
                             continue;
 
 
+                        if (it->what == TYPE_ACT_CELU)
+                            expr = (dml::ActivationCelu(mop.Item(whati[0]),(float)it->Params[0]));
+                        if (it->what == TYPE_ACT_ELU)
+                            expr = (dml::ActivationElu(mop.Item(whati[0]), (float)it->Params[0]));
+                        if (it->what == TYPE_ACT_GELU)
+                            expr = (dml::ActivationGelu(mop.Item(whati[0])));
+						if (it->what == TYPE_ACT_HARDMAX)
+							expr = (dml::ActivationHardmax(mop.Item(whati[0])));
+						if (it->what == TYPE_ACT_HARDSIGMOID)
+							expr = (dml::ActivationHardSigmoid(mop.Item(whati[0]), it->Params[0], it->Params[1]));
                         if (it->what == TYPE_ACT_IDENTITY)
                             expr = (dml::ActivationIdentity(mop.Item(whati[0])));
-
+						if (it->what == TYPE_ACT_LEAKYRELU)
+							expr = (dml::ActivationLeakyRelu(mop.Item(whati[0]), it->Params[0]));
+						if (it->what == TYPE_ACT_LINEAR)
+							expr = (dml::ActivationLinear(mop.Item(whati[0]), it->Params[0], it->Params[1]));
 
                         if (it->what == TYPE_ABS && whati.size() > 0)
                             expr = dml::Abs(mop.Item(whati[0]));
@@ -3782,7 +3976,10 @@ namespace winrt::VisualDML::implementation
                 }
 
 
-                ml.ops.push_back(mop.Build());
+                if (op.Active == 0)
+                    ml.ops.push_back(mop);
+                else
+                    ml.ops.push_back(mop.Build());
             }
         }
         //catch(std::exception& e)

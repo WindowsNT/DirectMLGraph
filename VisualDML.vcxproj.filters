@@ -6,6 +6,7 @@
   <ItemGroup>
     <Page Include="MainWindow.xaml" />
     <Page Include="MLGraph.xaml" />
+    <Page Include="Network.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MainWindow.idl" />
@@ -17,10 +18,14 @@
     <ClCompile Include="dmllib.cpp" />
     <ClCompile Include="func.cpp" />
     <ClCompile Include="Item.cpp" />
+    <ClCompile Include="d2d.cpp" />
+    <ClCompile Include="nn.cpp" />
+    <ClCompile Include="python.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="Item.h" />
+    <ClInclude Include="nn.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\Wide310x150Logo.scale-200.png">
@@ -63,5 +68,8 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="main.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
   </ItemGroup>
 </Project>
