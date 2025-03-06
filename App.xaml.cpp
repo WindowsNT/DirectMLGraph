@@ -17,7 +17,8 @@ using namespace winrt;
 using namespace winrt::Microsoft::UI::Xaml;
 using namespace winrt::Microsoft::UI::Xaml::Controls;
 
-
+std::random_device rd;
+std::mt19937 grand_mt(rd());
 
 HICON hIcon1 = 0;
 WNDPROC wProc = 0;
@@ -87,7 +88,6 @@ LRESULT CALLBACK cbx(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
 
     if (mm == WM_KEYDOWN)
     {
-        MessageBeep(0);
     }
     if (mm == WM_SIZE)
     {

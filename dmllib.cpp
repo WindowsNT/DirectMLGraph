@@ -482,9 +482,9 @@ ML::ML(bool dbg)
 	Debug = dbg;
 }
 
-HRESULT ML::On()
+HRESULT ML::On(IDXGIAdapter* ad)
 {
-	auto hr = InitializeDirect3D12();
+	auto hr = InitializeDirect3D12(ad);
 	if (FAILED(hr))
 		return hr;
 	hr = CreateDML();
@@ -495,7 +495,7 @@ HRESULT ML::On()
 }
 
 
-HRESULT ML::InitializeDirect3D12()
+HRESULT ML::InitializeDirect3D12(IDXGIAdapter* adapter)
 {
 	if (d3D12Device)
 		return S_FALSE;
@@ -510,29 +510,42 @@ HRESULT ML::InitializeDirect3D12()
 	}
 #endif
 
-	CComPtr<IDXGIFactory4> dxgiFactory;
-	CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
-
-	CComPtr<IDXGIAdapter> dxgiAdapter;
-	UINT adapterIndex{};
 	HRESULT hr{};
-	do
+	if (adapter)
 	{
-		dxgiAdapter = nullptr;
-		dxgiAdapter = 0;
-		if (FAILED((dxgiFactory->EnumAdapters(adapterIndex, &dxgiAdapter))))
-			return E_FAIL;
-		++adapterIndex;
-
-		d3D12Device = 0;
 		hr = ::D3D12CreateDevice(
-			dxgiAdapter,
+			adapter,
 			D3D_FEATURE_LEVEL_11_0,
 			IID_PPV_ARGS(&d3D12Device));
-		if (hr == DXGI_ERROR_UNSUPPORTED) continue;
 		if (FAILED(hr))
 			return hr;
-	} while (hr != S_OK);
+	}
+	else
+	{
+
+		CComPtr<IDXGIFactory4> dxgiFactory;
+		CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory));
+
+		CComPtr<IDXGIAdapter> dxgiAdapter;
+		UINT adapterIndex{};
+		do
+		{
+			dxgiAdapter = nullptr;
+			dxgiAdapter = 0;
+			if (FAILED((dxgiFactory->EnumAdapters(adapterIndex, &dxgiAdapter))))
+				return E_FAIL;
+			++adapterIndex;
+
+			d3D12Device = 0;
+			hr = ::D3D12CreateDevice(
+				dxgiAdapter,
+				D3D_FEATURE_LEVEL_11_0,
+				IID_PPV_ARGS(&d3D12Device));
+			if (hr == DXGI_ERROR_UNSUPPORTED) continue;
+			if (FAILED(hr))
+				return hr;
+		} while (hr != S_OK);
+	}
 
 	D3D12_COMMAND_QUEUE_DESC commandQueueDesc{};
 	commandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;

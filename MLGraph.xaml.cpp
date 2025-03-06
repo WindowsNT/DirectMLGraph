@@ -13,7 +13,6 @@ using namespace winrt::Microsoft::UI::Xaml::Controls;
 
 extern std::map<HWND, winrt::Windows::Foundation::IInspectable> windows;
 std::vector<CComPtr<IDXGIAdapter1>> all_adapters;
-CComPtr<IDXGIAdapter1> adapter;
 
 extern POINT MouseHoverPT;
 void ClearRectsAndTips();
@@ -23,6 +22,7 @@ std::shared_ptr<XLNODE> MovingNodeP = nullptr;
 int MovingNode = 0;
 int WhatInput = 0;
 PARAM* WhatParam = 0;
+XLNODE* WhatNode = 0;
 VARIABLE* WhatVariable = 0;
 float ScaleX = 1.0f;
 bool MustStop = 0;
@@ -112,27 +112,35 @@ void XLNODE::Draw(MLOP* mlop,bool Active,bool Enabled,ID2D1DeviceContext5* r, si
     wchar_t hdr[100] = {};
     wchar_t ftr[200] = {};
     swprintf_s(hdr, 100, L"OP %zi", iop + 1);
-    if (tidx >= 0 && mlop && Enabled)
+    if (tidxs.size() > 0 && mlop && Enabled)
     {
-        if (mlop->Count() > tidx)
+        //* Multiple outputs visibility
+        int ct = 0;
+        for (auto& a_tidx : tidxs)
         {
-            auto& it = mlop->Item(tidx);
-            try
+            if (mlop->Count() > a_tidx)
             {
-				auto buf = it.expr.GetOutputDesc();
-                //            DML_BUFFER_TENSOR_DESC* buf = (DML_BUFFER_TENSOR_DESC*)desc.Desc;
-                for (UINT i = 0; i < buf.sizes.size() ; i++)
+                auto& it = mlop->Item(a_tidx);
+                if (ct > 0)
+					swprintf_s(ftr + wcslen(ftr), 10, L"\r\n");
+                try
                 {
-                    if (i != buf.sizes.size() - 1)
-                        swprintf_s(ftr + wcslen(ftr), 10, L"%ix", buf.sizes[i]);
-                    else
-                        swprintf_s(ftr + wcslen(ftr), 10, L"%i", buf.sizes[i]);
+                    auto buf = it.expr.GetOutputDesc();
+                    //            DML_BUFFER_TENSOR_DESC* buf = (DML_BUFFER_TENSOR_DESC*)desc.Desc;
+                    for (UINT i = 0; i < buf.sizes.size(); i++)
+                    {
+                        if (i != buf.sizes.size() - 1)
+                            swprintf_s(ftr + wcslen(ftr), 10, L"%ix", buf.sizes[i]);
+                        else
+                            swprintf_s(ftr + wcslen(ftr), 10, L"%i", buf.sizes[i]);
+                    }
+                    swprintf_s(ftr + wcslen(ftr), 10, L" %s", optypes[buf.dataType].c_str());
                 }
-                swprintf_s(ftr + wcslen(ftr), 10, L" %s", optypes[buf.dataType].c_str());
-            }
-            catch (...)
-            {
+                catch (...)
+                {
 
+                }
+                ct++;
             }
         }
     }
@@ -241,8 +249,25 @@ void XLNODE::Draw(MLOP* mlop,bool Active,bool Enabled,ID2D1DeviceContext5* r, si
         }
     }
 
+    for (int i = 0; i < (nin() + nout()); i++)
+    {
+        auto& ch = children[i];
+        // bullet draw with centering
+        // calculate top
+        D2D1_ELLIPSE el = { { ch.hit.MiddleX(),ch.hit.MiddleY()}, elr, elr };
+        bool Red = ch.S;
+        if (Hit(red_to.x, red_to.y, ch.hit) && red_to.x > 0 && red_to.y > 0 && MovingNode != 2)
+        {
+            Red = 1;
+        }
+        bool Connected = false;
+        r->FillEllipse(el, Red ? d2d->RedBrush : Connected ? d2d->CyanBrush : DefBrush);
+        ch.hit = D2D1_RECT_F({ el.point.x - el.radiusX, el.point.y - el.radiusY, el.point.x + el.radiusX, el.point.y + el.radiusY });
 
-    if (nin())
+    }
+
+
+/*    if (nin() && 0)
     {
         for (int i = 0; i < nin(); i++)
         {
@@ -262,7 +287,7 @@ void XLNODE::Draw(MLOP* mlop,bool Active,bool Enabled,ID2D1DeviceContext5* r, si
 
     }
 
-    if (nout())
+    if (nout() && 0)
     {
         for (int i = 0; i < nout(); i++)
         {
@@ -286,6 +311,7 @@ void XLNODE::Draw(MLOP* mlop,bool Active,bool Enabled,ID2D1DeviceContext5* r, si
             ch.hit =  D2D1_RECT_F({ el.point.x - el.radiusX, el.point.y - el.radiusY, el.point.x + el.radiusX, el.point.y + el.radiusY });
         }
     }
+    */
 
     if (BufferVisible || IsInput() || IsOutput())
     {
@@ -329,6 +355,13 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildNodeRightMenu(std::shared_
 
     if (Type == 1)
     {
+        SepIf();
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"Tensor shape..."); O.Click(fooo);
+        r1.Items().Append(O);
+    }
+    if (Type == 1)
+    {
+        SepIf();
         winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
         A.Text(L"Input");
 
@@ -454,7 +487,7 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildNodeRightMenu(std::shared_
 
             r1.Items().Append(A);
         }
-        if (Type != 1 && Type != 3)
+        if (Type != 1 && Type != 3 && nd->nout() == 1)
         {
             SepIf();
             winrt::Microsoft::UI::Xaml::Controls::ToggleMenuFlyoutItem O1; O1.Text(L"Visible Buffer"); O1.Click(fooo); O1.IsChecked(nd->BufferVisible);
@@ -471,13 +504,22 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
 {
     winrt::Microsoft::UI::Xaml::Controls::MenuFlyout r1;
 
+    auto SepIf = [&]()
+        {
+            if (r1.Items().Size())
+            {
+                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSeparator s;
+                r1.Items().Append(s);
+            }
+        };
+
+
 
     if (1)
     {
         winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"Input"); O.Click(fooo);
         r1.Items().Append(O);
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSeparator s;
-		r1.Items().Append(s);
+        SepIf();
     }
 
     if (1)
@@ -536,9 +578,94 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
 
 
         r1.Items().Append(A);
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSeparator s;
-        r1.Items().Append(s);
+        SepIf();
     }
+
+    if (1)
+    {
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
+        A.Text(L"Comparison");
+        
+      
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"Equals"); N.Click(fooo);
+            A.Items().Append(N);
+        } 
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"GreaterThan"); N.Click(fooo);
+            A.Items().Append(N);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"GreaterThanOrEqual"); N.Click(fooo);
+            A.Items().Append(N);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"If"); N.Click(fooo);
+            A.Items().Append(N);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"IsInfinity"); N.Click(fooo);
+            A.Items().Append(N);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"IsNan"); N.Click(fooo);
+            A.Items().Append(N);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"LessThan"); N.Click(fooo);
+            A.Items().Append(N);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"LessThanOrEqual"); N.Click(fooo);
+            A.Items().Append(N);
+        }
+
+        r1.Items().Append(A);
+        SepIf();
+    }
+
+    if (1)
+    {
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
+        A.Text(L"Batch");
+
+
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem b3; b3.Text(L"BatchNormalization"); b3.Click(fooo);
+            A.Items().Append(b3);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem b3; b3.Text(L"BatchNormalizationGrad"); b3.Click(fooo);
+            A.Items().Append(b3);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem b3; b3.Text(L"BatchNormalizationTraining"); b3.Click(fooo);
+            A.Items().Append(b3);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem b3; b3.Text(L"BatchNormalizationTrainingGrad"); b3.Click(fooo);
+            A.Items().Append(b3);
+        }
+
+
+        r1.Items().Append(A);
+        SepIf();
+    }
+
+
+
     if (1)
     {
         winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
@@ -587,6 +714,7 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
         A.Text(L"B");
 
+        
         winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem BitAnd; BitAnd.Text(L"BitAnd"); BitAnd.Click(fooo);
         A.Items().Append(BitAnd);
         if (1)
@@ -708,11 +836,7 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Exp"); Neg.Click(fooo);
             A.Items().Append(Neg);
         }
-        if (1)
-        {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"Equals"); N.Click(fooo);
-            A.Items().Append(N);
-        }
+      
 
         r1.Items().Append(A);
     }
@@ -738,17 +862,7 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Gemm"); Neg.Click(fooo);
             A.Items().Append(Neg);
         }
-        if (1)
-        {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"GreaterThan"); N.Click(fooo);
-            A.Items().Append(N);
-        }
-        if (1)
-        {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"GreaterThanOrEqual"); N.Click(fooo);
-            A.Items().Append(N);
-        }
-
+       
 
         r1.Items().Append(A);
     }
@@ -764,21 +878,6 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Identity"); Neg.Click(fooo);
             A.Items().Append(Neg);
-        }
-        if (1)
-        {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"If"); N.Click(fooo);
-            A.Items().Append(N);
-        }
-        if (1)
-        {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"IsInfinity"); N.Click(fooo);
-            A.Items().Append(N);
-        }
-        if (1)
-        {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"IsNan"); N.Click(fooo);
-            A.Items().Append(N);
         }
 
 
@@ -810,16 +909,7 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Log"); Neg.Click(fooo);
             A.Items().Append(Neg);
         }
-        if (1)
-        {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"LessThan"); N.Click(fooo);
-            A.Items().Append(N);
-        }
-        if (1)
-        {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"LessThanOrEqual"); N.Click(fooo);
-            A.Items().Append(N);
-        }
+     
 
         r1.Items().Append(A);
     }
@@ -1103,12 +1193,9 @@ namespace winrt::VisualDML::implementation
             {
 				if (xl.ops.size() > (unsigned long long)(k - 0x31))
 				{
+                    Dirty(1);
                     Push();
                     xl.ops[k - 0x31].Active = !xl.ops[k - 0x31].Active;
-/*                    xl.ops.erase(xl.ops.begin() + (k - 0x31));
-                    if (ActiveOperator2 >= xl.ops.size())
-                        ActiveOperator2 = xl.ops.size() - 1;
-	*/
                     FullRefresh();
 				}
 				return;
@@ -1134,8 +1221,11 @@ namespace winrt::VisualDML::implementation
                         {
                             for (auto& n2 : op2.nodes)
                             {
-								if (n2->ShareMemory == -c)
-									n2->ShareMemory = 0;
+                                if (n2->ShareMemory == -c)
+                                {
+                                    Dirty(1);
+                                    n2->ShareMemory = 0;
+                                }
                             }
                         }
                         FullRefresh();
@@ -1147,6 +1237,7 @@ namespace winrt::VisualDML::implementation
                         if (!P1)
                             Push();
                         P1 = 1;
+                        Dirty(1);
                         op.nodes.erase(op.nodes.begin() + ii);
                         if (op.nodes.empty() && xl.ops.size() > 1)
                         {
@@ -1163,6 +1254,7 @@ namespace winrt::VisualDML::implementation
                         {
                             if (!P1)
                                 Push();
+                            Dirty(1);
                             P1 = 1;
                             op.nodes[ii]->children[iii].g.clear();
                             FullRefresh();
@@ -1320,6 +1412,7 @@ namespace winrt::VisualDML::implementation
 							if (Hit(pos.X, pos.Y, nod->bhit2))
 							{
 								Push();
+                                Dirty(1);
                                 if (MovingNodeP->ShareMemory == 0)
                                     MovingNodeP->ShareMemory = nextn();
 								nod->ShareMemory = -MovingNodeP->ShareMemory;
@@ -1346,6 +1439,7 @@ namespace winrt::VisualDML::implementation
                                         if (ch2.O == 0 && Hit(pos.X, pos.Y, ch2.hit))
                                         {
                                             Push();
+                                            Dirty(1);
                                             ch2.g.clear();
                                             auto ne = nextn();
                                             ch2.g.push_back(ne);
@@ -1423,6 +1517,7 @@ namespace winrt::VisualDML::implementation
                                             if (i3 >= 0x100000000)
                                             {
                                                 Push();
+                                                Dirty(1);
                                                 ULARGE_INTEGER ul;
 												ul.QuadPart = i3;
                                                 auto low = ul.LowPart;
@@ -1438,6 +1533,7 @@ namespace winrt::VisualDML::implementation
                                                 if (nod->Params[pidx].minv == 0 && nod->Params[pidx].maxv == 1)
                                                 {
                                                     Push();
+                                                    Dirty(1);
                                                     if ((int)nod->Params[pidx] == 0)
 														nod->Params[pidx].v = L"1";
 													else
@@ -1484,12 +1580,32 @@ namespace winrt::VisualDML::implementation
 											if (t == optypes[ig])
 											{
 												Push();
-												nod->OpType = (int)ig;
+                                                Dirty(1);
+                                                nod->OpType = (int)ig;
 												FullRefresh();
 												return;
 											}
                                         }
 
+                                        if (t == L"Tensor shape...")
+                                        {
+                                            WhatInput = 6;
+                                            _i0 = L"Enter Input Tensor Shape:";
+											auto inp = std::dynamic_pointer_cast<XLNODE_INPUT>(nod);
+                                            _i1 = L"";
+											for (auto& s : inp->tensor_dims)
+											{
+												_i1 += std::to_wstring(s);
+												_i1 += L"x";
+											}
+											_i1.pop_back();
+                                            WhatNode = nod.get();
+                                            Refresh({ L"i1",L"i0" });
+                                            auto sp = Content().as<Panel>();
+                                            auto ct = sp.FindName(L"Input1").as<ContentDialog>();
+                                            ct.ShowAsync();
+                                            return;
+                                        }
                                         if (t == L"Clear input")
                                         {
                                             Push();
@@ -1543,6 +1659,7 @@ namespace winrt::VisualDML::implementation
                                         {
 											nod->BufferVisible = !nod->BufferVisible;
 											nod->ShareMemory = 0;
+                                            Dirty(1);
                                             FullRefresh();
                                             return;
                                         }
@@ -1624,6 +1741,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params.resize(1);
                                     node->Params[0].n = L"Alpha";
                                     node->Params[0].v = L"1";
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"ActivationElu")
@@ -1634,6 +1752,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params.resize(1);
                                     node->Params[0].n = L"Alpha";
                                     node->Params[0].v = L"1";
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"ActivationGelu")
@@ -1641,6 +1760,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_GELU);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"ActivationHardmax")
@@ -1648,6 +1768,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_HARDMAX);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"ActivationHardSigmoid")
@@ -1660,6 +1781,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params[0].v = L"0.2";
                                     node->Params[1].n = L"Beta";
                                     node->Params[1].v = L"0.5";
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"ActivationIdentity")
@@ -1667,6 +1789,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_IDENTITY);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"ActivationLeakyRelu")
@@ -1677,6 +1800,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params.resize(1);
                                     node->Params[0].n = L"Alpha";
                                     node->Params[0].v = L"0.01";
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"ActivationLinear")
@@ -1689,6 +1813,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params[0].v = L"0";
                                     node->Params[1].n = L"Beta";
                                     node->Params[1].v = L"0";
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 								if (t == L"ActivationLogSoftmax")
@@ -1703,7 +1828,8 @@ namespace winrt::VisualDML::implementation
 									auto node = std::make_shared<XLNODE_ANY>(2, TYPE_ACT_PRELU);
 									node->hit.left = pos.X;
 									node->hit.top = pos.Y;
-									op.nodes.push_back(node);
+                                    Push();
+                                    op.nodes.push_back(node);
 								}
                                 if (t == L"ActivationParametricSoftplus")
                                 {
@@ -1715,6 +1841,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params[0].v = L"0";
                                     node->Params[1].n = L"Beta";
                                     node->Params[1].v = L"0";
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"ActivationRelu")
@@ -1722,6 +1849,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_RELU);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"ActivationScaledElu")
@@ -1734,6 +1862,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params[0].v = L"1.67326319217681884765625";
                                     node->Params[1].n = L"Gamma";
                                     node->Params[1].v = L"1.05070102214813232421875";
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"ActivationScaledTanh")
@@ -1746,6 +1875,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params[0].v = L"1.0";
                                     node->Params[1].n = L"Beta";
                                     node->Params[1].v = L"0.5";
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 								if (t == L"ActivationShrink")
@@ -1758,6 +1888,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params[0].v = L"0";
                                     node->Params[1].n = L"Threshold";
                                     node->Params[1].v = L"0.5";
+                                    Push();
                                     op.nodes.push_back(node);
 								}
                                 if (t == L"ActivationSigmoid")
@@ -1765,14 +1896,16 @@ namespace winrt::VisualDML::implementation
 									auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_SIGMOID);
 									node->hit.left = pos.X;
 									node->hit.top = pos.Y;
-									op.nodes.push_back(node);
+                                    Push();
+                                    op.nodes.push_back(node);
                                 }
 								if (t == L"ActivationSoftmax")
 								{
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_SOFTMAX);
 									node->hit.left = pos.X;
 									node->hit.top = pos.Y;
-									op.nodes.push_back(node);
+                                    Push();
+                                    op.nodes.push_back(node);
 								}
 								if (t == L"ActivationSoftplus")
 								{
@@ -1782,13 +1915,15 @@ namespace winrt::VisualDML::implementation
                                     node->Params.resize(1);
                                     node->Params[0].n = L"Steepness";
                                     node->Params[0].v = L"1.0";
-									op.nodes.push_back(node);
+                                    Push();
+                                    op.nodes.push_back(node);
 								}
                                 if (t == L"ActivationSoftsign")
                                 {
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_SOFTSIGN);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 								if (t == L"ActivationTanh")
@@ -1796,7 +1931,8 @@ namespace winrt::VisualDML::implementation
     								auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ACT_TANH);
 									node->hit.left = pos.X;
 									node->hit.top = pos.Y;
-									op.nodes.push_back(node);
+                                    Push();
+                                    op.nodes.push_back(node);
 								}
 								if (t == L"ActivationThresholdedRelu")
 								{
@@ -1806,7 +1942,8 @@ namespace winrt::VisualDML::implementation
 									node->Params.resize(1);
 									node->Params[0].n = L"Alpha";
 									node->Params[0].v = L"1";
-									op.nodes.push_back(node);
+                                    Push();
+                                    op.nodes.push_back(node);
 								}
 
 
@@ -1818,6 +1955,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1,TYPE_ABS);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"ACos")
@@ -1825,6 +1963,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1,TYPE_ACOS);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"ACosh")
@@ -1832,6 +1971,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1,TYPE_ACOSH);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"And")
@@ -1839,6 +1979,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_LAND);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -1847,6 +1988,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ASIN);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"ASinh")
@@ -1854,6 +1996,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ASINH);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"ATan")
@@ -1861,6 +2004,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ATAN);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"ATanh")
@@ -1868,6 +2012,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ATANH);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"ATanYX")
@@ -1875,6 +2020,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2,TYPE_ATANYX);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"Add")
@@ -1882,6 +2028,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_ADD);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -1891,6 +2038,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_BITAND);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"BitCount")
@@ -1898,6 +2046,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_BITAND);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"BitNot")
@@ -1905,6 +2054,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_BITNOT);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"BitOr")
@@ -1912,6 +2062,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_BITOR);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"BitShiftLeft")
@@ -1919,6 +2070,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_BITSL);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"BitShiftRight")
@@ -1926,6 +2078,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_BITSR);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"BitXor")
@@ -1933,6 +2086,53 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_BITXOR);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"BatchNormalization")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(5, TYPE_BATCHNORMALIZATION);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(2);
+                                    node->Params[0].n = L"Spatial";
+                                    node->Params[0].v = L"0.0";
+                                    node->Params[1].n = L"Epsilon";
+                                    node->Params[1].v = L"0.0";
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"BatchNormalizationGrad")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(5, TYPE_BATCHNORMALIZATIONGRAD,3);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(1);
+                                    node->Params[0].n = L"Epsilon";
+                                    node->Params[0].v = L"0.0";
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"BatchNormalizationTraining")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(3, TYPE_BATCHNORMALIZATIONTRAINING, 3);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(1);
+                                    node->Params[0].n = L"Epsilon";
+                                    node->Params[0].v = L"0.0";
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"BatchNormalizationTrainingGrad")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(5, TYPE_BATCHNORMALIZATIONTRAININGGRAD, 3);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(1);
+                                    node->Params[0].n = L"Epsilon";
+                                    node->Params[0].v = L"0.0";
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -1941,6 +2141,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_CAST);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"Ceil")
@@ -1948,6 +2149,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_CEIL);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"Clip")
@@ -1961,6 +2163,7 @@ namespace winrt::VisualDML::implementation
 
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"Constant")
@@ -1972,6 +2175,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_COS);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"Cosh")
@@ -1979,6 +2183,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_COSH);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -1992,6 +2197,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params[0].minv = 0;
                                     node->Params[0].maxv = 1;
                                     node->Params[0].list_names = { L"No Cross",L"Cross" };
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"CummulativeSum")
@@ -2008,6 +2214,7 @@ namespace winrt::VisualDML::implementation
 
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2025,6 +2232,7 @@ namespace winrt::VisualDML::implementation
 
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2033,6 +2241,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_DIVIDE);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"Erf")
@@ -2040,6 +2249,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ERF);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"Exp")
@@ -2047,6 +2257,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_EXP);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"Equals")
@@ -2054,6 +2265,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_EQUALS);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2062,6 +2274,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_FLOOR);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"Gemm")
@@ -2078,6 +2291,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params[1].maxv = 1;
                                     node->Params[2].n = L"Alpha";
                                     node->Params[3].n = L"Beta";
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"GreaterThan")
@@ -2085,6 +2299,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_GREATERTHAN);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"GreaterThanOrEqual")
@@ -2092,6 +2307,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_GREATERTHANOREQUAL);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2101,6 +2317,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_IDENTITY);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2114,6 +2331,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params[0].minv = 0;
                                     node->Params[0].maxv = 2;
 									node->Params[0].list_names = { L"Either",L"Positive Infinity",L"Negative Infinity" };
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"IsNan")
@@ -2121,6 +2339,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ISNAN);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2134,6 +2353,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params[0].n = L"Axis";
                                     node->Params[0].minv = 0;
                                     node->Params[0].maxv = 100;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2142,6 +2362,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(3, TYPE_IF);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2150,6 +2371,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_LOG);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2158,6 +2380,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_LESSTHAN);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"LessThanOrEqual")
@@ -2165,6 +2388,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_LESSTHANOREQUAL);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2174,6 +2398,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_MAX);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"Mean")
@@ -2181,6 +2406,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_MEAN);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"Min")
@@ -2188,6 +2414,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_MIN);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2196,6 +2423,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_MULTIPLY);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"ModulusFloor")
@@ -2203,6 +2431,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_MODULUSFLOOR);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 								if (t == L"ModulusTruncate")
@@ -2210,13 +2439,15 @@ namespace winrt::VisualDML::implementation
 									auto node = std::make_shared<XLNODE_ANY>(2, TYPE_MODULUSTRUNCATE);
 									node->hit.left = pos.X;
 									node->hit.top = pos.Y;
-									op.nodes.push_back(node);
+                                    Push();
+                                    op.nodes.push_back(node);
 								}
                                 if (t == L"Neg")
                                 {
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_NEGATE);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"Not")
@@ -2224,6 +2455,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_LNOT);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2233,6 +2465,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_LOR);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2245,6 +2478,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params[0].v = L"1.0";
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2253,6 +2487,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_RECIP);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2271,6 +2506,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params[1].v = L"1x1";
                                     node->Params[1].minv = -1;
                                     node->Params[1].maxv = -1;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
                                 if (t == L"Resample")
@@ -2296,6 +2532,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params[3].minv = -1;
                                     node->Params[3].maxv = -1;
 
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2309,6 +2546,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params[0].n = L"Mode";
                                     node->Params[0].minv = 0;
                                     node->Params[0].maxv = 2;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2322,6 +2560,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params[0].minv = -1;
                                     node->Params[0].maxv = -1;
                                     node->Params[0].v = L"1x1";
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2344,6 +2583,7 @@ namespace winrt::VisualDML::implementation
 
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2353,6 +2593,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_SUBTRACT);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2362,6 +2603,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_SQRT);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2370,6 +2612,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_SIGN);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2381,6 +2624,7 @@ namespace winrt::VisualDML::implementation
                                     node->hit.top = pos.Y;
                                     node->Params.resize(1);
                                     node->Params[0].n = L"Minimum";
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2390,6 +2634,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_LXOR);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2399,6 +2644,7 @@ namespace winrt::VisualDML::implementation
                                     auto node = std::make_shared<XLNODE_OUTPUT>();
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
+                                    Push();
                                     op.nodes.push_back(node);
                                 }
 
@@ -2478,9 +2724,6 @@ namespace winrt::VisualDML::implementation
 				all_adapters.push_back(adapterq);
                 adapterq = 0;
 			}
-            auto iAdapter = SettingsX->GetRootElement().vv("iAdapter").GetValueInt(0);
-            if (iAdapter > 0 && iAdapter <= all_adapters.size())
-                adapter = all_adapters[iAdapter - 1];
         }
     }
 
@@ -2548,7 +2791,7 @@ namespace winrt::VisualDML::implementation
         if (!d2d)
         {
             d2d = std::make_shared<D2D>();
-            d2d->CreateD2X(adapter,0, (int)(wi * ScaleX), (int)(he * ScaleX), 1, 0, 0, 1);
+            d2d->CreateD2X(0,0, (int)(wi * ScaleX), (int)(he * ScaleX), 1, 0, 0, 1);
         }
         else
             d2d->Resize((int)(wi * ScaleX), (int)(he * ScaleX));
@@ -2606,7 +2849,8 @@ namespace winrt::VisualDML::implementation
 			if (!p1)
 			{
 				Push();
-				p1 = 1;
+                Dirty(1);
+                p1 = 1;
 			}
 
             auto& xl = prj.xl();
@@ -2658,7 +2902,13 @@ namespace winrt::VisualDML::implementation
     void MLGraph::UpdateVideoMemory()
     {
         CComPtr<IDXGIAdapter3> d3;
-        d3 = d2d->dxgiAdapter;
+
+        CComPtr<IDXGIAdapter> ad;
+        auto iAdapter = SettingsX->GetRootElement().vv("iAdapter").GetValueInt(0);
+        if (iAdapter > 0 && iAdapter <= all_adapters.size())
+            d3 = all_adapters[iAdapter - 1];
+        if (!d3 && d2d)
+            d3 = d2d->dxgiAdapter;
         if (d3)
         {
             d3->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &vmi);
@@ -2682,7 +2932,7 @@ namespace winrt::VisualDML::implementation
                 auto wi = sp.ActualWidth();
                 auto he = sp.ActualHeight();
                 d2d = std::make_shared<D2D>();
-                d2d->CreateD2X(adapter.p, 0, (int)wi, (int)he, 1, 0, 0, 1);
+                d2d->CreateD2X(0, 0, (int)wi, (int)he, 1, 0, 0, 1);
             }
 
         }
@@ -3043,6 +3293,7 @@ namespace winrt::VisualDML::implementation
 			mi.Click([this, i](IInspectable const&, RoutedEventArgs const&)
 				{
                     Push();
+                    Dirty(1);
                     auto& xl = prj.xl();
                     xl.ops.erase(xl.ops.begin() + i);
 					if (ActiveOperator2 >= xl.ops.size())
@@ -3083,6 +3334,7 @@ namespace winrt::VisualDML::implementation
             mi.Click([this, i](IInspectable const&, RoutedEventArgs const&)
                 {
                       Push();
+                      Dirty(1);
                       auto& xl = prj.xl();
                       xl.variables.erase(xl.variables.begin() + i);
                       FullRefresh();
@@ -3139,18 +3391,22 @@ namespace winrt::VisualDML::implementation
         auto m31 = sp.FindName(L"AdapterMenu").as<MenuBarItem>();
         if (m31.Items().Size() == 0)
         {
+            auto iAdapter = SettingsX->GetRootElement().vv("iAdapter").GetValueInt(0);
+
             for (size_t i = 0; i <= all_adapters.size(); i++)
             {
                 if (i == 0)
                 {
                     auto mi = RadioMenuFlyoutItem();
                     mi.Text(L"Default Adapter");
-                    mi.IsChecked(adapter == 0);
+                    mi.IsChecked(iAdapter == 0);
                     mi.Click([this](IInspectable const&, RoutedEventArgs const&)
                         {
 							SettingsX->GetRootElement().vv("iAdapter").SetValueInt(0);
                             SettingsX->Save();
-                            MessageBox((HWND)wnd(),L"Restart the application to apply the changes.",ttitle,MB_OK);
+							Clean();
+                            FullRefresh();
+                            UpdateVideoMemory();
                         });
                     m31.Items().Append(mi);
 
@@ -3162,12 +3418,14 @@ namespace winrt::VisualDML::implementation
                 DXGI_ADAPTER_DESC1 desc;
                 all_adapters[i - 1]->GetDesc1(&desc);
                 mi.Text(ystring().Format(L"Adapter %zi: %s", i, desc.Description));
-                mi.IsChecked(adapter == all_adapters[i - 1]);
+                mi.IsChecked(iAdapter == i);
                 mi.Click([this, i](IInspectable const&, RoutedEventArgs const&)
                     {
                         SettingsX->GetRootElement().vv("iAdapter").SetValueInt((int)i);
                         SettingsX->Save();
-                        MessageBox((HWND)wnd(), L"Restart the application to apply the changes.", ttitle, MB_OK);
+                        Clean();
+                        FullRefresh();
+                          UpdateVideoMemory();
                     });
                 m31.Items().Append(mi);
             }
@@ -3178,12 +3436,26 @@ namespace winrt::VisualDML::implementation
     void MLGraph::Input_Completed(IInspectable, IInspectable)
     {
         auto& xl = prj.xl();
+        if (WhatInput == 6 && WhatNode)
+        {
+            //Tensor Shape
+            auto* node = dynamic_cast<XLNODE_INPUT*>(WhatNode);
+			auto dims = TensorFromString(_i1.c_str());
+			if (dims.empty())
+				return;
+            Dirty(1);
+            Push();
+			node->tensor_dims = dims;
+			FullRefresh();
+            return;
+        }
         if (WhatInput == 5 && WhatVariable)
         {
             // Edit Variable
             try
             {
                 Push();
+                Dirty(1);
                 WhatVariable->v = _i1;
             }
             catch (...)
@@ -3224,6 +3496,7 @@ namespace winrt::VisualDML::implementation
             try
             {
                 Push();
+                Dirty(1);
                 if (WhatParam->minv <= -1 && WhatParam->maxv <= -1)
                     WhatParam->v = _i1;
 				else
@@ -3246,10 +3519,21 @@ namespace winrt::VisualDML::implementation
             try
             {
                 Push();
+                Dirty(1);
+                POINT pos = {};
+                GetCursorPos(&pos);
+                ScreenToClient((HWND)wnd(), &pos);
+                if (pos.x > 50)
+                    pos.x -= 50;
+                if (pos.y > 50)
+                    pos.y -= 50;
+
                 if (WhatInput == 3)
                 {
                     auto t = std::make_shared<XLNODE_CONSTANT>();
                     t->hit = D2D1_RECT_F({ 10,10,100,100 });
+                    t->hit.left = (float)pos.x;
+                    t->hit.top = (float)pos.y;
                     t->tensor_dims = dims;
                     op.nodes.push_back(t);
                 }
@@ -3257,6 +3541,8 @@ namespace winrt::VisualDML::implementation
                 {
                     auto t = std::make_shared<XLNODE_INPUT>();
                     t->hit = D2D1_RECT_F({ 10,10,100,100 });
+                    t->hit.left = (float)pos.x;
+                    t->hit.top = (float)pos.y;
                     t->tensor_dims = dims;
                     op.nodes.push_back(t);
                 }
@@ -3293,9 +3579,21 @@ namespace winrt::VisualDML::implementation
     }
     void MLGraph::OnAddOutput(IInspectable const&, IInspectable const&)
     {
+        Push();
+        Dirty(1);
         auto& xl = prj.xl();
         auto& op = xl.ops[ActiveOperator2];
         auto node = std::make_shared<XLNODE_OUTPUT>();
+        POINT pos = {};
+        GetCursorPos(&pos);
+		ScreenToClient((HWND)wnd(), &pos);  
+        if (pos.x > 50)
+            pos.x -= 50;
+        if (pos.y > 50)
+            pos.y -= 50;
+        node->hit.left = (float)pos.x;
+        node->hit.top = (float)pos.y;
+
         op.nodes.push_back(node);
         FullRefresh();
     }
@@ -3453,33 +3751,40 @@ namespace winrt::VisualDML::implementation
                     {
                         if (auto it = std::dynamic_pointer_cast<XLNODE_INPUT>(node))
                         {
-                            auto& wh = mlop.Item(it->tidx);
-                            if (!wh.buffer)
-                                continue;
-
-                            if (it->ShareMemory >= 0 && it->csv_input == L"\"Random\"")
+                            for (auto& a_tid : it->tidxs)
                             {
+                                auto& wh = mlop.Item(a_tid);
+                                if (!wh.buffer)
+                                    continue;
+
+                                if (it->ShareMemory >= 0 && it->csv_input == L"\"Random\"")
+                                {
+                                    long long bs = (long long)wh.buffer->b.sz();
+                                    std::vector<float> fv(bs / 4);
+                                    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+                                    for (size_t i = 0; i < fv.size(); i++)
+                                    {
+                                        extern std::mt19937 grand_mt;
+										fv[i] = dist(grand_mt);
+                                    }
+                                    wh.buffer->Upload(&ml, fv.data(), bs);
+                                    continue;
+                                }
+
+                                if (it->ShareMemory < 0 || it->mapin.p() == 0)
+                                    continue;
+
                                 long long bs = (long long)wh.buffer->b.sz();
-                                std::vector<float> fv(bs / 4);
-								for (size_t i = 0; i < fv.size(); i++)
-									fv[i] = (float)rand() / RAND_MAX;
-                                wh.buffer->Upload(&ml, fv.data(), bs);
-                                continue;
-                            }
-
-                            if (it->ShareMemory < 0 || it->mapin.p() == 0)
-                                continue;
-
-                            long long bs = (long long)wh.buffer->b.sz();
-                            long long szfu = (long long)(it->mapin.size()) - (long long)(iRun * bs);
-                            if (szfu <= 0)
-                                continue;
-                            if (szfu <= bs)
-                                wh.buffer->Upload(&ml, it->mapin.p() + (iRun * bs), szfu);
-                            else
-                            {
-                                wh.buffer->Upload(&ml, it->mapin.p() + (iRun * bs), bs);
-                                WillBeLast = 0;
+                                long long szfu = (long long)(it->mapin.size()) - (long long)(iRun * bs);
+                                if (szfu <= 0)
+                                    continue;
+                                if (szfu <= bs)
+                                    wh.buffer->Upload(&ml, it->mapin.p() + (iRun * bs), szfu);
+                                else
+                                {
+                                    wh.buffer->Upload(&ml, it->mapin.p() + (iRun * bs), bs);
+                                    WillBeLast = 0;
+                                }
                             }
                         }
                     }
@@ -3509,110 +3814,113 @@ namespace winrt::VisualDML::implementation
                                     of = mfs;
                                 }
                                 DeleteFile(of.c_str());
-                                auto& wh = mlop.Item(node->tidx);
-                                if (!wh.buffer)
-                                    continue;
-                                std::vector<char> v;
-                                wh.buffer->Download(&ml, (size_t)-1, v);
-
-                                auto ch = wcsrchr(of.c_str(), L'.');
-                                if (it->csv_output == L"\"Screen\"")
+                                for (auto& a_tidx : node->tidxs)
                                 {
-                                    std::vector<char> fv(v.size());
-                                    memcpy(fv.data(), v.data(), v.size());
-                                    std::wstring j;
-                                    auto ts = fv.size();
+                                    auto& wh = mlop.Item(a_tidx);
+                                    if (!wh.buffer)
+                                        continue;
+                                    std::vector<char> v;
+                                    wh.buffer->Download(&ml, (size_t)-1, v);
 
-                                    auto buf = wh.expr.GetOutputDesc().dataType;
-                                    wh.operator DML_BINDING_DESC().Desc ;
+                                    auto ch = wcsrchr(of.c_str(), L'.');
+                                    if (it->csv_output == L"\"Screen\"")
+                                    {
+                                        std::vector<char> fv(v.size());
+                                        memcpy(fv.data(), v.data(), v.size());
+                                        std::wstring j;
+                                        auto ts = fv.size();
+
+                                        auto buf = wh.expr.GetOutputDesc().dataType;
+                                        wh.operator DML_BINDING_DESC().Desc;
 
 
-									if (buf == DML_TENSOR_DATA_TYPE_FLOAT32)
-									{
-										auto fv2 = (float*)v.data();
-										for (size_t i = 0; i < ts / 4; i++)
-										{
-											j += std::to_wstring(fv2[i]);
-											j += L" ";
-										}
-									}
-                                    if (buf == DML_TENSOR_DATA_TYPE_FLOAT64)
-                                    {
-                                        auto fv2 = (double*)v.data();
-                                        for (size_t i = 0; i < ts / 8; i++)
+                                        if (buf == DML_TENSOR_DATA_TYPE_FLOAT32)
                                         {
-                                            j += std::to_wstring(fv2[i]);
-                                            j += L" ";
-                                            if (j.length() > 1000)
-                                                break;
+                                            auto fv2 = (float*)v.data();
+                                            for (size_t i = 0; i < ts / 4; i++)
+                                            {
+                                                j += std::to_wstring(fv2[i]);
+                                                j += L" ";
+                                            }
                                         }
-                                    }
-                                    if (buf == DML_TENSOR_DATA_TYPE_INT32)
-                                    {
-                                        auto fv2 = (int*)v.data();
-                                        for (size_t i = 0; i < ts / 4; i++)
+                                        if (buf == DML_TENSOR_DATA_TYPE_FLOAT64)
                                         {
-                                            j += std::to_wstring(fv2[i]);
-                                            j += L" ";
-                                            if (j.length() > 1000)
-                                                break;
+                                            auto fv2 = (double*)v.data();
+                                            for (size_t i = 0; i < ts / 8; i++)
+                                            {
+                                                j += std::to_wstring(fv2[i]);
+                                                j += L" ";
+                                                if (j.length() > 1000)
+                                                    break;
+                                            }
                                         }
-                                    }
-                                    if (buf == DML_TENSOR_DATA_TYPE_INT64)
-                                    {
-                                        auto fv2 = (long long*)v.data();
-                                        for (size_t i = 0; i < ts / 8; i++)
+                                        if (buf == DML_TENSOR_DATA_TYPE_INT32)
                                         {
-                                            j += std::to_wstring(fv2[i]);
-                                            j += L" ";
-                                            if (j.length() > 1000)
-                                                break;
+                                            auto fv2 = (int*)v.data();
+                                            for (size_t i = 0; i < ts / 4; i++)
+                                            {
+                                                j += std::to_wstring(fv2[i]);
+                                                j += L" ";
+                                                if (j.length() > 1000)
+                                                    break;
+                                            }
                                         }
-                                    }
-                                    if (buf == DML_TENSOR_DATA_TYPE_UINT32)
-                                    {
-                                        auto fv2 = (unsigned int*)v.data();
-                                        for (size_t i = 0; i < ts / 4; i++)
+                                        if (buf == DML_TENSOR_DATA_TYPE_INT64)
                                         {
-                                            j += std::to_wstring(fv2[i]);
-                                            j += L" ";
-                                            if (j.length() > 1000)
-                                                break;
+                                            auto fv2 = (long long*)v.data();
+                                            for (size_t i = 0; i < ts / 8; i++)
+                                            {
+                                                j += std::to_wstring(fv2[i]);
+                                                j += L" ";
+                                                if (j.length() > 1000)
+                                                    break;
+                                            }
                                         }
-                                    }
-                                    if (buf == DML_TENSOR_DATA_TYPE_UINT64)
-                                    {
-                                        auto fv2 = (unsigned long long*)v.data();
-                                        for (size_t i = 0; i < ts / 8; i++)
+                                        if (buf == DML_TENSOR_DATA_TYPE_UINT32)
                                         {
-                                            j += std::to_wstring(fv2[i]);
-                                            j += L" ";
+                                            auto fv2 = (unsigned int*)v.data();
+                                            for (size_t i = 0; i < ts / 4; i++)
+                                            {
+                                                j += std::to_wstring(fv2[i]);
+                                                j += L" ";
+                                                if (j.length() > 1000)
+                                                    break;
+                                            }
                                         }
-                                    }
+                                        if (buf == DML_TENSOR_DATA_TYPE_UINT64)
+                                        {
+                                            auto fv2 = (unsigned long long*)v.data();
+                                            for (size_t i = 0; i < ts / 8; i++)
+                                            {
+                                                j += std::to_wstring(fv2[i]);
+                                                j += L" ";
+                                            }
+                                        }
 
-                                    MessageBox(0, j.c_str(), L"Screen", MB_ICONINFORMATION);
-                                    continue;
+                                        MessageBox(0, j.c_str(), L"Screen", MB_ICONINFORMATION);
+                                        continue;
+                                    }
+                                    else
+                                        if (ch && wcscmp(ch, L".csv") == 0)
+                                        {
+                                            std::vector<float> fv(v.size() / 4);
+                                            memcpy(fv.data(), v.data(), v.size());
+                                            std::ofstream f(of);
+                                            if (f.is_open())
+                                            {
+                                                for (size_t i = 0; i < fv.size(); i++)
+                                                {
+                                                    f << fv[i] << std::endl;
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // Binary
+                                            PutFile(of.c_str(), v, true);
+                                        }
+                                    Locate(of.c_str());
                                 }
-                                else
-                                if (ch && wcscmp(ch, L".csv") == 0)
-                                {
-                                    std::vector<float> fv(v.size() / 4);
-                                    memcpy(fv.data(), v.data(), v.size());
-                                    std::ofstream f(of);
-                                    if (f.is_open())
-                                    {
-                                        for (size_t i = 0; i < fv.size(); i++)
-                                        {
-                                            f << fv[i] << std::endl;
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    // Binary
-                                    PutFile(of.c_str(), v, true);
-                                }
-                                Locate(of.c_str());
                             }
                         }
                     }
@@ -3624,6 +3932,17 @@ namespace winrt::VisualDML::implementation
 			MessageBox(0, L"Run failed!", L"Error", MB_ICONERROR);
 		}
     }
+
+    void MLGraph::Dirty(bool CL)
+    {
+        if (CL)
+        {
+            auto& xl = prj.xl();
+            if (xl.ml)
+                Clean();
+        }
+    }
+
     void MLGraph::Clean()
     {
         auto& xl = prj.xl();
@@ -3634,7 +3953,10 @@ namespace winrt::VisualDML::implementation
             {
                 if (auto it = std::dynamic_pointer_cast<XLNODE>(node))
                 {
-                    it->tidx = -1;
+                    it->tidxs.clear();
+                    auto it2 = std::dynamic_pointer_cast<XLNODE_ANY>(it);
+                    if (it2)
+                        it2->MultipleOpOutputData = {};
                 }
             }
         }
@@ -3720,12 +4042,51 @@ namespace winrt::VisualDML::implementation
             ml.SetDebug(1);
 #endif
             ml.SetFeatureLevel(DML_FEATURE_LEVEL_6_4);
-            ml.On();
+            
+
+            CComPtr<IDXGIAdapter> ad;
+            auto iAdapter = SettingsX->GetRootElement().vv("iAdapter").GetValueInt(0);
+            if (iAdapter > 0 && iAdapter <= all_adapters.size())
+                ad = all_adapters[iAdapter - 1];
+            ml.On(ad);
             for (size_t i = 0; i < xl.ops.size(); i++)
             {
                 int tidx = 0;
                 auto& op = xl.ops[i];
                 MLOP mop(&ml);
+
+                // test 2 nodes and input outpt
+                if (op.nodes.size() == 2)
+                {
+					auto first = std::dynamic_pointer_cast<XLNODE_INPUT>(op.nodes[0]);
+					auto second = std::dynamic_pointer_cast<XLNODE_OUTPUT>(op.nodes[1]);
+                    if (first && second)
+                    {
+                        if (first->children.size() == 1 && second->children.size() == 1)
+                        {
+                            auto node = std::make_shared<XLNODE_ANY>(1, TYPE_IDENTITY);
+                            node->hit.left = 10;
+                            node->hit.top = 10;
+                            if (node->children.size() == 2)
+                            {
+                                auto ne1 = nextn();
+                                auto ne2 = nextn();
+                                first->children[0].g.clear();
+                                first->children[0].g.push_back(ne1);
+
+                                node->children[0].g.clear();
+                                node->children[0].g.push_back(ne1);
+                                node->children[1].g.clear();
+                                node->children[1].g.push_back(ne2);
+
+                                second->children[0].g.clear();
+                                second->children[0].g.push_back(ne2);
+
+                                op.nodes.push_back(node);
+                            }
+                        }
+                    }
+                }
 
 				std::sort(op.nodes.begin(), op.nodes.end(), [](auto& a, auto& b) 
                     { 
@@ -3755,9 +4116,9 @@ namespace winrt::VisualDML::implementation
                                 {
                                     if (n == node)
                                         continue;
-                                    if (n->ShareMemory == -node->ShareMemory)
+                                    if (n->ShareMemory == -node->ShareMemory && n->tidxs.size() > 0)
                                     {
-                                        remote_tid = n->tidx;
+                                        remote_tid = n->tidxs[0];
                                         iop = ii3;
                                         break;
                                     }
@@ -3809,7 +4170,7 @@ namespace winrt::VisualDML::implementation
                                 mop.AddItem(expr, 0, false, BINDING_MODE::NONE);
                             }
                         }
-                        node->tidx = tidx++;
+                        node->tidxs.push_back(tidx++);
                         continue;
                     }
 
@@ -3827,25 +4188,38 @@ namespace winrt::VisualDML::implementation
                                 bool F = 0;
                                 if (j == node)
                                     continue;
+                                int count_outs = 0;
                                 for (auto& ch : j->children)
                                 {
                                     for (auto& chg : ch.g)
                                     {
-                                        if (chg == input_gg)
+                                        if (chg == input_gg && j->tidxs.size() > count_outs)
                                         {
                                             F = 1;
-                                            whati.push_back(j->tidx);
+                                            whati.push_back(j->tidxs[count_outs]);
                                             break;
                                         }
                                     }
                                     if (F)
                                         break;
+                                    if (ch.O == 1)
+                                        count_outs++;
                                 }
                                 if (F)
                                     break;
                             }
                         }
                     }
+
+                    // For operators that have multiple outputs
+                    std::vector<int> whato;
+                    for (size_t ci = 0; ci < node->children.size(); ci++)
+                    {
+                        if (node->children[ci].O != 1)
+                            continue;
+                    }
+
+
 
                     if (auto it = std::dynamic_pointer_cast<XLNODE_OUTPUT>(node))
                     {
@@ -3854,7 +4228,7 @@ namespace winrt::VisualDML::implementation
                         if (whati[0] == -1)
                             continue;
                         mop.AddOutput(mop.Item(whati[0]));
-                        node->tidx = tidx++;
+                        node->tidxs.push_back(tidx++);
                         continue;
                     }
 
@@ -3948,9 +4322,43 @@ namespace winrt::VisualDML::implementation
                             expr = (dml::BitShiftRight(mop.Item(whati[0]), mop.Item(whati[1])));
                         if (it->what == TYPE_BITXOR)
                             expr = (dml::BitXor(mop.Item(whati[0]), mop.Item(whati[1])));
+						if (it->what == TYPE_BATCHNORMALIZATION)
+                            expr = dml::BatchNormalization(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[2]), mop.Item(whati[3]), mop.Item(whati[4]), it->Params[0], it->Params[1]);
+                        if (it->what == TYPE_BATCHNORMALIZATIONGRAD)
+                        {
+                            if (!it->MultipleOpOutputData.has_value())
+                                it->MultipleOpOutputData = dml::BatchNormalizationGrad(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[2]), mop.Item(whati[3]), mop.Item(whati[4]), it->Params[0]);
+                            auto& b = std::any_cast<dml::BatchNormalizationGradOutputs&>(it->MultipleOpOutputData);
+                            for (auto& ope : { b.gradient,b.biasGradient,b.scaleGradient })
+                            {
+                                mop.AddItem(ope, 0, false, BINDING_MODE::NONE);
+                                node->tidxs.push_back(tidx++);
+                            }
+                        }
+                        if (it->what == TYPE_BATCHNORMALIZATIONTRAINING)
+                        {
+                            if (!it->MultipleOpOutputData.has_value())
+                                it->MultipleOpOutputData = dml::BatchNormalizationTraining(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[2]),dml::NullOpt,it->Params[0]);
+                            auto& b = std::any_cast<dml::BatchNormalizationTrainingOutputs&>(it->MultipleOpOutputData);
+                            for (auto& ope : { b.output,b.mean,b.variance })
+                            {
+                                mop.AddItem(ope, 0, false, BINDING_MODE::NONE);
+                                node->tidxs.push_back(tidx++);
+                            }
 
-
-
+                        }
+                        if (it->what == TYPE_BATCHNORMALIZATIONTRAININGGRAD)
+                        {
+                            if (!it->MultipleOpOutputData.has_value())
+                                it->MultipleOpOutputData = dml::BatchNormalizationTrainingGrad(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[2]), mop.Item(whati[3]), mop.Item(whati[4]), it->Params[0]);
+                            auto& b = std::any_cast<dml::BatchNormalizationGradOutputs&>(it->MultipleOpOutputData);
+                            for (auto& ope : { b.gradient,b.biasGradient,b.scaleGradient })
+                            {
+                                mop.AddItem(ope, 0, false, BINDING_MODE::NONE);
+                                node->tidxs.push_back(tidx++);
+                            }
+                        }
+                        
                         if (it->what == TYPE_CAST)
                             expr = (dml::Cast(mop.Item(whati[0]),(DML_TENSOR_DATA_TYPE)it->OpType));
                         if (it->what == TYPE_CEIL)
@@ -4117,7 +4525,8 @@ namespace winrt::VisualDML::implementation
 
                         
 
-                        Y = 1;
+                        if (expr)
+                            Y = 1;
                     }
 
                     if (Y)
@@ -4136,7 +4545,7 @@ namespace winrt::VisualDML::implementation
 
                         mop.AddItem(expr, tag, NB, BI);
 
-                        node->tidx = tidx++;
+                        node->tidxs.push_back(tidx++);
                         continue;
                     }
 

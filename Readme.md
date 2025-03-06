@@ -23,6 +23,10 @@ Show Adapter Memory Consumed
 
 Activation: Celu,Elu,Gelu,HardMax,HardSigmoid,Identity,LeakyRelu,Linear,LogSoftmax,ParameterizedRelu,ParametricSoftplus,Relu,ScaledElu,ScaledTanh,Shrink,Sigmoid,Softmax,Softplus,Softsign,Tanh,ThresholdedRelu
 
+Batch Processing: BatchNormalization, BatchNormalizationGrad, BatchNormalizationTraining, BatchNormalizationTrainingGrad
+
+Comparison Operators: If, IsInfinity, IsNaN
+
 A: Abs,ACos,ACosh,Add,And,ASin,ASinh,ATan,ATanh,ATanYX
 
 B: BitAnd, BitCount, BitOr, BitNot, BitShiftLeft, BitShiftRight, BitXor
@@ -37,7 +41,7 @@ F: Floor
 
 G: Gemm, GreaterThan, GreaterThanOrEqual
 
-I: Identity, If, IsInfinity, IsNaN
+I: Identity, 
 
 J: Join
 
@@ -58,11 +62,40 @@ S: Slice, Subtract, Sqrt, Sign
 T: Threshold
 
 X: Xor
+
 ### Pending
 
-All other operators
+All other operators: 
 
-Activation, Batch, 
-quantizer  Split, Tile Topk, 
+                        dml::AveragePooling;
+                        dml::ClipGrad;
+                        dml::ConvolutionInteger;
+                        dml::DepthToSpace;
+                        dml::Dequantize;
+                        dml::DequantizeLinear;
+                        dml::DifferenceSquare;
+                        dml::Gather;
+                        dml::GatherElements;
+                        dml::GatherND;
+                        dml::LocalResponseNormalization;
+                        dml::MaxPooling;
+                        dml::MeanVarianceNormalization;
+                        dml::NonZeroCoordinates;
+                        dml::OneHot;
+                        dml::Padding;
+                        dml::QuantizedLinearConvolution;
+                        dml::QuantizeLinear;
+                        dml::RandomGenerator;
+                        dml::ResampleGrad;
+                        dml::ReverseSubsequences;
+                        dml::RoiAlign;
+                        dml::RoiAlignGrad;
+                        dml::ScatterElements;
+                        dml::SliceGrad;
+                        dml::SpaceToDepth;
+                        dml::TopK;
+                        dml::Upsample2D;
+                        dml::ValueScale2D;
+
 
 ![screenshot](graph1.jpg)

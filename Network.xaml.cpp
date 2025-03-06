@@ -10,7 +10,6 @@ using namespace winrt;
 using namespace winrt::Microsoft::UI::Xaml;
 using namespace winrt::Microsoft::UI::Xaml::Controls;
 extern std::vector<CComPtr<IDXGIAdapter1>> all_adapters;
-extern CComPtr<IDXGIAdapter1> adapter;
 
 extern bool TrainCancel;
 extern std::wstring fil;
@@ -221,18 +220,18 @@ namespace winrt::VisualDML::implementation
         if (m31.Items().Size() == 0)
         {
             LoadAdapters();
+            auto iAdapter = SettingsX->GetRootElement().vv("iAdapter").GetValueInt(0);
             for (size_t i = 0; i <= all_adapters.size(); i++)
             {
                 if (i == 0)
                 {
                     auto mi = RadioMenuFlyoutItem();
                     mi.Text(L"Default Adapter");
-                    mi.IsChecked(adapter == 0);
+                    mi.IsChecked(iAdapter == 0);
                     mi.Click([this](IInspectable const&, RoutedEventArgs const&)
                         {
                             SettingsX->GetRootElement().vv("iAdapter").SetValueInt(0);
                             SettingsX->Save();
-                            MessageBox(0, L"Restart the application to apply the changes.", L"NN", MB_OK);
                         });
                     m31.Items().Append(mi);
 
@@ -244,12 +243,11 @@ namespace winrt::VisualDML::implementation
                 DXGI_ADAPTER_DESC1 desc;
                 all_adapters[i - 1]->GetDesc1(&desc);
                 mi.Text(ystring().Format(L"Adapter %zi: %s", i, desc.Description));
-                mi.IsChecked(adapter == all_adapters[i - 1]);
+                mi.IsChecked(iAdapter == i);
                 mi.Click([this, i](IInspectable const&, RoutedEventArgs const&)
                     {
                         SettingsX->GetRootElement().vv("iAdapter").SetValueInt((int)i);
                         SettingsX->Save();
-                        MessageBox(0, L"Restart the application to apply the changes.", L"NN", MB_OK);
                     });
                 m31.Items().Append(mi);
             }
@@ -271,9 +269,6 @@ namespace winrt::VisualDML::implementation
                 all_adapters.push_back(adapterq);
                 adapterq = 0;
             }
-            auto iAdapter = SettingsX->GetRootElement().vv("iAdapter").GetValueInt(0);
-            if (iAdapter > 0 && iAdapter <= all_adapters.size())
-                adapter = all_adapters[iAdapter - 1];
         }
     }
 
@@ -326,7 +321,7 @@ namespace winrt::VisualDML::implementation
         if (!d2d)
         {
             d2d = std::make_shared<D2D>();
-            d2d->CreateD2X(adapter, 0, (int)wi, (int)he, 1, 0, 0, 1);
+            d2d->CreateD2X(0, 0, (int)wi, (int)he, 1, 0, 0, 1);
         }
         else
             d2d->Resize((int)wi, (int)he);
@@ -464,7 +459,7 @@ namespace winrt::VisualDML::implementation
                 auto wi = sp.ActualWidth();
                 auto he = sp.ActualHeight();
                 d2d = std::make_shared<D2D>();
-                d2d->CreateD2X(adapter, 0, (int)wi, (int)he, 1, 0, 0, 1);
+                d2d->CreateD2X(0, 0, (int)wi, (int)he, 1, 0, 0, 1);
             }
 
         }

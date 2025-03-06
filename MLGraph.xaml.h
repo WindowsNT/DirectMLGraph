@@ -104,7 +104,7 @@ struct PARAM
 struct XLNODE
 {
 
-    int tidx = -1; // idx in MLOP
+    std::vector<int> tidxs; // idx in MLOP, most nodes have one but some like BatchOperationGraidents have multiple
     bool BufferVisible = 0;
     D2F bhit = { };
     D2F bhit2 = { };
@@ -145,7 +145,7 @@ enum XLNODE_TYPE
     TYPE_INPUT = 1,
     TYPE_ACT_IDENTITY,TYPE_ACT_CELU,TYPE_ACT_ELU,TYPE_ACT_GELU,TYPE_ACT_HARDMAX,TYPE_ACT_HARDSIGMOID,TYPE_ACT_LEAKYRELU,TYPE_ACT_LINEAR,TYPE_ACT_LOGSOFTMAX,TYPE_ACT_PRELU, TYPE_ACT_PSOFTPLUS, TYPE_ACT_RELU, TYPE_ACT_SELU, TYPE_ACT_STANH, TYPE_ACT_SHRINK, TYPE_ACT_SIGMOID, TYPE_ACT_SOFTMAX, TYPE_ACT_SOFTPLUS, TYPE_ACT_SOFTSIGN, TYPE_ACT_TANH, TYPE_ACT_TRELU,
     TYPE_ABS,TYPE_ACOS,TYPE_ACOSH, TYPE_ADD,TYPE_ASIN,TYPE_ASINH,TYPE_ATAN,TYPE_ATANH, TYPE_ATANYX,
-    TYPE_BITAND,TYPE_BITCOUNT,TYPE_BITNOT,TYPE_BITOR,TYPE_BITSL,TYPE_BITSR,TYPE_BITXOR,
+	TYPE_BITAND, TYPE_BITCOUNT, TYPE_BITNOT, TYPE_BITOR, TYPE_BITSL, TYPE_BITSR, TYPE_BITXOR, TYPE_BATCHNORMALIZATION, TYPE_BATCHNORMALIZATIONGRAD,TYPE_BATCHNORMALIZATIONTRAINING, TYPE_BATCHNORMALIZATIONTRAININGGRAD,
 	TYPE_CAST,TYPE_CEIL, TYPE_CLIP, TYPE_CONSTANT, TYPE_COS, TYPE_COSH, TYPE_CONVOLUTION,TYPE_CUMSUM, TYPE_CUMPROD,
     TYPE_DIVIDE,
     TYPE_ERF,TYPE_EXP,TYPE_EQUALS,
@@ -204,6 +204,10 @@ inline std::map<int, std::string> TypesToNames = {
 	{TYPE_BITSL,"BitSL"},
 	{TYPE_BITSR,"BitSR"},
 	{TYPE_BITXOR,"BitXor"},
+	{TYPE_BATCHNORMALIZATION,"BatchNormalization"},
+	{TYPE_BATCHNORMALIZATIONGRAD,"BatchNormalizationGrad"},
+	{TYPE_BATCHNORMALIZATIONTRAINING,"BatchNormalizationTraining"},
+	{TYPE_BATCHNORMALIZATIONTRAININGGRAD,"BatchNormalizationTrainingGrad"},
 	{TYPE_CAST,"Cast"},
 	{TYPE_CEIL,"Ceil"},
 	{TYPE_CLIP,"Clip"},
@@ -260,6 +264,9 @@ struct XLNODE_ANY : public XLNODE
 {
     int what = 0;
     int howi = 0;
+    int howo = 1;
+
+    std::any MultipleOpOutputData;
 
     virtual bool AsksType() {
         if (what == TYPE_CAST || what == TYPE_LESSTHAN || what == TYPE_LESSTHANOREQUAL || what == TYPE_GREATERTHAN || what == TYPE_GREATERTHANOREQUAL || what == TYPE_REINTERPRET || what == TYPE_ISINFINITY || what == TYPE_ISNAN || what == TYPE_REDUCE)
@@ -278,12 +285,13 @@ struct XLNODE_ANY : public XLNODE
         return nin(); 
     }
     virtual int nin() { return howi; }
-    virtual int nout() { return 1; }
+    virtual int nout() { return howo; }
 
 
-    XLNODE_ANY(int NI,int w)
+    XLNODE_ANY(int NI,int w,int NO = 1)
     {
         howi = NI;
+        howo = NO;
         for (int i = 0; i < NI; i++)
         {
             XLNODEBULLET bu;
@@ -291,10 +299,12 @@ struct XLNODE_ANY : public XLNODE
             children.push_back(bu);
         }
 
-        XLNODEBULLET bu;
-        bu.O = 1;
-        children.push_back(bu);
-
+        for (int i = 0; i < NO; i++)
+        {
+            XLNODEBULLET bu;
+            bu.O = 1;
+            children.push_back(bu);
+        }
         what = w;
     }
 
@@ -379,6 +389,14 @@ struct XLNODE_ANY : public XLNODE
 			return L"BitSR";
 		if (what == TYPE_BITXOR)
 			return L"BitXor";
+		if (what == TYPE_BATCHNORMALIZATION)
+			return L"BatchNormalization";
+		if (what == TYPE_BATCHNORMALIZATIONGRAD)
+			return L"BatchNormalizationGrad";
+		if (what == TYPE_BATCHNORMALIZATIONTRAINING)
+			return L"BatchNormalizationTraining";
+		if (what == TYPE_BATCHNORMALIZATIONTRAININGGRAD)
+			return L"BatchNormalizationTrainingGrad";
 
 		if (what == TYPE_CAST)
 			return L"Cast";
@@ -544,6 +562,7 @@ struct XLNODE_ANY : public XLNODE
     {
         XLNODE::Ser(ee);
         ee.vv("ni").SetValueInt(nin());
+        ee.vv("no").SetValueInt(nout());
         ee.vv("Type").SetValueInt(what);
 		ee.vv("Name").SetWideValue(opname().c_str());
 		for (auto& p : Params)
@@ -771,8 +790,6 @@ struct XLOP : public XLNODE
                 break;
             }
         }
-        if (!F)
-            MessageBeep(0);
 
 
         if (nty == TYPE_INPUT)
@@ -800,7 +817,10 @@ struct XLOP : public XLNODE
             int ni = ne.vv("ni").GetValueInt();
             if (ni == 0)
                 ni = 1;
-            auto n = std::make_shared<XLNODE_ANY>(ni, nty);
+            int no = ne.vv("no").GetValueInt(1);
+            if (no == 0)
+                no = 1;
+            auto n = std::make_shared<XLNODE_ANY>(ni, nty,no);
             n->Unser(ne);
             return n;
         }
@@ -1013,6 +1033,7 @@ namespace winrt::VisualDML::implementation
         void Stop();
         void Compile();
         void Clean();
+        void Dirty(bool Cl = 1);
         void OnAddOp(IInspectable const&, IInspectable const&);
         void OnAddSet(IInspectable const&, IInspectable const&);
         void Tip(const wchar_t*);
