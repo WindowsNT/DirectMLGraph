@@ -27,13 +27,13 @@ Batch Processing: BatchNormalization, BatchNormalizationGrad, BatchNormalization
 
 Comparison Operators: If, IsInfinity, IsNaN
 
-A: Abs,ACos,ACosh,Add,And,ASin,ASinh,ATan,ATanh,ATanYX
+A: Abs,ACos,ACosh,Add,And,ASin,ASinh,ATan,ATanh,ATanYX,AveragePooling
 
 B: BitAnd, BitCount, BitOr, BitNot, BitShiftLeft, BitShiftRight, BitXor
 
-C: Cast, Ceil, Clip, Constant, Cos, Cosh, Cummulative Sum/Product, Convolution
+C: Cast, Ceil, Clip, ClipGrad, Constant, Cos, Cosh, Cummulative Sum/Product, Convolution
 
-D: Divide
+D: DepthToSpace, Dequantize, DequantizeLinear, DifferenceSquare, Divide
 
 E: Erf, Exp, Equals
 
@@ -67,13 +67,7 @@ X: Xor
 
 All other operators: 
 
-                        dml::AveragePooling;
-                        dml::ClipGrad;
                         dml::ConvolutionInteger;
-                        dml::DepthToSpace;
-                        dml::Dequantize;
-                        dml::DequantizeLinear;
-                        dml::DifferenceSquare;
                         dml::Gather;
                         dml::GatherElements;
                         dml::GatherND;

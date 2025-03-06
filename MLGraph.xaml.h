@@ -144,13 +144,13 @@ enum XLNODE_TYPE
 {
     TYPE_INPUT = 1,
     TYPE_ACT_IDENTITY,TYPE_ACT_CELU,TYPE_ACT_ELU,TYPE_ACT_GELU,TYPE_ACT_HARDMAX,TYPE_ACT_HARDSIGMOID,TYPE_ACT_LEAKYRELU,TYPE_ACT_LINEAR,TYPE_ACT_LOGSOFTMAX,TYPE_ACT_PRELU, TYPE_ACT_PSOFTPLUS, TYPE_ACT_RELU, TYPE_ACT_SELU, TYPE_ACT_STANH, TYPE_ACT_SHRINK, TYPE_ACT_SIGMOID, TYPE_ACT_SOFTMAX, TYPE_ACT_SOFTPLUS, TYPE_ACT_SOFTSIGN, TYPE_ACT_TANH, TYPE_ACT_TRELU,
-    TYPE_ABS,TYPE_ACOS,TYPE_ACOSH, TYPE_ADD,TYPE_ASIN,TYPE_ASINH,TYPE_ATAN,TYPE_ATANH, TYPE_ATANYX,
+    TYPE_ABS,TYPE_ACOS,TYPE_ACOSH, TYPE_ADD,TYPE_ASIN,TYPE_ASINH,TYPE_ATAN,TYPE_ATANH, TYPE_ATANYX,TYPE_AVERAGEPOOLING,
 	TYPE_BITAND, TYPE_BITCOUNT, TYPE_BITNOT, TYPE_BITOR, TYPE_BITSL, TYPE_BITSR, TYPE_BITXOR, TYPE_BATCHNORMALIZATION, TYPE_BATCHNORMALIZATIONGRAD,TYPE_BATCHNORMALIZATIONTRAINING, TYPE_BATCHNORMALIZATIONTRAININGGRAD,
-	TYPE_CAST,TYPE_CEIL, TYPE_CLIP, TYPE_CONSTANT, TYPE_COS, TYPE_COSH, TYPE_CONVOLUTION,TYPE_CUMSUM, TYPE_CUMPROD,
-    TYPE_DIVIDE,
+	TYPE_CAST,TYPE_CEIL, TYPE_CLIP, TYPE_CLIPGRAD, TYPE_CONSTANT, TYPE_COS, TYPE_COSH, TYPE_CONVOLUTION,TYPE_CUMSUM, TYPE_CUMPROD,
+    TYPE_DIVIDE,TYPE_DEPTHTOSPACE,TYPE_DEQUANTIZE,TYPE_DEQUANTIZELINEAR,TYPE_DIFFERENCESQUARE,
     TYPE_ERF,TYPE_EXP,TYPE_EQUALS,
     TYPE_FLOOR,
-	TYPE_GEMM, TYPE_GREATERTHAN, TYPE_GREATERTHANOREQUAL,
+	TYPE_GATHER,TYPE_GATHERELEMENTS,TYPE_GATHERND,TYPE_GEMM, TYPE_GREATERTHAN, TYPE_GREATERTHANOREQUAL,
     TYPE_IDENTITY,TYPE_IF,TYPE_ISINFINITY,TYPE_ISNAN,
     TYPE_JOIN,
 	TYPE_LAND, TYPE_LOR, TYPE_LXOR, TYPE_LNOT, TYPE_LOG, TYPE_LESSTHAN, TYPE_LESSTHANOREQUAL,
@@ -197,6 +197,8 @@ inline std::map<int, std::string> TypesToNames = {
 	{TYPE_ATAN,"ATan"},
 	{TYPE_ATANH,"ATanh"},
 	{TYPE_ATANYX,"ATanYX"},
+	{TYPE_AVERAGEPOOLING,"AveragePooling"},
+
 	{TYPE_BITAND,"BitAnd"},
 	{TYPE_BITCOUNT,"BitCount"},
 	{TYPE_BITNOT,"BitNot"},
@@ -211,6 +213,7 @@ inline std::map<int, std::string> TypesToNames = {
 	{TYPE_CAST,"Cast"},
 	{TYPE_CEIL,"Ceil"},
 	{TYPE_CLIP,"Clip"},
+	{TYPE_CLIPGRAD,"ClipGrad"},
 	{TYPE_CONSTANT,"Constant"},
 	{TYPE_COS,"Cos"},
 	{TYPE_COSH,"Cosh"},
@@ -218,10 +221,18 @@ inline std::map<int, std::string> TypesToNames = {
 	{TYPE_CUMSUM,"CummulativeSum"},
 	{TYPE_CUMPROD,"CummulativeProduct"},
 	{TYPE_DIVIDE,"Divide"},
+	{TYPE_DEPTHTOSPACE,"DepthToSpace"},
+	{TYPE_DEQUANTIZE,"Dequantize"},
+	{TYPE_DEQUANTIZELINEAR,"DequantizeLinear"},
+	{TYPE_DIFFERENCESQUARE,"DifferenceSquare"},
+
 	{TYPE_ERF,"Erf"},
 	{TYPE_EXP,"Exp"},
 	{TYPE_EQUALS,"Equals"},
 	{TYPE_FLOOR,"Floor"},
+	{TYPE_GATHER,"Gather"},
+	{TYPE_GATHERELEMENTS,"GatherElements"},
+	{TYPE_GATHERND,"GatherND"},
 	{TYPE_GEMM,"Gemm"},
 	{TYPE_GREATERTHAN,"GreaterThan"},
 	{TYPE_GREATERTHANOREQUAL,"GreaterThanOrEqual"},
@@ -282,7 +293,9 @@ struct XLNODE_ANY : public XLNODE
             return nin() - 1;
         if (what == TYPE_JOIN)
             return 1;
-        return nin(); 
+        if (what == TYPE_DEQUANTIZE)
+            return 2;
+        return nin();
     }
     virtual int nin() { return howi; }
     virtual int nout() { return howo; }
@@ -372,6 +385,8 @@ struct XLNODE_ANY : public XLNODE
             return L"ATanh";
         if (what == TYPE_ATANYX)
             return L"ATanYX";
+		if (what == TYPE_AVERAGEPOOLING)
+			return L"AveragePooling";
 
 
 
@@ -404,6 +419,9 @@ struct XLNODE_ANY : public XLNODE
             return L"Ceil";
         if (what == TYPE_CLIP)
             return L"Clip";
+		if (what == TYPE_CLIPGRAD)
+			return L"ClipGrad";
+
         if (what == TYPE_CONSTANT)
             return L"Constant";
         if (what == TYPE_COS)
@@ -419,6 +437,15 @@ struct XLNODE_ANY : public XLNODE
 
 		if (what == TYPE_DIVIDE)
 			return L"Divide";
+		if (what == TYPE_DEPTHTOSPACE)
+			return L"DepthToSpace";
+		if (what == TYPE_DEQUANTIZE)
+			return L"Dequantize";
+		if (what == TYPE_DEQUANTIZELINEAR)
+			return L"DequantizeLinear";
+		if (what == TYPE_DIFFERENCESQUARE)
+			return L"DifferenceSquare";
+
 
 		if (what == TYPE_ERF)
 			return L"Erf";
@@ -430,6 +457,12 @@ struct XLNODE_ANY : public XLNODE
 		if (what == TYPE_FLOOR)
 			return L"Floor";
 
+		if (what == TYPE_GATHER)
+			return L"Gather";
+		if (what == TYPE_GATHERELEMENTS)
+			return L"GatherElements";
+		if (what == TYPE_GATHERND)
+			return L"GatherND";
 		if (what == TYPE_GEMM)
 			return L"Gemm";
 		if (what == TYPE_GREATERTHAN)

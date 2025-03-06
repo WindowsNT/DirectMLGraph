@@ -659,7 +659,6 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
             A.Items().Append(b3);
         }
 
-
         r1.Items().Append(A);
         SepIf();
     }
@@ -700,6 +699,8 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         A.Items().Append(ATanh);
         winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem ATanYX; ATanYX.Text(L"ATanYX"); ATanYX.Click(fooo);
         A.Items().Append(ATanYX);
+		winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem AveragePool; AveragePool.Text(L"AveragePooling"); AveragePool.Click(fooo);
+		A.Items().Append(AveragePool);
 
         
 
@@ -774,6 +775,11 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         }
         if (1)
         {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"ClipGrad"); N.Click(fooo);
+            A.Items().Append(N);
+        }
+        if (1)
+        {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"Constant"); N.Click(fooo);
             A.Items().Append(N);
         }
@@ -815,8 +821,34 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
         A.Text(L"D");
 
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Divide"); Neg.Click(fooo);
-        A.Items().Append(Neg);
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Divide"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"DepthToSpace"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Dequantize"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"DequantizeLinear"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"DifferenceSquare"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+
+
+
 
         r1.Items().Append(A);
     }
@@ -857,6 +889,25 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
     {
         winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
         A.Text(L"G");
+
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Gather"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"GatherElements"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"GatherND"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+
         if (1)
         {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Gemm"); Neg.Click(fooo);
@@ -2023,6 +2074,57 @@ namespace winrt::VisualDML::implementation
                                     Push();
                                     op.nodes.push_back(node);
                                 }
+                                if (t == L"AveragePooling")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_AVERAGEPOOLING);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+
+                                    //expr = dml::AveragePooling(mop.Item(whati[0]), TensorFromString<unsigned int>(it->Params[0]), TensorFromString<unsigned int>(it->Params[1]), TensorFromString<unsigned int>(it->Params[2]), TensorFromString<unsigned int>(it->Params[3]), TensorFromString<unsigned int>(it->Params[4]), (bool)it->Params[5], TensorFromString<unsigned int>(it->Params[6]));
+									node->Params.resize(7); 
+									node->Params[0].n = L"Strides";
+									node->Params[0].v = L"1x1";
+                                    node->Params[0].minv = -1;
+                                    node->Params[0].maxv = -1;
+
+									node->Params[1].n = L"Window Sizes";
+									node->Params[1].v = L"1x1";
+									node->Params[1].minv = -1;
+									node->Params[1].maxv = -1;
+
+									node->Params[2].n = L"Start Pad";
+									node->Params[2].v = L"0x0";
+									node->Params[2].minv = -1;
+									node->Params[2].maxv = -1;
+
+									node->Params[3].n = L"End Pad";
+									node->Params[3].v = L"0x0";
+									node->Params[3].minv = -1;
+									node->Params[3].maxv = -1;
+
+									node->Params[4].n = L"Dilations";
+									node->Params[4].v = L"0x0";
+									node->Params[4].minv = -1;
+									node->Params[4].maxv = -1;
+
+									node->Params[5].n = L"Include Padding";
+									node->Params[5].v = L"0";
+									node->Params[5].minv = 0;
+									node->Params[5].maxv = 1;
+
+
+									node->Params[6].n = L"Output Sizes";
+									node->Params[6].v = L"1x1";
+									node->Params[6].minv = -1;
+									node->Params[6].maxv = -1;
+                                        
+
+
+                                    Push();
+                                    op.nodes.push_back(node);
+
+                                }
+
                                 if (t == L"Add")
                                 {
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_ADD);
@@ -2166,6 +2268,20 @@ namespace winrt::VisualDML::implementation
                                     Push();
                                     op.nodes.push_back(node);
                                 }
+                                if (t == L"ClipGrad")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(2, TYPE_CLIPGRAD);
+
+                                    node->Params.resize(2);
+                                    node->Params[0].n = L"Min";
+                                    node->Params[0].n = L"Max";
+                                    node->Params[1].v = L"1";
+
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
                                 if (t == L"Constant")
                                 {
                                     OnAddConstant({}, {});
@@ -2244,6 +2360,54 @@ namespace winrt::VisualDML::implementation
                                     Push();
                                     op.nodes.push_back(node);
                                 }
+                                if (t == L"DepthToSpace")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_DEPTHTOSPACE);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+
+                                    node->Params.resize(2);
+									node->Params[0].n = L"Block Size";
+									node->Params[0].v = L"1";
+                                    node->Params[1].n = L"Mode";
+                                    node->Params[1].minv = 0;
+                                    node->Params[1].maxv = 1;
+                                    node->Params[1].list_names = { L"DEPTH_COLUMN_ROW",L"COLUMN_ROW_DEPTH"};
+
+
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"Dequantize")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(10, TYPE_DEQUANTIZE);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(1);
+                                    node->Params[0].n = L"Mode";
+                                    node->Params[0].minv = 0;
+                                    node->Params[0].maxv = 1;
+                                    node->Params[0].list_names = { L"Scale",L"Zero Point"};
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"DequantizeLinear")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(3, TYPE_DEQUANTIZELINEAR);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"DifferenceSquare")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(2, TYPE_DIFFERENCESQUARE);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+
                                 if (t == L"Erf")
                                 {
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_ERF);
@@ -2277,6 +2441,42 @@ namespace winrt::VisualDML::implementation
                                     Push();
                                     op.nodes.push_back(node);
                                 }
+
+                                if (t == L"Gather")
+                                {
+									auto node = std::make_shared<XLNODE_ANY>(2, TYPE_GATHER);
+									node->hit.left = pos.X;
+									node->hit.top = pos.Y;
+									node->Params.resize(2);
+									node->Params[0].n = L"Axis";
+                                    node->Params[1].n = L"Index Dimensions";
+                                    Push();
+									op.nodes.push_back(node);
+                                }
+								if (t == L"GatherElements")
+								{
+									auto node = std::make_shared<XLNODE_ANY>(2, TYPE_GATHERELEMENTS);
+									node->hit.left = pos.X;
+									node->hit.top = pos.Y;
+                                    node->Params.resize(1);
+                                    node->Params[0].n = L"Axis";
+                                    Push();
+									op.nodes.push_back(node);
+								}
+                                if (t == L"GatherND")
+                                {
+									auto node = std::make_shared<XLNODE_ANY>(2, TYPE_GATHERND);
+									node->hit.left = pos.X;
+									node->hit.top = pos.Y;
+									node->Params.resize(3);
+                                    node->Params[0].n = L"Input Dimension Count";
+                                    node->Params[1].n = L"Indices Dimension Count";
+                                    node->Params[2].n = L"Batch Dimension Count";
+									Push();
+									op.nodes.push_back(node);
+                                }
+
+
                                 if (t == L"Gemm")
                                 {
                                     auto node = std::make_shared<XLNODE_ANY>(3, TYPE_GEMM);
@@ -4306,6 +4506,9 @@ namespace winrt::VisualDML::implementation
                             expr = (dml::ATanh(mop.Item(whati[0])));
                         if (it->what == TYPE_ATANYX)
                             expr = (dml::ATanYX(mop.Item(whati[0]), mop.Item(whati[1])));
+						if (it->what == TYPE_AVERAGEPOOLING)
+							expr = dml::AveragePooling(mop.Item(whati[0]),TensorFromString<unsigned int>(it->Params[0]), TensorFromString<unsigned int>(it->Params[1]), TensorFromString<unsigned int>(it->Params[2]), TensorFromString<unsigned int>(it->Params[3]), TensorFromString<unsigned int>(it->Params[4]),(bool)it->Params[5], TensorFromString<unsigned int>(it->Params[6]));
+                        
 
 
                         if (it->what == TYPE_BITCOUNT)
@@ -4365,7 +4568,8 @@ namespace winrt::VisualDML::implementation
                             expr = (dml::Ceil(mop.Item(whati[0])));
                         if (it->what == TYPE_CLIP)
                             expr = (dml::Clip(mop.Item(whati[0]),it->Params[0], it->Params[1]));
-
+                        if (it->what == TYPE_CLIPGRAD)
+                            expr = (dml::ClipGrad(mop.Item(whati[0]), mop.Item(whati[1]), it->Params[0], it->Params[1]));
 
                         if (it->what == TYPE_CONVOLUTION)
                         {
@@ -4388,6 +4592,22 @@ namespace winrt::VisualDML::implementation
 
                         if (it->what == TYPE_DIVIDE)
                             expr = (dml::Divide(mop.Item(whati[0]), mop.Item(whati[1])));
+                        if (it->what == TYPE_DEPTHTOSPACE)
+                            expr = (dml::DepthToSpace(mop.Item(whati[0]),(unsigned int)it->Params[0],(DML_DEPTH_SPACE_ORDER)(int)it->Params[1]));
+
+                        if (it->what == TYPE_DEQUANTIZE)
+                        {
+                            std::vector<dml::Expression> ll;
+							for (int i5 = 1; i5 < whati.size(); i5++)
+								ll.push_back(mop.Item(whati[i5]));   
+                            int jt = it->Params[0];
+                            jt++;
+                            expr = dml::Dequantize(mop.Item(whati[0]), ll,(DML_QUANTIZATION_TYPE)jt);
+                        }
+                        if (it->what == TYPE_DEQUANTIZELINEAR)
+                            expr = (dml::DequantizeLinear(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[2])));
+                        if (it->what == TYPE_DIFFERENCESQUARE)
+                            expr = (dml::DifferenceSquare(mop.Item(whati[0]), mop.Item(whati[1])));
 
 
                         if (it->what == TYPE_ERF)
@@ -4400,6 +4620,15 @@ namespace winrt::VisualDML::implementation
 
                         if (it->what == TYPE_FLOOR)
                             expr = (dml::Floor(mop.Item(whati[0])));
+
+						if (it->what == TYPE_GATHER)
+							expr = dml::Gather(mop.Item(whati[0]), mop.Item(whati[1]),it->Params[0],it->Params[1]);
+
+                        if (it->what == TYPE_GATHERELEMENTS)
+							expr = (dml::GatherElements(mop.Item(whati[0]), mop.Item(whati[1]), it->Params[0]));
+
+						if (it->what == TYPE_GATHERND)
+							expr = dml::GatherND(mop.Item(whati[0]), mop.Item(whati[1]),it->Params[0],it->Params[1],it->Params[2]);
 
                         if (it->what == TYPE_GEMM)
                         {
