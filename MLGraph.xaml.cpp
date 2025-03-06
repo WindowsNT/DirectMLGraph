@@ -1034,6 +1034,11 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         A.Text(L"O");
         if (1)
         {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"OneHot"); N.Click(fooo);
+            A.Items().Append(N);
+        }
+        if (1)
+        {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"Or"); N.Click(fooo);
             A.Items().Append(N);
         }
@@ -1046,12 +1051,30 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
         A.Text(L"P");
 
+//        dml::
+
         winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Pow"); Neg.Click(fooo);
         A.Items().Append(Neg);
 
         r1.Items().Append(A);
     }
 
+    if (1)
+    {
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
+        A.Text(L"Q"); 
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"QuantizeLinear"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"QuantizedLinearConvolution"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+
+    }
 
     if (1)
     {
@@ -1081,6 +1104,12 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         }
         if (1)
         {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"ReverseSubsequences"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+
+        if (1)
+        {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Round"); Neg.Click(fooo);
             A.Items().Append(Neg);
         }
@@ -1101,6 +1130,11 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         if (1)
         {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Slice"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"SliceGrad"); Neg.Click(fooo);
             A.Items().Append(Neg);
         }
         if (1)
@@ -2659,6 +2693,19 @@ namespace winrt::VisualDML::implementation
                                     op.nodes.push_back(node);
                                 }
 
+                                if (t == L"OneHot")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(2, TYPE_ONEHOT);
+                                    node->Params.resize(2);
+                                    node->Params[0].n = L"Output Length";
+                                    node->Params[0].v = L"1.0";
+                                    node->Params[1].n = L"Axis";
+                                    node->Params[1].v = L"1.0";
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
 
                                 if (t == L"Or")
                                 {
@@ -2680,6 +2727,27 @@ namespace winrt::VisualDML::implementation
                                     node->hit.top = pos.Y;
                                     Push();
                                     op.nodes.push_back(node);
+                                }
+
+                                if (t == L"QuantizeLinear")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(3, TYPE_QUANTIZELINEAR);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+
+                                if (t == L"QuantizedLinearConvolution")
+                                {
+                                    // Later, this is complex
+/*                                    dml::QuantizedLinear();
+                                    auto node = std::make_shared<XLNODE_ANY>(3, TYPE_QUANTIZELINEARCONVOLUTION);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    Push();
+                                    op.nodes.push_back(node);
+*/
                                 }
 
                                 if (t == L"Recip")
@@ -2764,6 +2832,17 @@ namespace winrt::VisualDML::implementation
                                     op.nodes.push_back(node);
                                 }
 
+                                if (t == L"ReverseSubsequences")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(2, TYPE_REVERSESUBSEQUENCES);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(1);
+                                    node->Params[0].n = L"Axis";
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+
                                 if (t == L"Slice")
                                 {
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_SLICE);
@@ -2787,6 +2866,33 @@ namespace winrt::VisualDML::implementation
                                     op.nodes.push_back(node);
                                 }
 
+
+                                if (t == L"SliceGrad")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_SLICEGRAD);
+                                    node->Params.resize(4);
+                                    node->Params[0].n = L"Output Gradient Sizes";
+                                    node->Params[0].minv = -1;
+                                    node->Params[0].maxv = -1;
+                                    node->Params[0].v = L"1x1";
+                                    node->Params[1].n = L"Offsets";
+                                    node->Params[1].minv = -1;
+                                    node->Params[1].maxv = -1;
+                                    node->Params[1].v = L"1x1";
+                                    node->Params[2].n = L"Sizes";
+                                    node->Params[2].minv = -1;
+                                    node->Params[2].maxv = -1;
+                                    node->Params[2].v = L"1x1";
+                                    node->Params[3].n = L"Strides";
+                                    node->Params[3].minv = -1;
+                                    node->Params[3].maxv = -1;
+                                    node->Params[3].v = L"1x1";
+
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
 
                                 if (t == L"Subtract")
                                 {
@@ -4707,8 +4813,20 @@ namespace winrt::VisualDML::implementation
                         if (it->what == TYPE_NEGATE)
                             expr = (dml::Negate(mop.Item(whati[0])));
 
+
+                        if (it->what == TYPE_ONEHOT)
+							expr = dml::OneHot(mop.Item(whati[0]), mop.Item(whati[1]), it->Params[0], it->Params[1]);
+
                         if (it->what == TYPE_POW)
                             expr = (dml::Pow(mop.Item(whati[0]),it->Params[0]));
+
+                        if (it->what == TYPE_QUANTIZELINEAR)
+                            expr = (dml::QuantizeLinear(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[2]), (DML_TENSOR_DATA_TYPE)it->OpType));
+                        if (it->what == TYPE_QUANTIZEDLINEARCONVOLUTION)
+                        {
+
+                        }
+
 
                         if (it->what == TYPE_RECIP)
                             expr = (dml::Recip(mop.Item(whati[0])));
@@ -4730,6 +4848,8 @@ namespace winrt::VisualDML::implementation
                             std::vector<unsigned int> newSizes = TensorFromString(it->Params[0].v.c_str());
                             expr = (dml::Reinterpret(mop.Item(whati[0]), (DML_TENSOR_DATA_TYPE)it->OpType, newSizes, {}));
                         }
+                        if (it->what == TYPE_REVERSESUBSEQUENCES)
+							expr = (dml::ReverseSubsequences(mop.Item(whati[0]), mop.Item(whati[1]), it->Params[0]));
 
                         if (it->what == TYPE_SLICE)
                         {
@@ -4737,6 +4857,15 @@ namespace winrt::VisualDML::implementation
                             std::vector<unsigned int> sizes = TensorFromString(it->Params[1].v.c_str());
                             std::vector<int> strides = TensorFromString<int>(it->Params[2].v.c_str());
                             expr = (dml::Slice(mop.Item(whati[0]),offsets,sizes,strides));
+                        }
+                        if (it->what == TYPE_SLICEGRAD)
+                        {
+							std::vector<unsigned int> yo = TensorFromString(it->Params[0].v.c_str());
+                            std::vector<unsigned int> offsets = TensorFromString(it->Params[1].v.c_str());
+                            std::vector<unsigned int> sizes = TensorFromString(it->Params[2].v.c_str());
+                            std::vector<int> strides = TensorFromString<int>(it->Params[3].v.c_str());
+							expr = (dml::SliceGrad(mop.Item(whati[0]), yo, offsets, sizes, strides));
+
                         }
 
                         if (it->what == TYPE_SUBTRACT)

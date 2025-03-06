@@ -69,14 +69,16 @@
     <None Include="packages.config" />
     <None Include="Readme.md" />
     <None Include="test.dml" />
-    <None Include="data\mnist.exe">
-      <Filter>data</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="main.rc" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="data\mnist.exe">
+      <Filter>data</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>

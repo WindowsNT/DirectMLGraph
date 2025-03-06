@@ -156,9 +156,11 @@ enum XLNODE_TYPE
 	TYPE_LAND, TYPE_LOR, TYPE_LXOR, TYPE_LNOT, TYPE_LOG, TYPE_LESSTHAN, TYPE_LESSTHANOREQUAL,
     TYPE_MAX,TYPE_MEAN,TYPE_MIN,TYPE_MULTIPLY,TYPE_MODULUSFLOOR,TYPE_MODULUSTRUNCATE,
     TYPE_NEGATE,
+    TYPE_ONEHOT,
     TYPE_POW,
-    TYPE_REINTERPRET,TYPE_RECIP,TYPE_REDUCE,TYPE_RESAMPLE,TYPE_ROUND,
-    TYPE_SLICE,TYPE_SUBTRACT,TYPE_SQRT,TYPE_SIGN,
+    TYPE_QUANTIZELINEAR,TYPE_QUANTIZEDLINEARCONVOLUTION,
+    TYPE_REINTERPRET,TYPE_RECIP,TYPE_REDUCE,TYPE_RESAMPLE,TYPE_REVERSESUBSEQUENCES,TYPE_ROUND,
+    TYPE_SLICE,TYPE_SLICEGRAD,TYPE_SUBTRACT,TYPE_SQRT,TYPE_SIGN,
     TYPE_THRESHOLD,
     TYPE_OUTPUT = 999999
 };
@@ -255,13 +257,19 @@ inline std::map<int, std::string> TypesToNames = {
 	{TYPE_MODULUSFLOOR,"ModulusFloor"},
 	{TYPE_MODULUSTRUNCATE,"ModulusTruncate"},
 	{TYPE_NEGATE,"Negate"},
+	{TYPE_ONEHOT,"OneHot"},
     {TYPE_POW,"Pow"},
+	{TYPE_QUANTIZELINEAR,"QuantizeLinear"},
+	{TYPE_QUANTIZEDLINEARCONVOLUTION,"QuantizedLinearConvolution"},
+
 	{TYPE_REINTERPRET,"Reinterpret"},
 	{TYPE_RECIP,"Recip"},
 	{TYPE_REDUCE,"Reduce"},
 	{TYPE_RESAMPLE,"Resample"},
+	{ TYPE_REVERSESUBSEQUENCES,"ReverseSubsequences" },
 	{TYPE_ROUND,"Round"},
 	{TYPE_SLICE,"Slice"},
+	{ TYPE_SLICEGRAD,"SliceGrad" },
     {TYPE_SUBTRACT,"Subtract"},
     {TYPE_SQRT,"Sqrt"},
 	{TYPE_SIGN,"Sign"},
@@ -280,7 +288,7 @@ struct XLNODE_ANY : public XLNODE
     std::any MultipleOpOutputData;
 
     virtual bool AsksType() {
-        if (what == TYPE_CAST || what == TYPE_LESSTHAN || what == TYPE_LESSTHANOREQUAL || what == TYPE_GREATERTHAN || what == TYPE_GREATERTHANOREQUAL || what == TYPE_REINTERPRET || what == TYPE_ISINFINITY || what == TYPE_ISNAN || what == TYPE_REDUCE)
+        if (what == TYPE_CAST || what == TYPE_LESSTHAN || what == TYPE_LESSTHANOREQUAL || what == TYPE_GREATERTHAN || what == TYPE_GREATERTHANOREQUAL || what == TYPE_REINTERPRET || what == TYPE_ISINFINITY || what == TYPE_ISNAN || what == TYPE_REDUCE || what == TYPE_QUANTIZELINEAR || what == TYPE_QUANTIZEDLINEARCONVOLUTION)
             return true;
         return false;
     }
@@ -515,8 +523,17 @@ struct XLNODE_ANY : public XLNODE
         if (what == TYPE_NEGATE)
             return L"Neg";
 
+		if (what == TYPE_ONEHOT)
+			return L"OneHot";
+
         if (what == TYPE_POW)
             return L"Pow";
+
+		if (what == TYPE_QUANTIZELINEAR)
+			return L"QuantizeLinear";
+		if (what == TYPE_QUANTIZEDLINEARCONVOLUTION)
+			return L"QuantizedLinearConvolution";
+
 
 		if (what == TYPE_REINTERPRET)
 			return L"Reinterpret";
@@ -524,6 +541,8 @@ struct XLNODE_ANY : public XLNODE
 			return L"Round";
 		if (what == TYPE_RESAMPLE)
 			return L"Resample";
+		if (what == TYPE_REVERSESUBSEQUENCES)
+			return L"ReverseSubsequences";
 		if (what == TYPE_REDUCE)
 			return L"Reduce";
 		if (what == TYPE_RECIP)
@@ -531,6 +550,8 @@ struct XLNODE_ANY : public XLNODE
 
 		if (what == TYPE_SLICE)
 			return L"Slice";
+		if (what == TYPE_SLICEGRAD)
+			return L"SliceGrad";
 		if (what == TYPE_SUBTRACT)
 			return L"Subtract";
         if (what == TYPE_SQRT)

@@ -217,7 +217,9 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="data\mnist.exe" />
+    <CopyFileToFolders Include="data\mnist.exe">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
     <None Include="packages.config" />
     <None Include="Readme.md" />
     <None Include="test.dml" />
