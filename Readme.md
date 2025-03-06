@@ -49,8 +49,10 @@ Uses my [DirectML Lib](https://github.com/WindowsNT/directmllib).
 * P: Pow
 * Q: QuantizedLinearConvolution, QuantizeLinear
 * R: Recip, Reduce, Resample, Round, Reintrerpret, ReverseSubsequences
-* S: Slice, SliceGrad, Subtract, Sqrt, Sign
+* S: ScatterElements, Slice, SliceGrad, Subtract, Sqrt, Sign, SpaceToDepth
 * T: Threshold
+* U: Upsample2D
+* V: ValueScale2D 
 * X: Xor  
 
 ## Screenshots
@@ -73,10 +75,6 @@ All other operators:
 	dml::ResampleGrad;
 	dml::RoiAlign;
 	dml::RoiAlignGrad;
-	dml::ScatterElements;
-	dml::SpaceToDepth;
 	dml::TopK;
-	dml::Upsample2D;
-	dml::ValueScale2D;
 
 

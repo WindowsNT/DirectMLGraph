@@ -160,8 +160,10 @@ enum XLNODE_TYPE
     TYPE_POW,
     TYPE_QUANTIZELINEAR,TYPE_QUANTIZEDLINEARCONVOLUTION,
     TYPE_REINTERPRET,TYPE_RECIP,TYPE_REDUCE,TYPE_RESAMPLE,TYPE_REVERSESUBSEQUENCES,TYPE_ROUND,
-    TYPE_SLICE,TYPE_SLICEGRAD,TYPE_SUBTRACT,TYPE_SQRT,TYPE_SIGN,
+    TYPE_SCATTERELEMENTS,TYPE_SLICE,TYPE_SLICEGRAD,TYPE_SUBTRACT,TYPE_SQRT,TYPE_SIGN,TYPE_SPACETODEPTH,
     TYPE_THRESHOLD,
+    TYPE_UPSAMLPLE2D,
+    TYPE_VALUESCALE2D,
     TYPE_OUTPUT = 999999
 };
 
@@ -266,14 +268,19 @@ inline std::map<int, std::string> TypesToNames = {
 	{TYPE_RECIP,"Recip"},
 	{TYPE_REDUCE,"Reduce"},
 	{TYPE_RESAMPLE,"Resample"},
-	{ TYPE_REVERSESUBSEQUENCES,"ReverseSubsequences" },
+	{TYPE_REVERSESUBSEQUENCES,"ReverseSubsequences" },
 	{TYPE_ROUND,"Round"},
+	{TYPE_SCATTERELEMENTS,"ScatterElements" },
 	{TYPE_SLICE,"Slice"},
-	{ TYPE_SLICEGRAD,"SliceGrad" },
+	{TYPE_SLICEGRAD,"SliceGrad" },
     {TYPE_SUBTRACT,"Subtract"},
     {TYPE_SQRT,"Sqrt"},
 	{TYPE_SIGN,"Sign"},
+	{TYPE_SPACETODEPTH,"SpaceToDepth" },
 	{TYPE_THRESHOLD,"Threshold"},
+	{ TYPE_UPSAMLPLE2D,"Upsample2D" },
+	{TYPE_VALUESCALE2D,"ValueScale2D" },
+
 	{TYPE_OUTPUT,"Output"}
 
 };
@@ -548,12 +555,16 @@ struct XLNODE_ANY : public XLNODE
 		if (what == TYPE_RECIP)
 			return L"Recip";
 
+		if (what == TYPE_SCATTERELEMENTS)
+			return L"ScatterElements";
 		if (what == TYPE_SLICE)
 			return L"Slice";
 		if (what == TYPE_SLICEGRAD)
 			return L"SliceGrad";
 		if (what == TYPE_SUBTRACT)
 			return L"Subtract";
+		if (what == TYPE_SPACETODEPTH)
+			return L"SpaceToDepth"; 
         if (what == TYPE_SQRT)
             return L"Sqrt";
 
@@ -562,6 +573,10 @@ struct XLNODE_ANY : public XLNODE
 
 		if (what == TYPE_THRESHOLD)
 			return L"Threshold";
+		if (what == TYPE_UPSAMLPLE2D)
+			return L"Upsample2D";
+		if (what == TYPE_VALUESCALE2D)
+			return L"ValueScale2D";
 
 
         return L"Unknown";

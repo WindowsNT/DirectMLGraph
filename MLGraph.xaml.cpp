@@ -1124,6 +1124,11 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
 
         if (1)
         {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"ScatterElements"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Sign"); Neg.Click(fooo);
             A.Items().Append(Neg);
         }
@@ -1135,6 +1140,11 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         if (1)
         {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"SliceGrad"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"SpaceToDepth"); Neg.Click(fooo);
             A.Items().Append(Neg);
         }
         if (1)
@@ -1159,6 +1169,32 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         if (1)
         {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"Threshold"); N.Click(fooo);
+            A.Items().Append(N);
+        }
+        r1.Items().Append(A);
+
+    }
+
+    if (1)
+    {
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
+        A.Text(L"U");
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"Upsample2D"); N.Click(fooo);
+            A.Items().Append(N);
+        }
+        r1.Items().Append(A);
+
+    }
+
+    if (1)
+    {
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
+        A.Text(L"V");
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"ValueScale2D"); N.Click(fooo);
             A.Items().Append(N);
         }
         r1.Items().Append(A);
@@ -2843,6 +2879,17 @@ namespace winrt::VisualDML::implementation
                                     op.nodes.push_back(node);
                                 }
 
+                                if (t == L"ScatterElements")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(3, TYPE_SCATTERELEMENTS);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(1);
+                                    node->Params[0].n = L"Axis";
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+
                                 if (t == L"Slice")
                                 {
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_SLICE);
@@ -2903,6 +2950,22 @@ namespace winrt::VisualDML::implementation
                                     op.nodes.push_back(node);
                                 }
 
+                                if (t == L"SpaceToDepth")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_SPACETODEPTH);
+                                    node->Params.resize(2);
+                                    node->Params[0].n = L"Block Size";
+                                    node->Params[1].n = L"Order";
+                                    node->Params[1].minv = 0;
+                                    node->Params[1].maxv = 1;
+                                    node->Params[1].list_names = { L"DEPTH_COLUMN_ROW",L"COLUMN_ROW_DEPTH" };
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+
+
 
                                 if (t == L"Sqrt")
                                 {
@@ -2930,6 +2993,35 @@ namespace winrt::VisualDML::implementation
                                     node->hit.top = pos.Y;
                                     node->Params.resize(1);
                                     node->Params[0].n = L"Minimum";
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"Upsample2D")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_UPSAMLPLE2D);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(3);
+                                    node->Params[0].n = L"ScaleX";
+                                    node->Params[1].n = L"ScaleY";
+                                    node->Params[2].n = L"Interpolation";
+                                    node->Params[2].minv = 0;
+                                    node->Params[2].maxv = 2;
+                                    node->Params[2].list_names = { L"None",L"Nearest",L"Linear"};
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+
+                                if (t == L"ValueScale2D")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_VALUESCALE2D);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(2);
+                                    node->Params[0].n = L"Scale";
+                                    node->Params[1].minv = -1;
+                                    node->Params[1].maxv = -1;
+                                    node->Params[1].n = L"Bias";
                                     Push();
                                     op.nodes.push_back(node);
                                 }
@@ -4851,6 +4943,12 @@ namespace winrt::VisualDML::implementation
                         if (it->what == TYPE_REVERSESUBSEQUENCES)
 							expr = (dml::ReverseSubsequences(mop.Item(whati[0]), mop.Item(whati[1]), it->Params[0]));
 
+
+                        if (it->what == TYPE_SCATTERELEMENTS)
+                        {
+							expr = dml::ScatterElements(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[2]), it->Params[0]);
+                        }
+
                         if (it->what == TYPE_SLICE)
                         {
                             std::vector<unsigned int> offsets = TensorFromString(it->Params[0].v.c_str());
@@ -4880,6 +4978,16 @@ namespace winrt::VisualDML::implementation
                         if (it->what == TYPE_THRESHOLD)
                             expr = (dml::Threshold(mop.Item(whati[0]), it->Params[0]));
 
+
+                        if (it->what == TYPE_VALUESCALE2D)
+							expr = dml::ValueScale2D(mop.Item(whati[0]), it->Params[0], TensorFromString<float>(it->Params[1]));
+
+						if (it->what == TYPE_UPSAMLPLE2D)
+                            expr = dml::Upsample2D(mop.Item(whati[0]), DML_SIZE_2D{ (unsigned int)(it->Params[0]), (unsigned int)(it->Params[1]) }, (DML_INTERPOLATION_MODE)(int)it->Params[2]);
+
+
+                        if (it->what == TYPE_SPACETODEPTH)
+							expr = (dml::SpaceToDepth(mop.Item(whati[0]), (unsigned int)it->Params[0], (DML_DEPTH_SPACE_ORDER)(int)it->Params[1]));
 
                         
 
