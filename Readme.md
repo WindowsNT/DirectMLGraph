@@ -1,4 +1,4 @@
-# DirectML Graph
+# Visual DML
 
 A tool to visually-design DirectML operators that run in the GPU and to create and train a neural network with it.
 Uses my [DirectML Lib](https://github.com/WindowsNT/directmllib).
