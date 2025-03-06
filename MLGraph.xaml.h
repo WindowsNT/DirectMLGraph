@@ -310,6 +310,8 @@ struct XLNODE_ANY : public XLNODE
             return 1;
         if (what == TYPE_DEQUANTIZE)
             return 2;
+        if (what == TYPE_QUANTIZEDLINEARCONVOLUTION)
+            return 5;
         return nin();
     }
     virtual int nin() { return howi; }

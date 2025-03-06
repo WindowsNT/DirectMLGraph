@@ -645,12 +645,22 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         }
         if (1)
         {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem b3; b3.Text(L"BatchNormalizationGrad"); b3.Click(fooo);
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem b3; b3.Text(L"BatchNormalizationTraining"); b3.Click(fooo);
             A.Items().Append(b3);
         }
+
+        r1.Items().Append(A);
+        SepIf();
+    }
+
+    if (1)
+    {
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
+        A.Text(L"Gradients");
+
         if (1)
         {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem b3; b3.Text(L"BatchNormalizationTraining"); b3.Click(fooo);
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem b3; b3.Text(L"BatchNormalizationGrad"); b3.Click(fooo);
             A.Items().Append(b3);
         }
         if (1)
@@ -658,6 +668,17 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem b3; b3.Text(L"BatchNormalizationTrainingGrad"); b3.Click(fooo);
             A.Items().Append(b3);
         }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"ClipGrad"); N.Click(fooo);
+            A.Items().Append(N);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"SliceGrad"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+
 
         r1.Items().Append(A);
         SepIf();
@@ -771,11 +792,6 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         if (1)
         {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"Clip"); N.Click(fooo);
-            A.Items().Append(N);
-        }
-        if (1)
-        {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"ClipGrad"); N.Click(fooo);
             A.Items().Append(N);
         }
         if (1)
@@ -1074,6 +1090,7 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
             A.Items().Append(Neg);
         }
 
+        r1.Items().Append(A);
     }
 
     if (1)
@@ -1135,11 +1152,6 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         if (1)
         {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Slice"); Neg.Click(fooo);
-            A.Items().Append(Neg);
-        }
-        if (1)
-        {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"SliceGrad"); Neg.Click(fooo);
             A.Items().Append(Neg);
         }
         if (1)
@@ -2776,14 +2788,29 @@ namespace winrt::VisualDML::implementation
 
                                 if (t == L"QuantizedLinearConvolution")
                                 {
-                                    // Later, this is complex
-/*                                    dml::QuantizedLinear();
-                                    auto node = std::make_shared<XLNODE_ANY>(3, TYPE_QUANTIZELINEARCONVOLUTION);
+                                    // 5 forced input descriptions, 4 optional input descriptions, datatype, strides-dilations-start-endpdding tensors, group count,output tensor
+                                    auto node = std::make_shared<XLNODE_ANY>(9, TYPE_QUANTIZEDLINEARCONVOLUTION);
+                                    node->Params.resize(6);
+                                    for (int ii = 0; ii < 6; ii++)
+                                    {
+                                        if (ii != 4)
+                                        {
+                                            node->Params[ii].minv = -1;
+                                            node->Params[ii].maxv = -1;
+                                        }
+                                    }
+
+                                    node->Params[0].n = L"Strides";
+                                    node->Params[1].n = L"Dilations";
+                                    node->Params[2].n = L"Start Pad";
+                                    node->Params[3].n = L"End Pad";
+                                    node->Params[4].n = L"Group Count";
+                                    node->Params[4].v = L"1.0";
+                                    node->Params[5].n = L"Output Tensor Sizes";
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
                                     Push();
                                     op.nodes.push_back(node);
-*/
                                 }
 
                                 if (t == L"Recip")
@@ -4804,6 +4831,9 @@ namespace winrt::VisualDML::implementation
                         }
                         if (it->what == TYPE_DEQUANTIZELINEAR)
                             expr = (dml::DequantizeLinear(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[2])));
+
+
+
                         if (it->what == TYPE_DIFFERENCESQUARE)
                             expr = (dml::DifferenceSquare(mop.Item(whati[0]), mop.Item(whati[1])));
 
@@ -4916,8 +4946,13 @@ namespace winrt::VisualDML::implementation
                             expr = (dml::QuantizeLinear(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[2]), (DML_TENSOR_DATA_TYPE)it->OpType));
                         if (it->what == TYPE_QUANTIZEDLINEARCONVOLUTION)
                         {
-
+                            expr = dml::QuantizedLinearConvolution(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[5]), mop.Item(whati[2]), mop.Item(whati[3]), mop.Item(whati[6]), mop.Item(whati[7]), mop.Item(whati[4]), mop.Item(whati[8]),
+                                (DML_TENSOR_DATA_TYPE)it->OpType,
+                                TensorFromString<unsigned int>(it->Params[0]), TensorFromString<unsigned int>(it->Params[1]), TensorFromString<unsigned int>(it->Params[2]), TensorFromString<unsigned int>(it->Params[3]),
+                                it->Params[4], TensorFromString<unsigned int>(it->Params[5]));
                         }
+
+
 
 
                         if (it->what == TYPE_RECIP)
