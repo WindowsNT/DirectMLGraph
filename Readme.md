@@ -42,9 +42,9 @@ Uses my [DirectML Lib](https://github.com/WindowsNT/directmllib).
 * G: Gather, GatherElemends, GatherND, Gemm, GreaterThan, GreaterThanOrEqual
 * I: Identity, 
 * J: Join
-* L: Log, LessThan, LessThanOrEqual
-* M: Max,Mean,Min,Multiply,Modulus Floor,Modulus Truncate
-* N: Neg, Not
+* L: Log, LessThan, LessThanOrEqual, LocalResponseNormalization
+* M: Max,MaxPooling,Mean,MeanVarianceNormalization,Min,Multiply,Modulus Floor,Modulus Truncate
+* N: Neg, NonZeroCoordinates, Not
 * O: OneHot, Or
 * P: Pow
 * Q: QuantizedLinearConvolution, QuantizeLinear
@@ -66,10 +66,6 @@ Uses my [DirectML Lib](https://github.com/WindowsNT/directmllib).
 All other operators: 
 
 	dml::ConvolutionInteger;
-	dml::LocalResponseNormalization;
-	dml::MaxPooling;
-	dml::MeanVarianceNormalization;
-	dml::NonZeroCoordinates;
 	dml::Padding;
 	dml::RandomGenerator;
 	dml::ResampleGrad;

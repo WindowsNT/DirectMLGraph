@@ -19,6 +19,7 @@ struct XLNODEBULLET
     bool S = 0;
     size_t i = 0;
     bool O = 0;
+    std::wstring name;
     std::vector<unsigned long long> g;
 };
 
@@ -153,9 +154,9 @@ enum XLNODE_TYPE
 	TYPE_GATHER,TYPE_GATHERELEMENTS,TYPE_GATHERND,TYPE_GEMM, TYPE_GREATERTHAN, TYPE_GREATERTHANOREQUAL,
     TYPE_IDENTITY,TYPE_IF,TYPE_ISINFINITY,TYPE_ISNAN,
     TYPE_JOIN,
-	TYPE_LAND, TYPE_LOR, TYPE_LXOR, TYPE_LNOT, TYPE_LOG, TYPE_LESSTHAN, TYPE_LESSTHANOREQUAL,
-    TYPE_MAX,TYPE_MEAN,TYPE_MIN,TYPE_MULTIPLY,TYPE_MODULUSFLOOR,TYPE_MODULUSTRUNCATE,
-    TYPE_NEGATE,
+	TYPE_LAND, TYPE_LOR, TYPE_LXOR, TYPE_LNOT, TYPE_LOG, TYPE_LESSTHAN, TYPE_LESSTHANOREQUAL, TYPE_LOCALRESPONSENORMALIZATION,
+    TYPE_MAX,TYPE_MAXPOOLING,TYPE_MEAN,TYPE_MEANVARIANCENORMALIZATION, TYPE_MIN,TYPE_MULTIPLY,TYPE_MODULUSFLOOR,TYPE_MODULUSTRUNCATE,
+    TYPE_NEGATE,TYPE_NONZEROCOORDINATES,
     TYPE_ONEHOT,
     TYPE_POW,
     TYPE_QUANTIZELINEAR,TYPE_QUANTIZEDLINEARCONVOLUTION,
@@ -252,13 +253,18 @@ inline std::map<int, std::string> TypesToNames = {
     {TYPE_LOG,"Log"},
 	{TYPE_LESSTHAN,"LessThan"},
 	{TYPE_LESSTHANOREQUAL,"LessThanOrEqual"},
+	{TYPE_LOCALRESPONSENORMALIZATION,"LocalResponseNormalization"},
+
     {TYPE_MAX,"Max"},
+	{TYPE_MAXPOOLING,"MaxPooling"},
     {TYPE_MEAN,"Mean"},
+	{TYPE_MEANVARIANCENORMALIZATION,"MeanVarianceNormalization"},
     {TYPE_MIN,"Min"},
     {TYPE_MULTIPLY,"Multiply"},
 	{TYPE_MODULUSFLOOR,"ModulusFloor"},
 	{TYPE_MODULUSTRUNCATE,"ModulusTruncate"},
 	{TYPE_NEGATE,"Negate"},
+	{TYPE_NONZEROCOORDINATES,"NonZeroCoordinates"},
 	{TYPE_ONEHOT,"OneHot"},
     {TYPE_POW,"Pow"},
 	{TYPE_QUANTIZELINEAR,"QuantizeLinear"},
@@ -312,13 +318,26 @@ struct XLNODE_ANY : public XLNODE
             return 2;
         if (what == TYPE_QUANTIZEDLINEARCONVOLUTION)
             return 5;
+        if (what == TYPE_MEANVARIANCENORMALIZATION)
+            return 1;
         return nin();
     }
     virtual int nin() { return howi; }
     virtual int nout() { return howo; }
 
 
-    XLNODE_ANY(int NI,int w,int NO = 1)
+    void LoadNames()
+    {
+        std::vector<std::wstring> Names = GetNames(what);
+        for (int i = 0; i < children.size(); i++)
+        {
+            auto& bu = children[i];
+            if (Names.size() > i)
+                bu.name = Names[i];
+        }
+    }
+
+    XLNODE_ANY(int NI, int w, int NO = 1)
     {
         howi = NI;
         howo = NO;
@@ -336,6 +355,92 @@ struct XLNODE_ANY : public XLNODE
             children.push_back(bu);
         }
         what = w;
+        LoadNames();
+    }
+
+    std::vector<std::wstring> GetNames(int w)
+    {
+		std::vector<std::wstring> dr;
+        if (howi <= 1 && howo <= 1)
+            return dr;
+
+        if (w == TYPE_BATCHNORMALIZATION)
+        {
+			return { L"Input",L"Mean",L"Variance",L"Scale",L"Bias"};
+        }
+        if (w == TYPE_BATCHNORMALIZATIONGRAD)
+        {
+            return { L"Input",L"Input Gradient",L"Mean",L"Variance",L"Scale",L"Gradient",L"Bias Gradient",L"Scale Gradient"};
+        }
+        if (w == TYPE_BATCHNORMALIZATIONTRAINING)
+        {
+            return { L"Input",L"Scale",L"Bias",L"Output",L"Mean",L"Variance"};
+        }
+        if (w == TYPE_BATCHNORMALIZATIONTRAININGGRAD)
+        {
+            return { L"Input",L"Input Gradient",L"Mean",L"Variance",L"Scale",L"Gradient",L"Bias Gradient",L"Scale Gradient" };
+        }
+        if (w == TYPE_CLIPGRAD)
+        {
+            return { L"Input",L"Input Gradient"};
+        }
+		if (w == TYPE_CONVOLUTION)
+		{
+			return { L"Input",L"Filter",L"Bias" };
+		}
+		if (w == TYPE_DEQUANTIZELINEAR)
+		{
+			return { L"Input",L"Scale",L"Zero Point"};
+		}
+		if (w == TYPE_GATHER)
+		{
+			return { L"Input",L"Indices" };
+		}
+		if (w == TYPE_GATHERELEMENTS)
+		{
+			return { L"Input",L"Indices" };
+		}
+		if (w == TYPE_GATHERND)
+		{
+			return { L"Input",L"Indices" };
+		}
+        if (w == TYPE_GEMM)
+        {
+            return { L"Matrix 1",L"Matrix 2",L"Optional C" };
+        }
+        if (w == TYPE_MAXPOOLING)
+        {
+            return { L"Input",L"Values",L"Indices" };
+        }
+		if (w == TYPE_MEANVARIANCENORMALIZATION)
+		{
+            return { L"Input",L"Scale",L"Bias" };
+		}
+        if (w == TYPE_NONZEROCOORDINATES)
+        {
+            return { L"Input",L"Count",L"Coordinates" };
+        }
+        if (w == TYPE_ONEHOT)
+        {
+            return { L"Indices",L"Values" };
+        }
+        if (w == TYPE_QUANTIZELINEAR)
+        {
+            return { L"Input",L"Scale",L"Zero Point" };
+        }
+		if (w == TYPE_QUANTIZEDLINEARCONVOLUTION)
+		{
+			return { L"Input",L"Scale",L"Filter",L"Filter Scale",L"Output Scale",L"Input ZP",L"Filter ZP",L"Output ZP"};
+		}
+		if (w == TYPE_REVERSESUBSEQUENCES)
+		{
+			return { L"Input",L"Sequence Lengths" };
+		}
+        if (w == TYPE_SCATTERELEMENTS)
+        {
+            return { L"Input",L"Indices",L"Updates"};
+        }
+        return dr;
     }
 
     virtual std::wstring opname()
@@ -513,14 +618,20 @@ struct XLNODE_ANY : public XLNODE
 			return L"LessThan";
 		if (what == TYPE_LESSTHANOREQUAL)
 			return L"LessThanOrEqual";
+		if (what == TYPE_LOCALRESPONSENORMALIZATION)
+			return L"LocalResponseNormalization";
 
 
         if (what == TYPE_MAX)
             return L"Max";
         if (what == TYPE_MIN)
             return L"Min";
+		if (what == TYPE_MAXPOOLING)
+			return L"MaxPooling";
         if (what == TYPE_MEAN)
             return L"Mean";
+		if (what == TYPE_MEANVARIANCENORMALIZATION)
+			return L"MeanVarianceNormalization";
 
 		if (what == TYPE_MULTIPLY)
 			return L"Multiply";
@@ -531,6 +642,8 @@ struct XLNODE_ANY : public XLNODE
 
         if (what == TYPE_NEGATE)
             return L"Neg";
+		if (what == TYPE_NONZEROCOORDINATES)
+			return L"NonZeroCoordinates";   
 
 		if (what == TYPE_ONEHOT)
 			return L"OneHot";
@@ -663,6 +776,7 @@ struct XLNODE_ANY : public XLNODE
 				p.list_names.push_back(le.vv("n").GetWideValue());
 			Params.push_back(p);
         }
+        LoadNames();
     }
 
 

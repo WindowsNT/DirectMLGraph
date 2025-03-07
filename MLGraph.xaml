@@ -233,7 +233,7 @@
 
             <SwapChainPanel  x:Name="scp" AllowDrop="True" >
                 <ToolTipService.ToolTip>
-                    <ToolTip x:Name="Tooltip" Visibility="Collapsed" Content="" VerticalOffset="0" HorizontalOffset="0"/>
+                    <ToolTip x:Name="Tooltip" Visibility="Collapsed" />
                 </ToolTipService.ToolTip>
             </SwapChainPanel>
             </ScrollView>

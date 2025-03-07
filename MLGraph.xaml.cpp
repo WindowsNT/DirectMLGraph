@@ -260,8 +260,16 @@ void XLNODE::Draw(MLOP* mlop,bool Active,bool Enabled,ID2D1DeviceContext5* r, si
         {
             Red = 1;
         }
+
+		auto xn = dynamic_cast<XLNODE_ANY*>(this);
+        bool OptionalIn = 0;
+		if (i < nin() && xn &&  i >= xn->ninreq())
+		{
+    		OptionalIn = 1;
+		}
+
         bool Connected = false;
-        r->FillEllipse(el, Red ? d2d->RedBrush : Connected ? d2d->CyanBrush : DefBrush);
+        r->FillEllipse(el, Red ? d2d->RedBrush :  Connected ? d2d->CyanBrush : OptionalIn ? d2d->SnapBrush2 : DefBrush);
         ch.hit = D2D1_RECT_F({ el.point.x - el.radiusX, el.point.y - el.radiusY, el.point.x + el.radiusX, el.point.y + el.radiusY });
 
     }
@@ -635,7 +643,7 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
     if (1)
     {
         winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
-        A.Text(L"Batch");
+        A.Text(L"Batch and Gradients");
 
 
         if (1)
@@ -648,16 +656,6 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem b3; b3.Text(L"BatchNormalizationTraining"); b3.Click(fooo);
             A.Items().Append(b3);
         }
-
-        r1.Items().Append(A);
-        SepIf();
-    }
-
-    if (1)
-    {
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
-        A.Text(L"Gradients");
-
         if (1)
         {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem b3; b3.Text(L"BatchNormalizationGrad"); b3.Click(fooo);
@@ -976,6 +974,12 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Log"); Neg.Click(fooo);
             A.Items().Append(Neg);
         }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"LocalResponseNormalization"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+
+        }
      
 
         r1.Items().Append(A);
@@ -994,7 +998,17 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         }
         if (1)
         {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"MaxPooling"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Mean"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"MeanVarianceNormalization"); Neg.Click(fooo);
             A.Items().Append(Neg);
         }
 
@@ -1031,8 +1045,17 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
         A.Text(L"N");
 
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Neg"); Neg.Click(fooo);
-        A.Items().Append(Neg);
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Neg"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"NonZeroCoordinates"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        
 
         if (1)
         {
@@ -2656,6 +2679,23 @@ namespace winrt::VisualDML::implementation
                                     Push();
                                     op.nodes.push_back(node);
                                 }
+                                if (t == L"LocalResponseNormalization")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_LOCALRESPONSENORMALIZATION);
+                                    node->Params.resize(5);
+                                    node->Params[0].n = L"Cross Channel ";
+                                    node->Params[0].minv = 0;
+                                    node->Params[0].maxv = 1;
+                                    node->Params[1].n = L"Local Size";
+                                    node->Params[2].n = L"Alpha";
+                                    node->Params[3].n = L"Beta";
+                                    node->Params[4].n = L"Bias";
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+
 
                                 if (t == L"LessThan")
                                 {
@@ -2683,9 +2723,50 @@ namespace winrt::VisualDML::implementation
                                     Push();
                                     op.nodes.push_back(node);
                                 }
+                                if (t == L"MaxPooling")
+                                {
+									auto node = std::make_shared<XLNODE_ANY>(1, TYPE_MAXPOOLING,2);
+									node->hit.left = pos.X;
+									node->hit.top = pos.Y;
+									node->Params.resize(7);
+                                    for (int ii = 0; ii < 7; ii++)
+                                    {
+										node->Params[ii].minv = -1;
+										node->Params[ii].maxv = -1;
+                                        if (ii == 5)
+                                        {
+											node->Params[ii].minv = 0;
+											node->Params[ii].maxv = 1;
+                                        }
+                                    }
+									node->Params[0].n = L"Window Size";
+									node->Params[1].n = L"Strides";
+									node->Params[2].n = L"Start Pad";
+									node->Params[3].n = L"End Pad";
+									node->Params[4].n = L"Dilations";
+									node->Params[5].n = L"Output Indices";
+									node->Params[6].n = L"Output Sizes";
+									Push();
+									op.nodes.push_back(node);
+                                }
                                 if (t == L"Mean")
                                 {
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_MEAN);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"MeanVarianceNormalization")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(3, TYPE_MEANVARIANCENORMALIZATION);
+                                    node->Params.resize(4);
+                                    node->Params[0].n = L"Axes";
+                                    node->Params[0].minv = -1;
+                                    node->Params[0].maxv = -1;
+                                    node->Params[1].n = L"Normalize Variance";
+                                    node->Params[2].n = L"Normalize Mean";
+                                    node->Params[3].n = L"Epsilon";
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
                                     Push();
@@ -2727,6 +2808,14 @@ namespace winrt::VisualDML::implementation
                                 if (t == L"Neg")
                                 {
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_NEGATE);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"NonZeroCoordinates")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_NONZEROCOORDINATES,2);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
                                     Push();
@@ -3100,16 +3189,37 @@ namespace winrt::VisualDML::implementation
 							if (Hit(pos.X, pos.Y, ch.hit))
 							{
                                 if (ch.O == 1)
-    								ch.S = 1;
+                                {
+                                    ch.S = 1;
+                                    auto numout = op.nodes[ii]->nout();
+                                    if (numout > 1 && ch.name.length())
+                                        Tip(ch.name.c_str());
+                                }
+                                else
+                                {
+                                    // Tool tip
+                                    auto numin = op.nodes[ii]->nin();
+                                    if (numin == 1 || ch.name.empty())
+                                    {
+                                    }
+                                    else
+                                        Tip(ch.name.c_str());
+                                }
 								break;
 							}
                         }
                         if (Hit(pos.X, pos.Y, op.nodes[ii]->bhit))
                         {
                             MovingNodeP = op.nodes[ii];
+                            Tip(L"Memory out");
+
                             MovingNode = 2;
                             op.nodes[ii]->bSelected = 1;
                             break;
+                        }
+                        if (Hit(pos.X, pos.Y, op.nodes[ii]->bhit2))
+                        {
+                            Tip(L"Memory in");
                         }
 
                         if (Hit(pos.X, pos.Y, op.nodes[ii]->hit))
@@ -3588,11 +3698,26 @@ namespace winrt::VisualDML::implementation
 		auto tt = Content().as<Panel>().FindName(L"Tooltip").as<ToolTip>();
         if (t)
         {
+            POINT pt;
+            GetCursorPos(&pt);
+			ScreenToClient((HWND)wnd(), &pt);
+            pt.x += 50;
+            pt.y += 50;
+            winrt::Windows::Foundation::Rect re;
+			re.X = (float)pt.x;
+			re.Y = (float)pt.y;
+			re.Width = 100;
+			re.Height = 100;
+            tt.PlacementRect(re);
+//			tt.Placement(winrt::Microsoft::UI::Xaml::Controls::Primitives::PlacementMode::Mouse);
             tt.Content(winrt::box_value(t));
             tt.Visibility(Visibility::Visible);
         }
         else
-			tt.Visibility(Visibility::Collapsed);
+        {
+			tt.Content(nullptr);
+            tt.Visibility(Visibility::Collapsed);
+        }
     }
 
 
@@ -4900,6 +5025,7 @@ namespace winrt::VisualDML::implementation
                             expr = dml::Join(v, (UINT)it->Params[0]);
                         }
 
+
                         if (it->what == TYPE_LAND)
                             expr = (dml::LogicalAnd(mop.Item(whati[0]), mop.Item(whati[1])));
                         if (it->what == TYPE_LOR)
@@ -4914,11 +5040,40 @@ namespace winrt::VisualDML::implementation
                             expr = (dml::LessThan(mop.Item(whati[0]), mop.Item(whati[1]), (DML_TENSOR_DATA_TYPE)it->OpType));
                         if (it->what == TYPE_LESSTHANOREQUAL)
                             expr = (dml::LessThanOrEqual(mop.Item(whati[0]), mop.Item(whati[1]), (DML_TENSOR_DATA_TYPE)it->OpType));
+						if (it->what == TYPE_LOCALRESPONSENORMALIZATION)
+							expr = (dml::LocalResponseNormalization(mop.Item(whati[0]), it->Params[0], it->Params[1], it->Params[2], it->Params[3], it->Params[4]));
 
                         if (it->what == TYPE_MAX)
                             expr = (dml::Max(mop.Item(whati[0]), mop.Item(whati[1])));
+                        if (it->what == TYPE_MAXPOOLING)
+                        {
+                            if (!it->MultipleOpOutputData.has_value())
+								it->MultipleOpOutputData = dml::MaxPooling(mop.Item(whati[0]), TensorFromString<unsigned int>(it->Params[0]), TensorFromString<unsigned int>(it->Params[1]), TensorFromString<unsigned int>(it->Params[2]), TensorFromString<unsigned int>(it->Params[3]), TensorFromString<unsigned int>(it->Params[4]), (bool)(it->Params[5]), TensorFromString<unsigned int>(it->Params[6]));
+                            auto& b = std::any_cast<dml::MaxPoolingOutputs&>(it->MultipleOpOutputData);
+                            for (auto& ope : { b.values,b.indices })
+                            {
+                                mop.AddItem(ope, 0, false, BINDING_MODE::NONE);
+                                node->tidxs.push_back(tidx++);
+                            }
+                        }
+
                         if (it->what == TYPE_MEAN)
                             expr = (dml::Mean(mop.Item(whati[0]), mop.Item(whati[1])));
+
+                        
+
+                        if (it->what == TYPE_MEANVARIANCENORMALIZATION)
+                        {
+                            dml::Optional<dml::Expression> e2;
+                            if (whati.size() > 1)
+                                e2 = mop.Item(whati[1]);
+                            dml::Optional<dml::Expression> e3;
+                            if (whati.size() > 2)
+                                e3 = mop.Item(whati[2]);
+
+							expr = (dml::MeanVarianceNormalization(mop.Item(whati[0]), e2, e3, TensorFromString(it->Params[0]), it->Params[1],it->Params[2],it->Params[3]));
+                        }
+
                         if (it->what == TYPE_MIN)
                             expr = (dml::Min(mop.Item(whati[0]), mop.Item(whati[1])));
 
@@ -4934,6 +5089,17 @@ namespace winrt::VisualDML::implementation
 
                         if (it->what == TYPE_NEGATE)
                             expr = (dml::Negate(mop.Item(whati[0])));
+                        if (it->what == TYPE_NONZEROCOORDINATES)
+                        {
+                            if (!it->MultipleOpOutputData.has_value())
+                                it->MultipleOpOutputData = dml::NonZeroCoordinates(mop.Item(whati[0]));
+                            auto& b = std::any_cast<dml::NonZeroCoordinatesOutputs&>(it->MultipleOpOutputData);
+                            for (auto& ope : { b.count,b.coordinates })
+                            {
+                                mop.AddItem(ope, 0, false, BINDING_MODE::NONE);
+                                node->tidxs.push_back(tidx++);
+                            }
+                        }
 
 
                         if (it->what == TYPE_ONEHOT)
