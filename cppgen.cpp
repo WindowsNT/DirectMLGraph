@@ -50,23 +50,24 @@ int main()
 )";
     }
 
-    r += R"(
+	char buf[1000] = {};
+    sprintf_s(buf,1000,R"(
 		
 	// Initialize
 	ml.Prepare();
 
 	// Upload data example
 	// std::vector<float> data(100);
-	// op1.Item(0).buffer->Upload(&ml, data.data(), data.size() * sizeof(float));
+	// ml.ops[0].Item(0).buffer->Upload(&ml, data.data(), data.size() * sizeof(float));
 
 	ml.Run();
 
 	// Download data example
     // std::vector<char> cdata;
-	// op1.Item(1).buffer->Download(&ml, 400, cdata);
+	// ml.ops[ml.ops.size() - 1].buffer->Download(&ml, 400, cdata);
     
-)";
-
+)");
+	r += buf;
 
     r += R"(})";
     return r;

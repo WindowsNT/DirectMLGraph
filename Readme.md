@@ -12,6 +12,7 @@ Uses my [DirectML Lib](https://github.com/WindowsNT/directmllib).
 * Input/Output CSV or binary, Input Random, Output to MessageBox
 * Adapter Selection
 * Show Adapter Memory Consumed
+* Generate C++ Code or VS Solution (in progress).
 
 ## Features for NN design
 
@@ -28,7 +29,7 @@ Uses my [DirectML Lib](https://github.com/WindowsNT/directmllib).
 * Customizable activation functions
 
 
-## Supported Operators
+## Supported DirectML Operators
 
 * Activation: Celu,Elu,Gelu,HardMax,HardSigmoid,Identity,LeakyRelu,Linear,LogSoftmax,ParameterizedRelu,ParametricSoftplus,Relu,ScaledElu,ScaledTanh,Shrink,Sigmoid,Softmax,Softplus,Softsign,Tanh,ThresholdedRelu
 * Batch Processing: BatchNormalization, BatchNormalizationGrad, BatchNormalizationTraining, BatchNormalizationTrainingGrad
@@ -67,5 +68,11 @@ A few more operators:
 
 	dml::ConvolutionInteger;
 	dml::Padding;
+
+Complete VS project generation support 
+
+Recurrent NN training
+
+Usage of batch DML operations for faster training
 
 

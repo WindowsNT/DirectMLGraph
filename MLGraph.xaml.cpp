@@ -1776,12 +1776,28 @@ namespace winrt::VisualDML::implementation
                                             WhatInput = 6;
                                             _i0 = L"Enter Input Tensor Shape:";
 											auto inp = std::dynamic_pointer_cast<XLNODE_INPUT>(nod);
-                                            _i1 = L"";
-											for (auto& s : inp->tensor_dims)
-											{
-												_i1 += std::to_wstring(s);
-												_i1 += L"x";
-											}
+                                            if (inp)
+                                            {
+                                                _i1 = L"";
+                                                for (auto& s : inp->tensor_dims)
+                                                {
+                                                    _i1 += std::to_wstring(s);
+                                                    _i1 += L"x";
+                                                }
+                                            }
+                                            else
+                                            {
+                                                auto inp2 = std::dynamic_pointer_cast<XLNODE_CONSTANT>(nod);
+                                                if (inp2)
+                                                {
+                                                    _i1 = L"";
+                                                    for (auto& s : inp2->tensor_dims)
+                                                    {
+                                                        _i1 += std::to_wstring(s);
+                                                        _i1 += L"x";
+                                                    }
+                                                }
+                                            }
 											_i1.pop_back();
                                             WhatNode = nod.get();
                                             Refresh({ L"i1",L"i0" });
@@ -4134,12 +4150,29 @@ namespace winrt::VisualDML::implementation
         {
             //Tensor Shape
             auto* node = dynamic_cast<XLNODE_INPUT*>(WhatNode);
-			auto dims = TensorFromString(_i1.c_str());
-			if (dims.empty())
-				return;
-            Dirty(1);
-            Push();
-			node->tensor_dims = dims;
+            if (node)
+            {
+                auto dims = TensorFromString(_i1.c_str());
+                if (dims.empty())
+                    return;
+                Dirty(1);
+                Push();
+                node->tensor_dims = dims;
+            }
+            else
+            {
+                auto node2 = dynamic_cast<XLNODE_CONSTANT*>(WhatNode);
+                if (node2)
+                {
+                    auto dims = TensorFromString(_i1.c_str());
+                    if (dims.empty())
+                        return;
+                    Dirty(1);
+                    Push();
+                    node2->tensor_dims = dims;
+
+                }
+            }
 			FullRefresh();
             return;
         }
@@ -4930,10 +4963,11 @@ namespace winrt::VisualDML::implementation
 
                                 sprintf_s(the_code, 1000, R"(mop.AddItem(dml::FillValueConstant(*mop.GetGraph(), {%S},%S,scalar2), 0, false, BINDING_MODE::NONE);)", TensorToString(it2->tensor_dims).c_str(), optypes2[it2->OpType].c_str());
 
-                                node->code = the_code2;
-                                node->code += "\r\n";
+                                node->code = "\t";
+                                node->code += the_code2;
+                                node->code += "\r\n \t";
                                 node->code += the_code3;
-                                node->code += "\r\n";
+                                node->code += "\r\n\t";
                                 node->code += the_code;
                             }
                         }
@@ -5060,9 +5094,17 @@ namespace winrt::VisualDML::implementation
 
 
                         if (it->what == TYPE_ABS && whati.size() > 0)
+                        {
                             expr = dml::Abs(mop.Item(whati[0]));
+                            sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Abs(mop.Item(%i)));)", whati[0]);
+                            node->code = the_code;
+                        }
                         if (it->what == TYPE_ACOS)
+                        {
                             expr = (dml::ACos(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ACos(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_ACOSH)
                             expr = (dml::ACosh(mop.Item(whati[0])));
                         if (it->what == TYPE_ADD)
@@ -5151,10 +5193,17 @@ namespace winrt::VisualDML::implementation
                         }
                         
                         if (it->what == TYPE_COS)
+                        {
                             expr = (dml::Cos(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Cos(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_COSH)
+                        {
                             expr = (dml::Cosh(mop.Item(whati[0])));
-
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Cosh(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_CUMPROD)
 							expr = dml::CumulativeProduct(mop.Item(whati[0]),it->Params[0],(DML_AXIS_DIRECTION)(int)it->Params[1],(bool)it->Params[2]);
 						if (it->what == TYPE_CUMSUM)
@@ -5227,7 +5276,11 @@ namespace winrt::VisualDML::implementation
                             expr = (dml::GreaterThanOrEqual(mop.Item(whati[0]), mop.Item(whati[1]), (DML_TENSOR_DATA_TYPE)it->OpType));
 
                         if (it->what == TYPE_IDENTITY)
+                        {
                             expr = (dml::Identity(mop.Item(whati[0])));
+                            sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Identity(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_IF)
                             expr = (dml::If(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[2])));
 

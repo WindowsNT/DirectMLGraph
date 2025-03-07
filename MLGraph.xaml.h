@@ -836,6 +836,24 @@ struct XLNODE_CONSTANT : public XLNODE_ANY
     virtual bool IsInput() { return true; }
     virtual bool AsksType() { return true; }
 
+    virtual std::wstring subname()
+    {
+        std::wstring dr;
+        for (auto& d : tensor_dims)
+        {
+            dr += std::to_wstring(d) + L"x";
+        }
+        dr.pop_back();
+        if (csv_input.length())
+        {
+            dr += L"\r\n";
+            dr += csv_input;
+        }
+        dr += XLNODE_ANY::subname();
+        return dr;
+    }
+
+
     virtual void Ser(XML3::XMLElement& ee)
     {
         XLNODE_ANY::Ser(ee);
