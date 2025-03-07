@@ -4836,6 +4836,8 @@ namespace winrt::VisualDML::implementation
                 for (size_t ii = 0; ii < op.nodes.size(); ii++)
                 {
                     char the_code[1000] = {};
+                    char the_code2[1000] = {};
+                    char the_code3[1000] = {};
                     auto& node = op.nodes[ii];
                     [[maybe_unused]] auto str = node->name();
                     if (node->IsInput())
@@ -4870,7 +4872,7 @@ namespace winrt::VisualDML::implementation
                                 {
                                     mlr = itx.buffer->b;
 
-                                    sprintf_s(emlr, R"(ml.ops[%zi].Item(%i))",iop,remote_tid);
+                                    sprintf_s(emlr, R"(ml.ops[%zi].Item(%i).buffer->b)",iop,remote_tid);
                                 }
                             }
                         }
@@ -4879,7 +4881,7 @@ namespace winrt::VisualDML::implementation
                         if (it)
                         {
                             mop.AddInput({ (DML_TENSOR_DATA_TYPE)it->OpType, it->tensor_dims }, 0, mlr ? false : true, BINDING_MODE::BIND_IN, mlr);
-                            sprintf_s(the_code, 1000, R"(mop.AddInput({ %S, {%S} }, 0, %s, BINDING_MODE::BIND_IN,%s);)",optypes2[it->OpType + 1].c_str(), TensorToString(it->tensor_dims).c_str(), mlr ? "false" : "true",mlr ? emlr : "{}");
+                            sprintf_s(the_code, 1000, R"(mop.AddInput({ %S, {%S} }, 0, %s, BINDING_MODE::BIND_IN,%s);)",optypes2[it->OpType].c_str(), TensorToString(it->tensor_dims).c_str(), mlr ? "false" : "true",mlr ? emlr : "{}");
 							node->code = the_code;  
                         }
                         else
@@ -4889,7 +4891,7 @@ namespace winrt::VisualDML::implementation
                             {
                                 DML_SCALAR_UNION scalar2 = {};
 
-								if (it2->OpType == DML_TENSOR_DATA_TYPE_FLOAT32)	scalar2.Float32 = it2->Params[0];
+                                if (it2->OpType == DML_TENSOR_DATA_TYPE_FLOAT32)	scalar2.Float32 = it2->Params[0];
                                 if (it2->OpType == DML_TENSOR_DATA_TYPE_FLOAT16)	scalar2.Float32 = it2->Params[0];
                                 if (it2->OpType == DML_TENSOR_DATA_TYPE_UINT32)	scalar2.UInt32 = it2->Params[0];
                                 if (it2->OpType == DML_TENSOR_DATA_TYPE_UINT16)	scalar2.UInt16 = (unsigned short)(unsigned int)it2->Params[0];
@@ -4904,12 +4906,35 @@ namespace winrt::VisualDML::implementation
                                 if (it2->OpType == DML_TENSOR_DATA_TYPE_INT4)	scalar2.Int32 = it2->Params[0];
 
 
-                                auto expr = dml::FillValueConstant(
-                                    *mop.GetGraph(), it2->tensor_dims,
-                                    (DML_TENSOR_DATA_TYPE)it2->OpType,       // Data type
-                                    scalar2
-                                );
+                                auto expr = dml::FillValueConstant(*mop.GetGraph(), it2->tensor_dims, (DML_TENSOR_DATA_TYPE)it2->OpType, scalar2);
                                 mop.AddItem(expr, 0, false, BINDING_MODE::NONE);
+
+
+                                sprintf_s(the_code2, 1000, R"(DML_SCALAR_UNION scalar2 = {};)");
+                                if (it2->OpType == DML_TENSOR_DATA_TYPE_FLOAT32) sprintf_s(the_code3, R"(scalar2.Float32 = %.2f;)",(float)it2->Params[0]);
+								if (it2->OpType == DML_TENSOR_DATA_TYPE_FLOAT16) sprintf_s(the_code3, R"(scalar2.Float16 = %.2f;)", (float)it2->Params[0]);
+								if (it2->OpType == DML_TENSOR_DATA_TYPE_UINT32) sprintf_s(the_code3, R"(scalar2.UInt32 = %u;)", (unsigned int)it2->Params[0]);
+								if (it2->OpType == DML_TENSOR_DATA_TYPE_UINT16) sprintf_s(the_code3, R"(scalar2.UInt16 = %u;)", (unsigned short)(unsigned int)it2->Params[0]);
+								if (it2->OpType == DML_TENSOR_DATA_TYPE_UINT8) sprintf_s(the_code3, R"(scalar2.UInt8 = %u;)", (unsigned char)(unsigned int)it2->Params[0]);
+								if (it2->OpType == DML_TENSOR_DATA_TYPE_INT32) sprintf_s(the_code3, R"(scalar2.Int32 = %i;)", (int)it2->Params[0]);
+								if (it2->OpType == DML_TENSOR_DATA_TYPE_INT16) sprintf_s(the_code3, R"(scalar2.Int16 = %i;)", (short)(int)it2->Params[0]);
+								if (it2->OpType == DML_TENSOR_DATA_TYPE_INT8) sprintf_s(the_code3, R"(scalar2.Int8 = %i;)", (char)(int)it2->Params[0]);
+								if (it2->OpType == DML_TENSOR_DATA_TYPE_FLOAT64) sprintf_s(the_code3, R"(scalar2.Float64 = %.2f;)", (double)it2->Params[0]);
+								if (it2->OpType == DML_TENSOR_DATA_TYPE_UINT64) sprintf_s(the_code3, R"(scalar2.UInt64 = %llu;)", (unsigned long long)it2->Params[0]);
+								if (it2->OpType == DML_TENSOR_DATA_TYPE_INT64) sprintf_s(the_code3, R"(scalar2.Int64 = %lli;)", (long long)it2->Params[0]);
+								if (it2->OpType == DML_TENSOR_DATA_TYPE_UINT4) sprintf_s(the_code3, R"(scalar2.UInt32 = %u;)", (unsigned int)it2->Params[0]);
+								if (it2->OpType == DML_TENSOR_DATA_TYPE_INT4) sprintf_s(the_code3, R"(scalar2.Int32 = %i;)", (int)it2->Params[0]);
+
+
+
+
+                                sprintf_s(the_code, 1000, R"(mop.AddItem(dml::FillValueConstant(*mop.GetGraph(), {%S},%S,scalar2), 0, false, BINDING_MODE::NONE);)", TensorToString(it2->tensor_dims).c_str(), optypes2[it2->OpType].c_str());
+
+                                node->code = the_code2;
+                                node->code += "\r\n";
+                                node->code += the_code3;
+                                node->code += "\r\n";
+                                node->code += the_code;
                             }
                         }
                         node->tidxs.push_back(tidx++);
@@ -4971,6 +4996,10 @@ namespace winrt::VisualDML::implementation
                             continue;
                         mop.AddOutput(mop.Item(whati[0]));
                         node->tidxs.push_back(tidx++);
+
+                        sprintf_s(the_code, 1000, R"(mop.AddOutput(mop.Item(%i));)", whati[0]);
+                        node->code = the_code;
+
                         continue;
                     }
 

@@ -827,8 +827,11 @@ void ExtractVisualStudioSolution(const wchar_t* where, std::string code)
 	SetCurrentDirectory(tf.c_str());
 
 	auto root = tf;
+	auto tf3 = tf2;
 	tf2 += L" -y";
 	Run(tf2.c_str(), 1, CREATE_NO_WINDOW);
+
+	DeleteFile(tf3.c_str());
 
 	// test.cpp the code
 	std::ofstream oo("test.cpp");
