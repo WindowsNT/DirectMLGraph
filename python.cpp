@@ -593,7 +593,7 @@ HRESULT InstallPython()
 
 
 
-void NNToPythonOnnx(NN& nn,const wchar_t* ofi)
+void NNToPythonOnnx(const wchar_t* ofi)
 {
 
 	std::string pyf;
@@ -704,7 +704,7 @@ torch.onnx.export(
 }
 
 
-void NNToPythonPTH(NN& nn,const wchar_t* ofi)
+void NNToPythonPTH(const wchar_t* ofi)
 {
 
 	std::string pyf;
@@ -804,4 +804,37 @@ torch.save(model.state_dict(), file_path)
 	m.RunP(L"python.exe", gu);
 	DeleteFile(gu);
 	Locate(ofi);
+}
+DWORD Run(const wchar_t* y, bool W, DWORD flg);
+
+
+void ExtractVisualStudioSolution(const wchar_t* where, std::string code)
+{
+
+	std::vector<wchar_t> a(10000);
+	GetModuleFileName(0, a.data(), 10000);
+	auto a2 = wcsrchr(a.data(), L'\\');
+	if (a2)
+		*a2 = 0;
+	SetCurrentDirectory(a.data());
+
+	std::wstring tf = where;
+	DeleteFile(tf.c_str());
+	SHCreateDirectory(0, tf.c_str());
+	auto tf2 = tf;
+	tf2 += L"\\directmllib.exe";
+	CopyFile(L"directmllib.exe", tf2.c_str(), false);
+	SetCurrentDirectory(tf.c_str());
+
+	auto root = tf;
+	tf2 += L" -y";
+	Run(tf2.c_str(), 1, CREATE_NO_WINDOW);
+
+	// test.cpp the code
+	std::ofstream oo("test.cpp");
+	if (oo.is_open())
+	{
+		oo << code;
+	}
+
 }

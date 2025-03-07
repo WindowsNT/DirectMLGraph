@@ -18,8 +18,8 @@ extern std::map<HWND, winrt::Windows::Foundation::IInspectable> windows;
 std::wstring TempFile3();
 
 #include "nn.h"
-void NNToPythonOnnx(::NN&, const wchar_t*);
-void NNToPythonPTH(::NN&, const wchar_t*);
+void NNToPythonOnnx(const wchar_t*);
+void NNToPythonPTH(const wchar_t*);
 
 extern int CurrentBatch;
 extern int NumEpochsX;
@@ -764,7 +764,7 @@ namespace winrt::VisualDML::implementation
         if (!GetSaveFileName(&of))
             return;
 
-        NNToPythonPTH(nn, fnx.data());
+        NNToPythonPTH(fnx.data());
 
     }
 
@@ -813,7 +813,7 @@ namespace winrt::VisualDML::implementation
         if (!GetSaveFileName(&of))
             return;
 
-        NNToPythonOnnx(nn, fnx.data());
+        NNToPythonOnnx(fnx.data());
     }
 
     void Network::OnNew(IInspectable, IInspectable)

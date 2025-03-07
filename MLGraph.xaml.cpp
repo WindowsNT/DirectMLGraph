@@ -348,6 +348,8 @@ void XLNODE::Draw(MLOP* mlop,bool Active,bool Enabled,ID2D1DeviceContext5* r, si
     }
 }
 
+
+
 winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildNodeRightMenu(std::shared_ptr<XLNODE> nd,int Type,std::function<void(const winrt::Windows::Foundation::IInspectable, const winrt::Windows::Foundation::IInspectable)> fooo)
 {
     winrt::Microsoft::UI::Xaml::Controls::MenuFlyout r1;
@@ -673,7 +675,18 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         }
         if (1)
         {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"ResampleGrad"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+
+        if (1)
+        {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"SliceGrad"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"RoiAlignGrad"); Neg.Click(fooo);
             A.Items().Append(Neg);
         }
 
@@ -1123,6 +1136,11 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
 
         if (1)
         {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"RandomGenerator"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Reinterpret"); Neg.Click(fooo);
             A.Items().Append(Neg);
         }
@@ -1148,6 +1166,11 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
             A.Items().Append(Neg);
         }
 
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"RoiAlign"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
         if (1)
         {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Round"); Neg.Click(fooo);
@@ -1204,6 +1227,11 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         if (1)
         {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"Threshold"); N.Click(fooo);
+            A.Items().Append(N);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"TopK"); N.Click(fooo);
             A.Items().Append(N);
         }
         r1.Items().Append(A);
@@ -2902,6 +2930,25 @@ namespace winrt::VisualDML::implementation
                                     op.nodes.push_back(node);
                                 }
 
+                                if (t == L"RandomGenerator")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_RANDOMGENERATOR,2);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(2);
+                                    node->Params[0].n = L"Output Tensor";
+                                    node->Params[0].v = L"1x1";
+                                    node->Params[0].minv = -1;
+                                    node->Params[0].maxv = -1;
+                                    node->Params[1].n = L"Output State";
+                                    node->Params[1].minv = 0;
+                                    node->Params[1].maxv = 1;
+                                    node->Params[1].v = L"1";
+
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+
                                 if (t == L"Recip")
                                 {
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_RECIP);
@@ -2920,7 +2967,7 @@ namespace winrt::VisualDML::implementation
                                     node->Params.resize(2);
                                     node->Params[0].n = L"Function";
                                     node->Params[0].minv = 0;
-                                    node->Params[0].maxv = 1;
+                                    node->Params[0].maxv = 11;
                                     node->Params[0].list_names = { L"ArgMax",L"ArgMin",L"Average",L"L1",L"L2",L"LogSum",L"LogSumExp",L"Max",L"Min",L"Multiply",L"Sum",L"SumSquare"};
                                     node->Params[1].n = L"Axes";
                                     node->Params[1].v = L"1x1";
@@ -2955,7 +3002,28 @@ namespace winrt::VisualDML::implementation
                                     Push();
                                     op.nodes.push_back(node);
                                 }
+                                if (t == L"ResampleGrad")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_RESAMPLEGRAD);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(3);
+                                    node->Params[0].n = L"Output Tensor";
+                                    node->Params[0].v = L"1x1";
+                                    node->Params[0].minv = -1;
+                                    node->Params[0].maxv = -1;
+                                    node->Params[1].n = L"Interpolation";
+                                    node->Params[1].minv = 0;
+                                    node->Params[1].maxv = 1;
+                                    node->Params[1].list_names = { L"Nearest",L"Linear" };
+                                    node->Params[2].n = L"Scales";
+                                    node->Params[2].v = L"1x1";
+                                    node->Params[2].minv = -1;
+                                    node->Params[2].maxv = -1;
 
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
 
                                 if (t == L"Round")
                                 {
@@ -2966,6 +3034,66 @@ namespace winrt::VisualDML::implementation
                                     node->Params[0].n = L"Mode";
                                     node->Params[0].minv = 0;
                                     node->Params[0].maxv = 2;
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+
+                                if (t == L"RoiAlign")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(3, TYPE_ROIALIGN);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(12);
+                                    std::vector<std::wstring> pn = {
+                                        L"Reduction Function",L"Interpolation", L"Spatial Scale X", L"Spatial Scale Y", 
+                                        L"Output Pixel Offset", L"Output Bounds Offset", L"Out of bounds input value",
+                                        L"minSpO", L"maxSpO", L"AlignRegionsToCorners", L"Height", L"Width"};
+                                    for (int ii = 0; ii < 12; ii++)
+                                    {
+                                        node->Params[ii].n = pn[ii];
+                                        if (i == 0)
+                                        {
+											node->Params[ii].minv = 0;
+											node->Params[ii].maxv = 11;
+                                            node->Params[ii].list_names = { L"ArgMax",L"ArgMin",L"Average",L"L1",L"L2",L"LogSum",L"LogSumExp",L"Max",L"Min",L"Multiply",L"Sum",L"SumSquare" };
+                                        }
+                                        if (i == 1)
+                                        {
+                                            node->Params[ii].minv = 0;
+                                            node->Params[ii].maxv = 2;
+                                            node->Params[ii].list_names = { L"None",L"Nearest",L"Linear" };
+                                        }
+                                    }
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+                                if (t == L"RoiAlignGrad")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(4, TYPE_ROIALIGNGRAD,2);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(14);
+                                    std::vector<std::wstring> pn = {
+                                        L"Reduction Function",L"Interpolation", L"Spatial Scale X", L"Spatial Scale Y",
+                                        L"Output Pixel Offset", L"Output Bounds Offset", L"Out of bounds input value",
+                                        L"minSpO", L"maxSpO", L"AlignRegionsToCorners", L"Height", L"Width",
+                                    L"Compute Output Gradient",L"Compute Output ROI Gradient"};
+                                    for (int ii = 0; ii < 14; ii++)
+                                    {
+                                        node->Params[ii].n = pn[ii];
+                                        if (i == 0)
+                                        {
+                                            node->Params[ii].minv = 0;
+                                            node->Params[ii].maxv = 11;
+                                            node->Params[ii].list_names = { L"ArgMax",L"ArgMin",L"Average",L"L1",L"L2",L"LogSum",L"LogSumExp",L"Max",L"Min",L"Multiply",L"Sum",L"SumSquare" };
+                                        }
+                                        if (i == 1)
+                                        {
+                                            node->Params[ii].minv = 0;
+                                            node->Params[ii].maxv = 2;
+                                            node->Params[ii].list_names = { L"None",L"Nearest",L"Linear" };
+                                        }
+                                    }
                                     Push();
                                     op.nodes.push_back(node);
                                 }
@@ -3112,6 +3240,22 @@ namespace winrt::VisualDML::implementation
                                     Push();
                                     op.nodes.push_back(node);
                                 }
+                                if (t == L"TopK")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_TOPK,2);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(3);
+                                    node->Params[0].n = L"Axis";
+                                    node->Params[1].n = L"K";
+                                    node->Params[2].n = L"Axis Direction";
+                                    node->Params[2].minv = 0;
+                                    node->Params[2].maxv = 1;
+                                    node->Params[2].list_names = { L"Increasing",L"Decreasing" };
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
+
                                 if (t == L"Upsample2D")
                                 {
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_UPSAMLPLE2D);
@@ -4514,6 +4658,46 @@ namespace winrt::VisualDML::implementation
         UpdateVideoMemory();
         FullRefresh();
     }
+
+    void MLGraph::OnGC(IInspectable const&, IInspectable const&)
+    {
+		auto& xl = prj.xl();
+        if (FAILED(Compile()))
+            return;
+        auto str = xl.GenerateCode();
+#ifdef _DEBUGf
+		MessageBoxA(0, str.c_str(), "Code", MB_ICONINFORMATION);
+#else
+        std::wstring TempFile3();
+        auto tf = TempFile3();
+        DeleteFile(tf.c_str());
+        tf += L".txt";
+
+        // put str to tf
+		std::ofstream f(tf);
+		if (f.is_open())
+		{
+			f << str;
+		}
+		ShellExecute(0, L"open", tf.c_str(),  0, 0, SW_SHOWNORMAL);
+#endif
+    }
+
+    void MLGraph::OnGCV(IInspectable const&, IInspectable const&)
+    {
+        auto& xl = prj.xl();
+        if (FAILED(Compile()))
+            return;
+        auto str = xl.GenerateCode();
+        std::wstring TempFile3();
+        auto tf = TempFile3();
+        SHCreateDirectory(0, tf.c_str());
+        void ExtractVisualStudioSolution(const wchar_t* where, std::string code);
+        ExtractVisualStudioSolution(tf.c_str(), str);
+        ShellExecute(0, L"open", tf.c_str(), 0, 0, SW_SHOWNORMAL);
+
+    }
+
     void MLGraph::OnClean(IInspectable const&, IInspectable const&)
     {
         Clean();
@@ -4577,8 +4761,10 @@ namespace winrt::VisualDML::implementation
         Compile();
     }
 
-    void MLGraph::Compile()
+
+    HRESULT MLGraph::Compile()
     {
+        HRESULT hres = E_FAIL;
 		Clean();
         auto& xl = prj.xl();
         if (!xl.ml)
@@ -4649,11 +4835,13 @@ namespace winrt::VisualDML::implementation
 
                 for (size_t ii = 0; ii < op.nodes.size(); ii++)
                 {
+                    char the_code[1000] = {};
                     auto& node = op.nodes[ii];
                     [[maybe_unused]] auto str = node->name();
                     if (node->IsInput())
                     {
                         std::optional<MLRESOURCE> mlr;
+                        char emlr[300] = {};
                         if (node->ShareMemory < 0)
                         {
                             // Find other 
@@ -4681,6 +4869,8 @@ namespace winrt::VisualDML::implementation
                                 if (itx.buffer)
                                 {
                                     mlr = itx.buffer->b;
+
+                                    sprintf_s(emlr, R"(ml.ops[%zi].Item(%i))",iop,remote_tid);
                                 }
                             }
                         }
@@ -4689,6 +4879,8 @@ namespace winrt::VisualDML::implementation
                         if (it)
                         {
                             mop.AddInput({ (DML_TENSOR_DATA_TYPE)it->OpType, it->tensor_dims }, 0, mlr ? false : true, BINDING_MODE::BIND_IN, mlr);
+                            sprintf_s(the_code, 1000, R"(mop.AddInput({ %S, {%S} }, 0, %s, BINDING_MODE::BIND_IN,%s);)",optypes2[it->OpType + 1].c_str(), TensorToString(it->tensor_dims).c_str(), mlr ? "false" : "true",mlr ? emlr : "{}");
+							node->code = the_code;  
                         }
                         else
                         {
@@ -5119,6 +5311,17 @@ namespace winrt::VisualDML::implementation
                         }
 
 
+                        if (it->what == TYPE_RANDOMGENERATOR)
+                        {
+                            if (!it->MultipleOpOutputData.has_value())
+                                it->MultipleOpOutputData = dml::RandomGenerator(mop.Item(whati[0]), TensorFromString<unsigned int>(it->Params[0]), (bool)(it->Params[1]));
+                            auto& b = std::any_cast<dml::RandomGeneratorOutputs&>(it->MultipleOpOutputData);
+                            for (auto& ope : { b.values,b.state })
+                            {
+                                mop.AddItem(ope, 0, false, BINDING_MODE::NONE);
+                                node->tidxs.push_back(tidx++);
+                            }
+                        }
 
 
                         if (it->what == TYPE_RECIP)
@@ -5127,6 +5330,31 @@ namespace winrt::VisualDML::implementation
                         if (it->what == TYPE_ROUND)
                             expr = (dml::Round(mop.Item(whati[0]),(DML_ROUNDING_MODE)(int)(it->Params[0])));
 
+
+                        if (it->what == TYPE_ROIALIGN)
+                        {
+                            expr = dml::RoiAlign(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[2]), (DML_REDUCE_FUNCTION)(int)(it->Params[0]),
+                                (DML_INTERPOLATION_MODE)(int)(it->Params[1]), it->Params[2], it->Params[3], it->Params[4], it->Params[5], it->Params[6], it->Params[7], it->Params[8],
+                                it->Params[9], it->Params[10], it->Params[11]);
+                        }
+
+                        if (it->what == TYPE_ROIALIGNGRAD)
+                        {
+                            dml::Expression ino;
+
+                            if (!it->MultipleOpOutputData.has_value())
+                                it->MultipleOpOutputData = dml::RoiAlignGrad(ino,mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[2]), (DML_REDUCE_FUNCTION)(int)(it->Params[0]),
+                                    (DML_INTERPOLATION_MODE)(int)(it->Params[1]), it->Params[2], it->Params[3], it->Params[4], it->Params[5], it->Params[6], it->Params[7], it->Params[8],
+                                    it->Params[9], it->Params[10], it->Params[11], it->Params[12], it->Params[13]);
+                            auto& b = std::any_cast<dml::RoiAlignGradOutputs&>(it->MultipleOpOutputData);
+                            for (auto& ope : { b.outputGradient,b.outputROIGradient})
+                            {
+                                mop.AddItem(ope, 0, false, BINDING_MODE::NONE);
+                                node->tidxs.push_back(tidx++);
+                            }
+
+                        }
+
                         if (it->what == TYPE_REDUCE)
                             expr = dml::Reduce(mop.Item(whati[0]), (DML_REDUCE_FUNCTION)(int)(it->Params[0]),TensorFromString<unsigned int>(it->Params[1]),(DML_TENSOR_DATA_TYPE)it->OpType);
 
@@ -5134,6 +5362,11 @@ namespace winrt::VisualDML::implementation
                         {
                             expr = dml::Resample(mop.Item(whati[0]), TensorFromString<unsigned int>(it->Params[0]),(DML_INTERPOLATION_MODE)(int)it->Params[1],
                                 (DML_AXIS_DIRECTION)(int)it->Params[2],TensorFromString<float>(it->Params[3]));
+                        }
+                        if (it->what == TYPE_RESAMPLEGRAD)
+                        {
+                            expr = dml::ResampleGrad(mop.Item(whati[0]), TensorFromString<unsigned int>(it->Params[0]), (DML_INTERPOLATION_MODE)(int)it->Params[1],
+                                TensorFromString<float>(it->Params[2]));
                         }
 
                         if (it->what == TYPE_REINTERPRET)
@@ -5191,6 +5424,18 @@ namespace winrt::VisualDML::implementation
 							expr = (dml::SpaceToDepth(mop.Item(whati[0]), (unsigned int)it->Params[0], (DML_DEPTH_SPACE_ORDER)(int)it->Params[1]));
 
                         
+                        if (it->what == TYPE_TOPK)
+                        {
+                            if (!it->MultipleOpOutputData.has_value())
+                                it->MultipleOpOutputData = dml::TopK(mop.Item(whati[0]),it->Params[0],it->Params[1],(DML_AXIS_DIRECTION)(int)it->Params[2]);
+                            auto& b = std::any_cast<dml::TopKOutputs&>(it->MultipleOpOutputData);
+                            for (auto& ope : { b.value,b.index })
+                            {
+                                mop.AddItem(ope, 0, false, BINDING_MODE::NONE);
+                                node->tidxs.push_back(tidx++);
+                            }
+                        }
+
 
                         if (expr)
                             Y = 1;
@@ -5225,6 +5470,7 @@ namespace winrt::VisualDML::implementation
                 else
                     ml.ops.push_back(mop.Build());
             }
+            hres = S_OK;
         }
         //catch(std::exception& e)
         catch (...)
@@ -5237,6 +5483,7 @@ namespace winrt::VisualDML::implementation
         }
         FullRefresh();
         UpdateVideoMemory();
+        return hres;
     }
 
 

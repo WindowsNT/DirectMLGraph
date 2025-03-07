@@ -48,9 +48,9 @@ Uses my [DirectML Lib](https://github.com/WindowsNT/directmllib).
 * O: OneHot, Or
 * P: Pow
 * Q: QuantizedLinearConvolution, QuantizeLinear
-* R: Recip, Reduce, Resample, Round, Reintrerpret, ReverseSubsequences
+* R: RandomGenerator, Recip, Reduce, Resample, ResampleGrad, Round, RoiAlign, RoiAlignGrad, Reintrerpret, ReverseSubsequences
 * S: ScatterElements, Slice, SliceGrad, Subtract, Sqrt, Sign, SpaceToDepth
-* T: Threshold
+* T: Threshold, TopK
 * U: Upsample2D
 * V: ValueScale2D 
 * X: Xor  
@@ -63,14 +63,9 @@ Uses my [DirectML Lib](https://github.com/WindowsNT/directmllib).
 
 ### ToDo
 
-All other operators: 
+A few more operators: 
 
 	dml::ConvolutionInteger;
 	dml::Padding;
-	dml::RandomGenerator;
-	dml::ResampleGrad;
-	dml::RoiAlign;
-	dml::RoiAlignGrad;
-	dml::TopK;
 
 

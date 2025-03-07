@@ -85,7 +85,7 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 void Locate([[maybe_unused]] const wchar_t* fi)
 {
-#ifndef _DEBUG
+#ifndef _DEBUGX
     wchar_t buf[1024] = {};
     swprintf_s(buf,1024,L"/select,\"%s\"", fi);
     ShellExecute(0, L"open", L"explorer.exe", buf, 0, SW_SHOWMAXIMIZED);

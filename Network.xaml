@@ -116,7 +116,7 @@
                         <KeyboardAccelerator Key="T" Modifiers="Control,Shift"/>
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
-                <MenuFlyoutSeparator/>
+<!--                <MenuFlyoutSeparator/>
                 <MenuFlyoutItem Text="{x:Bind txt(27),Mode=OneTime}" Click="OnRTrainCPU" >
                     <MenuFlyoutItem.Icon>
                         <FontIcon Glyph="&#xE968;"/>
@@ -132,7 +132,7 @@
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Key="F5" Modifiers="Shift"/>
                     </MenuFlyoutItem.KeyboardAccelerators>
-                </MenuFlyoutItem>
+                </MenuFlyoutItem>-->
             </MenuBarItem>
         </MenuBar>
 

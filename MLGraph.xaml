@@ -203,6 +203,23 @@
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
                 <MenuFlyoutSeparator/>
+                <MenuFlyoutItem Text="Generate C++ code" Click="OnGC" >
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon Glyph="&#xE943;"/>
+                    </MenuFlyoutItem.Icon>
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F9" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Generate Visual Studio Solution" Click="OnGCV" >
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon Glyph="&#xE943;"/>
+                    </MenuFlyoutItem.Icon>
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F9" Modifiers="Shift" />
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutSeparator/>
                 <MenuFlyoutItem Text="Run" Click="OnRun" >
                     <MenuFlyoutItem.Icon>
                         <FontIcon Glyph="&#xE724;"/>

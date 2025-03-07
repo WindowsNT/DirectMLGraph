@@ -5,6 +5,7 @@
 
 inline int MAX_OP_TYPES = 13;
 inline std::wstring optypes[] = { L"",L"Float32",L"Float16",L"UInt32",L"UInt16",L"UInt8",L"Int32",L"Int16",L"Int8",L"Float64",L"UInt64",L"Int64",L"UInt4",L"Int4" };
+inline std::wstring optypes2[] = { L"",L"DML_TENSOR_DATA_TYPE_FLOAT32",L"DML_TENSOR_DATA_TYPE_FLOAT16",L"DML_TENSOR_DATA_TYPE_UINT32",L"DML_TENSOR_DATA_TYPE_UINT16",L"DML_TENSOR_DATA_TYPE_UINT8",L"DML_TENSOR_DATA_TYPE_INT32",L"DML_TENSOR_DATA_TYPE_INT16",L"DML_TENSOR_DATA_TYPE_INT8",L"DML_TENSOR_DATA_TYPE_FLOAT64",L"DML_TENSOR_DATA_TYPE_UINT64",L"DML_TENSOR_DATA_TYPE_INT64",L"DML_TENSOR_DATA_TYPE_UINT4",L"DML_TENSOR_DATA_TYPE_INT4" };
 
 struct XLNODE;
 inline static unsigned long long nnn = 1;
@@ -105,6 +106,7 @@ struct PARAM
 struct XLNODE
 {
 
+    std::string code;
     std::vector<int> tidxs; // idx in MLOP, most nodes have one but some like BatchOperationGraidents have multiple
     bool BufferVisible = 0;
     D2F bhit = { };
@@ -160,122 +162,126 @@ enum XLNODE_TYPE
     TYPE_ONEHOT,
     TYPE_POW,
     TYPE_QUANTIZELINEAR,TYPE_QUANTIZEDLINEARCONVOLUTION,
-    TYPE_REINTERPRET,TYPE_RECIP,TYPE_REDUCE,TYPE_RESAMPLE,TYPE_REVERSESUBSEQUENCES,TYPE_ROUND,
+    TYPE_RANDOMGENERATOR,TYPE_REINTERPRET,TYPE_RECIP,TYPE_REDUCE,TYPE_RESAMPLE,TYPE_RESAMPLEGRAD, TYPE_REVERSESUBSEQUENCES,TYPE_ROUND,TYPE_ROIALIGN,TYPE_ROIALIGNGRAD,
     TYPE_SCATTERELEMENTS,TYPE_SLICE,TYPE_SLICEGRAD,TYPE_SUBTRACT,TYPE_SQRT,TYPE_SIGN,TYPE_SPACETODEPTH,
-    TYPE_THRESHOLD,
+    TYPE_THRESHOLD,TYPE_TOPK,
     TYPE_UPSAMLPLE2D,
     TYPE_VALUESCALE2D,
     TYPE_OUTPUT = 999999
 };
 
 inline std::map<int, std::string> TypesToNames = {
-	{TYPE_INPUT,"Input"},
+    {TYPE_INPUT,"Input"},
 
-	{TYPE_ACT_IDENTITY,"ActivationIdentity"},
-	{TYPE_ACT_CELU,"ActivationCelu"},
-	{TYPE_ACT_ELU,"ActivationElu"},
-	{TYPE_ACT_GELU,"ActivationGelu"},
-	{TYPE_ACT_HARDMAX,"ActivationHardmax"},
-	{TYPE_ACT_HARDSIGMOID,"ActivationHardSigmoid"},
-	{TYPE_ACT_LEAKYRELU,"ActivationLeakyRelu"},
-	{TYPE_ACT_LINEAR,"ActivationLinear"},
-	{TYPE_ACT_LOGSOFTMAX,"ActivationLogSoftmax"},
-	{TYPE_ACT_PRELU,"ActivationParameterizedRelu"},
-	{TYPE_ACT_PSOFTPLUS,"ActivationParametricSoftplus"},
-	{TYPE_ACT_RELU,"ActivationRelu"},
-	{TYPE_ACT_SELU,"ActivationScaledElu"},
-	{TYPE_ACT_STANH,"ActivationScaledTanh"},
-	{TYPE_ACT_SHRINK,"ActivationShrink"},
-	{TYPE_ACT_SIGMOID,"ActivationSigmoid"},
-	{TYPE_ACT_SOFTMAX,"ActivationSoftmax"},
-	{TYPE_ACT_SOFTPLUS,"ActivationSoftplus"},
-	{TYPE_ACT_SOFTSIGN,"ActivationSoftsign"},
-	{TYPE_ACT_TANH,"ActivationTanh"},
-	{TYPE_ACT_TRELU,"ActivationThresholdedRelu"},
-       
-	{TYPE_ABS,"Abs"},
-	{TYPE_ACOS,"ACos"},
-	{TYPE_ACOSH,"ACosh"},
-	{TYPE_ADD,"Add"},
-	{TYPE_ASIN,"ASin"},
-	{TYPE_ASINH,"ASinh"},
-	{TYPE_ATAN,"ATan"},
-	{TYPE_ATANH,"ATanh"},
-	{TYPE_ATANYX,"ATanYX"},
-	{TYPE_AVERAGEPOOLING,"AveragePooling"},
+    {TYPE_ACT_IDENTITY,"ActivationIdentity"},
+    {TYPE_ACT_CELU,"ActivationCelu"},
+    {TYPE_ACT_ELU,"ActivationElu"},
+    {TYPE_ACT_GELU,"ActivationGelu"},
+    {TYPE_ACT_HARDMAX,"ActivationHardmax"},
+    {TYPE_ACT_HARDSIGMOID,"ActivationHardSigmoid"},
+    {TYPE_ACT_LEAKYRELU,"ActivationLeakyRelu"},
+    {TYPE_ACT_LINEAR,"ActivationLinear"},
+    {TYPE_ACT_LOGSOFTMAX,"ActivationLogSoftmax"},
+    {TYPE_ACT_PRELU,"ActivationParameterizedRelu"},
+    {TYPE_ACT_PSOFTPLUS,"ActivationParametricSoftplus"},
+    {TYPE_ACT_RELU,"ActivationRelu"},
+    {TYPE_ACT_SELU,"ActivationScaledElu"},
+    {TYPE_ACT_STANH,"ActivationScaledTanh"},
+    {TYPE_ACT_SHRINK,"ActivationShrink"},
+    {TYPE_ACT_SIGMOID,"ActivationSigmoid"},
+    {TYPE_ACT_SOFTMAX,"ActivationSoftmax"},
+    {TYPE_ACT_SOFTPLUS,"ActivationSoftplus"},
+    {TYPE_ACT_SOFTSIGN,"ActivationSoftsign"},
+    {TYPE_ACT_TANH,"ActivationTanh"},
+    {TYPE_ACT_TRELU,"ActivationThresholdedRelu"},
 
-	{TYPE_BITAND,"BitAnd"},
-	{TYPE_BITCOUNT,"BitCount"},
-	{TYPE_BITNOT,"BitNot"},
-	{TYPE_BITOR,"BitOr"},
-	{TYPE_BITSL,"BitSL"},
-	{TYPE_BITSR,"BitSR"},
-	{TYPE_BITXOR,"BitXor"},
-	{TYPE_BATCHNORMALIZATION,"BatchNormalization"},
-	{TYPE_BATCHNORMALIZATIONGRAD,"BatchNormalizationGrad"},
-	{TYPE_BATCHNORMALIZATIONTRAINING,"BatchNormalizationTraining"},
-	{TYPE_BATCHNORMALIZATIONTRAININGGRAD,"BatchNormalizationTrainingGrad"},
-	{TYPE_CAST,"Cast"},
-	{TYPE_CEIL,"Ceil"},
-	{TYPE_CLIP,"Clip"},
-	{TYPE_CLIPGRAD,"ClipGrad"},
-	{TYPE_CONSTANT,"Constant"},
-	{TYPE_COS,"Cos"},
-	{TYPE_COSH,"Cosh"},
-	{TYPE_CONVOLUTION,"Convolution"},
-	{TYPE_CUMSUM,"CummulativeSum"},
-	{TYPE_CUMPROD,"CummulativeProduct"},
-	{TYPE_DIVIDE,"Divide"},
-	{TYPE_DEPTHTOSPACE,"DepthToSpace"},
-	{TYPE_DEQUANTIZE,"Dequantize"},
-	{TYPE_DEQUANTIZELINEAR,"DequantizeLinear"},
-	{TYPE_DIFFERENCESQUARE,"DifferenceSquare"},
+    {TYPE_ABS,"Abs"},
+    {TYPE_ACOS,"ACos"},
+    {TYPE_ACOSH,"ACosh"},
+    {TYPE_ADD,"Add"},
+    {TYPE_ASIN,"ASin"},
+    {TYPE_ASINH,"ASinh"},
+    {TYPE_ATAN,"ATan"},
+    {TYPE_ATANH,"ATanh"},
+    {TYPE_ATANYX,"ATanYX"},
+    {TYPE_AVERAGEPOOLING,"AveragePooling"},
 
-	{TYPE_ERF,"Erf"},
-	{TYPE_EXP,"Exp"},
-	{TYPE_EQUALS,"Equals"},
-	{TYPE_FLOOR,"Floor"},
-	{TYPE_GATHER,"Gather"},
-	{TYPE_GATHERELEMENTS,"GatherElements"},
-	{TYPE_GATHERND,"GatherND"},
-	{TYPE_GEMM,"Gemm"},
-	{TYPE_GREATERTHAN,"GreaterThan"},
-	{TYPE_GREATERTHANOREQUAL,"GreaterThanOrEqual"},
-	{TYPE_IDENTITY,"Identity"},
-	{TYPE_IF,"If"},
-	{TYPE_ISINFINITY,"IsInfinity"},
-	{TYPE_ISNAN,"IsNan"},
-	{TYPE_JOIN,"Join"},
-	{TYPE_LAND,"And"},
-	{TYPE_LOR,"Or"},
-	{TYPE_LXOR,"Xor"},
+    {TYPE_BITAND,"BitAnd"},
+    {TYPE_BITCOUNT,"BitCount"},
+    {TYPE_BITNOT,"BitNot"},
+    {TYPE_BITOR,"BitOr"},
+    {TYPE_BITSL,"BitSL"},
+    {TYPE_BITSR,"BitSR"},
+    {TYPE_BITXOR,"BitXor"},
+    {TYPE_BATCHNORMALIZATION,"BatchNormalization"},
+    {TYPE_BATCHNORMALIZATIONGRAD,"BatchNormalizationGrad"},
+    {TYPE_BATCHNORMALIZATIONTRAINING,"BatchNormalizationTraining"},
+    {TYPE_BATCHNORMALIZATIONTRAININGGRAD,"BatchNormalizationTrainingGrad"},
+    {TYPE_CAST,"Cast"},
+    {TYPE_CEIL,"Ceil"},
+    {TYPE_CLIP,"Clip"},
+    {TYPE_CLIPGRAD,"ClipGrad"},
+    {TYPE_CONSTANT,"Constant"},
+    {TYPE_COS,"Cos"},
+    {TYPE_COSH,"Cosh"},
+    {TYPE_CONVOLUTION,"Convolution"},
+    {TYPE_CUMSUM,"CummulativeSum"},
+    {TYPE_CUMPROD,"CummulativeProduct"},
+    {TYPE_DIVIDE,"Divide"},
+    {TYPE_DEPTHTOSPACE,"DepthToSpace"},
+    {TYPE_DEQUANTIZE,"Dequantize"},
+    {TYPE_DEQUANTIZELINEAR,"DequantizeLinear"},
+    {TYPE_DIFFERENCESQUARE,"DifferenceSquare"},
+
+    {TYPE_ERF,"Erf"},
+    {TYPE_EXP,"Exp"},
+    {TYPE_EQUALS,"Equals"},
+    {TYPE_FLOOR,"Floor"},
+    {TYPE_GATHER,"Gather"},
+    {TYPE_GATHERELEMENTS,"GatherElements"},
+    {TYPE_GATHERND,"GatherND"},
+    {TYPE_GEMM,"Gemm"},
+    {TYPE_GREATERTHAN,"GreaterThan"},
+    {TYPE_GREATERTHANOREQUAL,"GreaterThanOrEqual"},
+    {TYPE_IDENTITY,"Identity"},
+    {TYPE_IF,"If"},
+    {TYPE_ISINFINITY,"IsInfinity"},
+    {TYPE_ISNAN,"IsNan"},
+    {TYPE_JOIN,"Join"},
+    {TYPE_LAND,"And"},
+    {TYPE_LOR,"Or"},
+    {TYPE_LXOR,"Xor"},
     {TYPE_LNOT,"Not"},
     {TYPE_LOG,"Log"},
-	{TYPE_LESSTHAN,"LessThan"},
-	{TYPE_LESSTHANOREQUAL,"LessThanOrEqual"},
-	{TYPE_LOCALRESPONSENORMALIZATION,"LocalResponseNormalization"},
+    {TYPE_LESSTHAN,"LessThan"},
+    {TYPE_LESSTHANOREQUAL,"LessThanOrEqual"},
+    {TYPE_LOCALRESPONSENORMALIZATION,"LocalResponseNormalization"},
 
     {TYPE_MAX,"Max"},
-	{TYPE_MAXPOOLING,"MaxPooling"},
+    {TYPE_MAXPOOLING,"MaxPooling"},
     {TYPE_MEAN,"Mean"},
-	{TYPE_MEANVARIANCENORMALIZATION,"MeanVarianceNormalization"},
+    {TYPE_MEANVARIANCENORMALIZATION,"MeanVarianceNormalization"},
     {TYPE_MIN,"Min"},
     {TYPE_MULTIPLY,"Multiply"},
-	{TYPE_MODULUSFLOOR,"ModulusFloor"},
-	{TYPE_MODULUSTRUNCATE,"ModulusTruncate"},
-	{TYPE_NEGATE,"Negate"},
-	{TYPE_NONZEROCOORDINATES,"NonZeroCoordinates"},
-	{TYPE_ONEHOT,"OneHot"},
+    {TYPE_MODULUSFLOOR,"ModulusFloor"},
+    {TYPE_MODULUSTRUNCATE,"ModulusTruncate"},
+    {TYPE_NEGATE,"Negate"},
+    {TYPE_NONZEROCOORDINATES,"NonZeroCoordinates"},
+    {TYPE_ONEHOT,"OneHot"},
     {TYPE_POW,"Pow"},
-	{TYPE_QUANTIZELINEAR,"QuantizeLinear"},
-	{TYPE_QUANTIZEDLINEARCONVOLUTION,"QuantizedLinearConvolution"},
+    {TYPE_QUANTIZELINEAR,"QuantizeLinear"},
+    {TYPE_QUANTIZEDLINEARCONVOLUTION,"QuantizedLinearConvolution"},
 
-	{TYPE_REINTERPRET,"Reinterpret"},
-	{TYPE_RECIP,"Recip"},
-	{TYPE_REDUCE,"Reduce"},
-	{TYPE_RESAMPLE,"Resample"},
+    {TYPE_RANDOMGENERATOR,"RandomGenerator"},
+    {TYPE_REINTERPRET,"Reinterpret"},
+    {TYPE_RECIP,"Recip"},
+    {TYPE_REDUCE,"Reduce"},
+    {TYPE_RESAMPLE,"Resample"},
+    {TYPE_RESAMPLE,"ResampleGrad"},
 	{TYPE_REVERSESUBSEQUENCES,"ReverseSubsequences" },
 	{TYPE_ROUND,"Round"},
+	{ TYPE_ROIALIGN,"RoiAlign" },
+	{ TYPE_ROIALIGNGRAD,"RoiAlignGrad" },
 	{TYPE_SCATTERELEMENTS,"ScatterElements" },
 	{TYPE_SLICE,"Slice"},
 	{TYPE_SLICEGRAD,"SliceGrad" },
@@ -284,7 +290,8 @@ inline std::map<int, std::string> TypesToNames = {
 	{TYPE_SIGN,"Sign"},
 	{TYPE_SPACETODEPTH,"SpaceToDepth" },
 	{TYPE_THRESHOLD,"Threshold"},
-	{ TYPE_UPSAMLPLE2D,"Upsample2D" },
+	{ TYPE_TOPK,"TopK" },
+	{TYPE_UPSAMLPLE2D,"Upsample2D" },
 	{TYPE_VALUESCALE2D,"ValueScale2D" },
 
 	{TYPE_OUTPUT,"Output"}
@@ -320,6 +327,8 @@ struct XLNODE_ANY : public XLNODE
             return 5;
         if (what == TYPE_MEANVARIANCENORMALIZATION)
             return 1;
+        if (what == TYPE_ROIALIGNGRAD)
+            return 3;
         return nin();
     }
     virtual int nin() { return howi; }
@@ -432,6 +441,19 @@ struct XLNODE_ANY : public XLNODE
 		{
 			return { L"Input",L"Scale",L"Filter",L"Filter Scale",L"Output Scale",L"Input ZP",L"Filter ZP",L"Output ZP"};
 		}
+        if (w == TYPE_RANDOMGENERATOR)
+        {
+            return { L"Input",L"Values",L"State"};
+        }
+		if (w == TYPE_ROIALIGN)
+		{
+            return { L"Input",L"Roi",L"Batch Indices" };
+		}
+        if (w == TYPE_ROIALIGNGRAD)
+        {
+            return { L"Input",L"Gradient",L"Roi",L"Batch Indices",L"Gradient",L"ROI Gradient"};
+        }
+
 		if (w == TYPE_REVERSESUBSEQUENCES)
 		{
 			return { L"Input",L"Sequence Lengths" };
@@ -440,6 +462,11 @@ struct XLNODE_ANY : public XLNODE
         {
             return { L"Input",L"Indices",L"Updates"};
         }
+        if (w == TYPE_TOPK)
+        {
+            return { L"Input",L"Value",L"Index" };
+        }
+
         return dr;
     }
 
@@ -657,18 +684,26 @@ struct XLNODE_ANY : public XLNODE
 			return L"QuantizedLinearConvolution";
 
 
+        if (what == TYPE_RANDOMGENERATOR)
+            return L"RandomGenerator";
 		if (what == TYPE_REINTERPRET)
 			return L"Reinterpret";
 		if (what == TYPE_ROUND)
 			return L"Round";
 		if (what == TYPE_RESAMPLE)
 			return L"Resample";
+        if (what == TYPE_RESAMPLEGRAD)
+            return L"ResampleGrad";
 		if (what == TYPE_REVERSESUBSEQUENCES)
 			return L"ReverseSubsequences";
 		if (what == TYPE_REDUCE)
 			return L"Reduce";
 		if (what == TYPE_RECIP)
 			return L"Recip";
+		if (what == TYPE_ROIALIGN)
+			return L"RoiAlign";
+		if (what == TYPE_ROIALIGNGRAD)
+			return L"RoiAlignGrad";
 
 		if (what == TYPE_SCATTERELEMENTS)
 			return L"ScatterElements";
@@ -688,6 +723,8 @@ struct XLNODE_ANY : public XLNODE
 
 		if (what == TYPE_THRESHOLD)
 			return L"Threshold";
+		if (what == TYPE_TOPK)
+			return L"TopK";
 		if (what == TYPE_UPSAMLPLE2D)
 			return L"Upsample2D";
 		if (what == TYPE_VALUESCALE2D)
@@ -1037,6 +1074,9 @@ struct XL : public XLNODE
     virtual std::wstring name() { return L"DML"; }
     virtual std::wstring subname() { return L""; }
 
+
+    std::string GenerateCode();
+
     virtual void Ser(XML3::XMLElement& ee)
     {
 		ee.vv("n").SetWideValue(n.c_str());
@@ -1211,12 +1251,14 @@ namespace winrt::VisualDML::implementation
         void OnUndo(IInspectable const&, IInspectable const&);
         void OnRedo(IInspectable const&, IInspectable const&);
         void OnClean(IInspectable const&, IInspectable const&);
+        void OnGC(IInspectable const&, IInspectable const&);
+        void OnGCV(IInspectable const&, IInspectable const&);
         void OnCompile(IInspectable const&, IInspectable const&);
         void OnRun(IInspectable const&, IInspectable const&);
         void OnStop(IInspectable const&, IInspectable const&);
         void Run();
         void Stop();
-        void Compile();
+        HRESULT Compile();
         void Clean();
         void Dirty(bool Cl = 1);
         void OnAddOp(IInspectable const&, IInspectable const&);

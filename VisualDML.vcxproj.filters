@@ -22,6 +22,7 @@
     <ClCompile Include="d2d.cpp" />
     <ClCompile Include="nn.cpp" />
     <ClCompile Include="python.cpp" />
+    <ClCompile Include="cppgen.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -78,6 +79,9 @@
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="data\mnist.exe">
+      <Filter>data</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="data\directmllib.exe">
       <Filter>data</Filter>
     </CopyFileToFolders>
   </ItemGroup>

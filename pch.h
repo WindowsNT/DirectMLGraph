@@ -279,6 +279,19 @@ std::vector<T> TensorFromString(const wchar_t* str)
 	return newSizes;
 }
 
+template <typename T = unsigned int>
+std::wstring TensorToString(std::vector<T> in)
+{
+	std::wstring x;
+	for (auto& i : in)
+	{
+		x += std::to_wstring(i);
+		x += L",";
+	}
+	if (x.length())
+		x.pop_back();
+	return x;
+}
 
 inline bool Hit(float x, float y, D2D1_RECT_F rc)
 {
