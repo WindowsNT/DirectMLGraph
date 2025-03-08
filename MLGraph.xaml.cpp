@@ -812,6 +812,11 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         }
         if (1)
         {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"ConvolutionInteger"); N.Click(fooo);
+            A.Items().Append(N);
+        }
+        if (1)
+        {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"Cos"); N.Click(fooo);
             A.Items().Append(N);
         }
@@ -940,7 +945,12 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Gemm"); Neg.Click(fooo);
             A.Items().Append(Neg);
         }
-       
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem N; N.Text(L"Gru"); N.Click(fooo);
+            A.Items().Append(N);
+        }
+
 
         r1.Items().Append(A);
     }
@@ -1105,9 +1115,16 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
 
 //        dml::
 
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Pow"); Neg.Click(fooo);
-        A.Items().Append(Neg);
-
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Padding"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"Pow"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
         r1.Items().Append(A);
     }
 
@@ -1469,6 +1486,31 @@ namespace winrt::VisualDML::implementation
         }
     }
 
+    XL MLGraph::ADefXL()
+    {
+        XLOP xlop;
+        XL xln;
+
+        // Add some defaults
+        if (1)
+        {
+            auto t = std::make_shared<XLNODE_INPUT>();
+            t->hit = D2D1_RECT_F({ 100,100,100,100 });
+            t->tensor_dims = { 10,10 };
+            xlop.nodes.push_back(t);
+        }
+        if (1)
+        {
+            auto t = std::make_shared<XLNODE_OUTPUT>();
+            t->hit = D2D1_RECT_F({ 400,400,100,100 });
+            xlop.nodes.push_back(t);
+        }
+
+
+        xln.ops.push_back(xlop);
+        return xln;
+    }
+
     void MLGraph::OnLoaded(IInspectable, IInspectable)
     {
         ActiveOperator2 = 0;
@@ -1486,6 +1528,18 @@ namespace winrt::VisualDML::implementation
 			current_file = fil;
 			XML3::XML x(fil.c_str());
 			prj.Unser(x.GetRootElement());
+
+        }
+        else
+        {
+            // Add a default
+            prj.xls.clear();
+
+
+            XL xln = ADefXL();
+            prj.xls.push_back(xln);
+            prj.iActive = prj.xls.size() - 1;
+
 
         }
         auto& xl = prj.xl();
@@ -2232,27 +2286,22 @@ namespace winrt::VisualDML::implementation
                                     //expr = dml::AveragePooling(mop.Item(whati[0]), TensorFromString<unsigned int>(it->Params[0]), TensorFromString<unsigned int>(it->Params[1]), TensorFromString<unsigned int>(it->Params[2]), TensorFromString<unsigned int>(it->Params[3]), TensorFromString<unsigned int>(it->Params[4]), (bool)it->Params[5], TensorFromString<unsigned int>(it->Params[6]));
 									node->Params.resize(7); 
 									node->Params[0].n = L"Strides";
-									node->Params[0].v = L"1x1";
                                     node->Params[0].minv = -1;
                                     node->Params[0].maxv = -1;
 
 									node->Params[1].n = L"Window Sizes";
-									node->Params[1].v = L"1x1";
 									node->Params[1].minv = -1;
 									node->Params[1].maxv = -1;
 
 									node->Params[2].n = L"Start Pad";
-									node->Params[2].v = L"0x0";
 									node->Params[2].minv = -1;
 									node->Params[2].maxv = -1;
 
 									node->Params[3].n = L"End Pad";
-									node->Params[3].v = L"0x0";
 									node->Params[3].minv = -1;
 									node->Params[3].maxv = -1;
 
 									node->Params[4].n = L"Dilations";
-									node->Params[4].v = L"0x0";
 									node->Params[4].minv = -1;
 									node->Params[4].maxv = -1;
 
@@ -2263,7 +2312,6 @@ namespace winrt::VisualDML::implementation
 
 
 									node->Params[6].n = L"Output Sizes";
-									node->Params[6].v = L"1x1";
 									node->Params[6].minv = -1;
 									node->Params[6].maxv = -1;
                                         
@@ -2434,6 +2482,36 @@ namespace winrt::VisualDML::implementation
                                 if (t == L"Constant")
                                 {
                                     OnAddConstant({}, {});
+                                }
+                                if (t == L"ConvolutionInteger")
+                                {
+									auto node = std::make_shared<XLNODE_ANY>(4, TYPE_CONVOLUTIONINTEGER);
+									node->hit.left = pos.X;
+									node->hit.top = pos.Y;
+
+                                    node->Params.resize(6);
+                                    for (int ii = 0; ii < 6; ii++)
+                                    {
+                                        node->Params[ii].minv = -1;
+                                        node->Params[ii].maxv = -1;
+                                        if (ii == 4)
+                                        {
+                                            node->Params[ii].minv = 0;
+                                            node->Params[ii].maxv = 1;
+                                        }
+                                    }
+                                    node->Params[0].n = L"Strides";
+                                    node->Params[1].n = L"Dilations";
+                                    node->Params[2].n = L"Start Pad";
+                                    node->Params[3].n = L"End Pad";
+                                    node->Params[4].n = L"Group Count";
+                                    node->Params[5].n = L"Output Sizes";
+                                    Push();
+                                    op.nodes.push_back(node);
+
+
+                                    Push();
+									op.nodes.push_back(node);
                                 }
                                 if (t == L"Cos")
                                 {
@@ -2643,6 +2721,36 @@ namespace winrt::VisualDML::implementation
                                     Push();
                                     op.nodes.push_back(node);
                                 }
+
+                                if (t == L"Gru")
+                                {
+                                    // TODO: It's fused
+/*                                    auto node = std::make_shared<XLNODE_ANY>(6, TYPE_GRU, 3);
+                                    node->Params.resize(6);
+
+                                    for (int ii = 0; ii < 6; ii++)
+                                    {
+                                        if (ii != 4)
+                                        {
+                                            node->Params[ii].minv = -1;
+                                            node->Params[ii].maxv = -1;
+                                        }
+                                    }
+
+                                    node->Params[0].n = L"Strides";
+                                    node->Params[1].n = L"Dilations";
+                                    node->Params[2].n = L"Start Pad";
+                                    node->Params[3].n = L"End Pad";
+                                    node->Params[4].n = L"Group Count";
+                                    node->Params[4].v = L"1.0";
+                                    node->Params[5].n = L"Output Tensor Sizes";
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    Push();
+                                    op.nodes.push_back(node);
+                                    */
+                                }
+
                                 if (t == L"GreaterThan")
                                 {
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_GREATERTHAN);
@@ -2897,7 +3005,27 @@ namespace winrt::VisualDML::implementation
                                     op.nodes.push_back(node);
                                 }
 
+                                if (t == L"Padding")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(1, TYPE_PADDING);
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+                                    node->Params.resize(4);
+                                    node->Params[0].n = L"Padding Mode";
+                                    node->Params[0].minv = 0;
+                                    node->Params[0].maxv = 2;
+									node->Params[0].list_names = { L"Constant",L"Edge",L"Reflection"};
+                                    node->Params[1].n = L"Padding Value";
+                                    node->Params[2].n = L"Start Padding";
+                                    node->Params[2].minv = -1;
+                                    node->Params[2].maxv = -1;
+                                    node->Params[3].n = L"End Padding";
+                                    node->Params[3].minv = -1;
+                                    node->Params[3].maxv = -1;
+                                    Push();
+                                    op.nodes.push_back(node);
 
+                                }
                                 if (t == L"Pow")
                                 {
                                     auto node = std::make_shared<XLNODE_ANY>(1, TYPE_POW);
@@ -2953,7 +3081,6 @@ namespace winrt::VisualDML::implementation
                                     node->hit.top = pos.Y;
                                     node->Params.resize(2);
                                     node->Params[0].n = L"Output Tensor";
-                                    node->Params[0].v = L"1x1";
                                     node->Params[0].minv = -1;
                                     node->Params[0].maxv = -1;
                                     node->Params[1].n = L"Output State";
@@ -2986,7 +3113,6 @@ namespace winrt::VisualDML::implementation
                                     node->Params[0].maxv = 11;
                                     node->Params[0].list_names = { L"ArgMax",L"ArgMin",L"Average",L"L1",L"L2",L"LogSum",L"LogSumExp",L"Max",L"Min",L"Multiply",L"Sum",L"SumSquare"};
                                     node->Params[1].n = L"Axes";
-                                    node->Params[1].v = L"1x1";
                                     node->Params[1].minv = -1;
                                     node->Params[1].maxv = -1;
                                     Push();
@@ -2999,7 +3125,6 @@ namespace winrt::VisualDML::implementation
                                     node->hit.top = pos.Y;
                                     node->Params.resize(4);
                                     node->Params[0].n = L"Output Tensor";
-                                    node->Params[0].v = L"1x1";
                                     node->Params[0].minv = -1;
                                     node->Params[0].maxv = -1;
                                     node->Params[1].n = L"Interpolation";
@@ -3011,7 +3136,6 @@ namespace winrt::VisualDML::implementation
                                     node->Params[2].maxv = 1;
                                     node->Params[2].list_names = { L"Increasing",L"Decreasing" };
                                     node->Params[3].n = L"Scales";
-                                    node->Params[3].v = L"1x1";
                                     node->Params[3].minv = -1;
                                     node->Params[3].maxv = -1;
 
@@ -3025,7 +3149,6 @@ namespace winrt::VisualDML::implementation
                                     node->hit.top = pos.Y;
                                     node->Params.resize(3);
                                     node->Params[0].n = L"Output Tensor";
-                                    node->Params[0].v = L"1x1";
                                     node->Params[0].minv = -1;
                                     node->Params[0].maxv = -1;
                                     node->Params[1].n = L"Interpolation";
@@ -3033,7 +3156,6 @@ namespace winrt::VisualDML::implementation
                                     node->Params[1].maxv = 1;
                                     node->Params[1].list_names = { L"Nearest",L"Linear" };
                                     node->Params[2].n = L"Scales";
-                                    node->Params[2].v = L"1x1";
                                     node->Params[2].minv = -1;
                                     node->Params[2].maxv = -1;
 
@@ -3123,7 +3245,6 @@ namespace winrt::VisualDML::implementation
                                     node->Params[0].n = L"New Size";
                                     node->Params[0].minv = -1;
                                     node->Params[0].maxv = -1;
-                                    node->Params[0].v = L"1x1";
                                     Push();
                                     op.nodes.push_back(node);
                                 }
@@ -3157,15 +3278,12 @@ namespace winrt::VisualDML::implementation
                                     node->Params[0].n = L"Offsets";
                                     node->Params[0].minv = -1;
                                     node->Params[0].maxv = -1;
-                                    node->Params[0].v = L"1x1";
                                     node->Params[1].n = L"Sizes";
                                     node->Params[1].minv = -1;
                                     node->Params[1].maxv = -1;
-                                    node->Params[1].v = L"1x1";
                                     node->Params[2].n = L"Strides";
                                     node->Params[2].minv = -1;
                                     node->Params[2].maxv = -1;
-                                    node->Params[2].v = L"1x1";
 
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
@@ -3181,19 +3299,15 @@ namespace winrt::VisualDML::implementation
                                     node->Params[0].n = L"Output Gradient Sizes";
                                     node->Params[0].minv = -1;
                                     node->Params[0].maxv = -1;
-                                    node->Params[0].v = L"1x1";
                                     node->Params[1].n = L"Offsets";
                                     node->Params[1].minv = -1;
                                     node->Params[1].maxv = -1;
-                                    node->Params[1].v = L"1x1";
                                     node->Params[2].n = L"Sizes";
                                     node->Params[2].minv = -1;
                                     node->Params[2].maxv = -1;
-                                    node->Params[2].v = L"1x1";
                                     node->Params[3].n = L"Strides";
                                     node->Params[3].minv = -1;
                                     node->Params[3].maxv = -1;
-                                    node->Params[3].v = L"1x1";
 
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
@@ -3883,8 +3997,7 @@ namespace winrt::VisualDML::implementation
 
     void MLGraph::OnAddSet(IInspectable const&, IInspectable const&)
     {
-        XL xln;
-		xln.ops.push_back(XLOP());
+        XL xln = ADefXL();
 		prj.xls.push_back(xln);
 		prj.iActive = prj.xls.size() - 1;
         FullRefresh();
@@ -5049,48 +5162,132 @@ namespace winrt::VisualDML::implementation
 
 
                         if (it->what == TYPE_ACT_CELU)
-                            expr = (dml::ActivationCelu(mop.Item(whati[0]),(float)it->Params[0]));
-                        if (it->what == TYPE_ACT_ELU)
-                            expr = (dml::ActivationElu(mop.Item(whati[0]), (float)it->Params[0]));
-                        if (it->what == TYPE_ACT_GELU)
-                            expr = (dml::ActivationGelu(mop.Item(whati[0])));
-						if (it->what == TYPE_ACT_HARDMAX)
-							expr = (dml::ActivationHardmax(mop.Item(whati[0])));
-						if (it->what == TYPE_ACT_HARDSIGMOID)
-							expr = (dml::ActivationHardSigmoid(mop.Item(whati[0]), it->Params[0], it->Params[1]));
-                        if (it->what == TYPE_ACT_IDENTITY)
-                            expr = (dml::ActivationIdentity(mop.Item(whati[0])));
-						if (it->what == TYPE_ACT_LEAKYRELU)
-							expr = (dml::ActivationLeakyRelu(mop.Item(whati[0]), it->Params[0]));
-						if (it->what == TYPE_ACT_LINEAR)
-							expr = (dml::ActivationLinear(mop.Item(whati[0]), it->Params[0], it->Params[1]));
-						if (it->what == TYPE_ACT_LOGSOFTMAX)
-							expr = dml::ActivationLogSoftmax(mop.Item(whati[0]));
-						if (it->what == TYPE_ACT_PRELU)
-							expr = (dml::ActivationParameterizedRelu(mop.Item(whati[0]), mop.Item(whati[1])));
-						if (it->what == TYPE_ACT_PSOFTPLUS)
-							expr = (dml::ActivationParametricSoftplus(mop.Item(whati[0]), it->Params[0], it->Params[1]));
-						if (it->what == TYPE_ACT_RELU)
-							expr = (dml::ActivationRelu(mop.Item(whati[0])));
-                        if (it->what == TYPE_ACT_SELU)
-							expr = (dml::ActivationScaledElu(mop.Item(whati[0]), it->Params[0], it->Params[1]));
-                        if (it->what == TYPE_ACT_STANH)
-							expr = (dml::ActivationScaledTanh(mop.Item(whati[0]), it->Params[0], it->Params[1]));
-						if (it->what == TYPE_ACT_SHRINK)
-							expr = (dml::ActivationShrink(mop.Item(whati[0]), it->Params[0], it->Params[1]));
-						if (it->what == TYPE_ACT_SIGMOID)
-							expr = (dml::ActivationSigmoid(mop.Item(whati[0])));
-						if (it->what == TYPE_ACT_SOFTMAX)
-							expr = (dml::ActivationSoftmax(mop.Item(whati[0])));
-						if (it->what == TYPE_ACT_SOFTPLUS)
-							expr = (dml::ActivationSoftplus(mop.Item(whati[0]),it->Params[0]));
-						if (it->what == TYPE_ACT_SOFTSIGN)
-							expr = (dml::ActivationSoftsign(mop.Item(whati[0])));
-						if (it->what == TYPE_ACT_TANH)
-							expr = (dml::ActivationTanh(mop.Item(whati[0])));
-						if (it->what == TYPE_ACT_TRELU)
-							expr = (dml::ActivationThresholdedRelu(mop.Item(whati[0]), it->Params[0]));
+                        {
+                            expr = (dml::ActivationCelu(mop.Item(whati[0]), (float)it->Params[0]));
+                            sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationCelu(mop.Item(%i),%.2f));)", whati[0],(float)it->Params[0]);
+                            node->code = the_code;
 
+                        }
+                        if (it->what == TYPE_ACT_ELU)
+                        {
+                            expr = (dml::ActivationElu(mop.Item(whati[0]), (float)it->Params[0]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationElu(mop.Item(%i),%.2f));)", whati[0], (float)it->Params[0]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ACT_GELU)
+                        {
+                            expr = (dml::ActivationGelu(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationGelu(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ACT_HARDMAX)
+                        {
+                            expr = (dml::ActivationHardmax(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationHardmax(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ACT_HARDSIGMOID)
+                        {
+                            expr = (dml::ActivationHardSigmoid(mop.Item(whati[0]), it->Params[0], it->Params[1]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationHardSigmoid(mop.Item(%i),%.2f,%.2f));)", whati[0], (float)it->Params[0], (float)it->Params[1]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ACT_IDENTITY)
+                        {
+                            expr = (dml::ActivationIdentity(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationIdentity(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
+						if (it->what == TYPE_ACT_LEAKYRELU)
+                        {
+                            expr = (dml::ActivationLeakyRelu(mop.Item(whati[0]), it->Params[0]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationLeakyRelu(mop.Item(%i),%.2f));)", whati[0], (float)it->Params[0]);
+							node->code = the_code;
+						}
+                        if (it->what == TYPE_ACT_LINEAR)
+                        {
+                            expr = (dml::ActivationLinear(mop.Item(whati[0]), it->Params[0], it->Params[1]));
+                            sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationLinear(mop.Item(%i),%.2f,%.2f));)", whati[0], (float)it->Params[0], (float)it->Params[1]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ACT_LOGSOFTMAX)
+                        {
+                            expr = dml::ActivationLogSoftmax(mop.Item(whati[0]));
+                            sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationLogSoftmax(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ACT_PRELU)
+                        {
+                            expr = (dml::ActivationParameterizedRelu(mop.Item(whati[0]), mop.Item(whati[1])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationParameterizedRelu(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ACT_PSOFTPLUS)
+                        {
+                            expr = (dml::ActivationParametricSoftplus(mop.Item(whati[0]), it->Params[0], it->Params[1]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationParametricSoftplus(mop.Item(%i),%.2f,%.2f));)", whati[0], (float)it->Params[0], (float)it->Params[1]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ACT_RELU)
+                        {
+                            expr = (dml::ActivationRelu(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationRelu(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ACT_SELU)
+                        {
+                            expr = (dml::ActivationScaledElu(mop.Item(whati[0]), it->Params[0], it->Params[1]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationScaledElu(mop.Item(%i),%.2f,%.2f));)", whati[0], (float)it->Params[0], (float)it->Params[1]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ACT_STANH)
+                        {
+                            expr = (dml::ActivationScaledTanh(mop.Item(whati[0]), it->Params[0], it->Params[1]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationScaledTanh(mop.Item(%i),%.2f,%.2f));)", whati[0], (float)it->Params[0], (float)it->Params[1]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ACT_SHRINK)
+                        {
+                            expr = (dml::ActivationShrink(mop.Item(whati[0]), it->Params[0], it->Params[1]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationShrink(mop.Item(%i),%.2f,%.2f));)", whati[0], (float)it->Params[0], (float)it->Params[1]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ACT_SIGMOID)
+                        {
+                            expr = (dml::ActivationSigmoid(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationSigmoid(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ACT_SOFTMAX)
+                        {
+                            expr = (dml::ActivationSoftmax(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationSoftmax(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ACT_SOFTPLUS)
+                        {
+                            expr = (dml::ActivationSoftplus(mop.Item(whati[0]), it->Params[0]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationSoftplus(mop.Item(%i),%.2f));)", whati[0], (float)it->Params[0]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ACT_SOFTSIGN)
+                        {
+                            expr = (dml::ActivationSoftsign(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationSoftsign(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ACT_TANH)
+                        {
+                            expr = (dml::ActivationTanh(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationTanh(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ACT_TRELU)
+                        {
+                            expr = (dml::ActivationThresholdedRelu(mop.Item(whati[0]), it->Params[0]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ActivationThresholdedRelu(mop.Item(%i),%.2f));)", whati[0], (float)it->Params[0]);
+							node->code = the_code;
+                        }
 
 
                         if (it->what == TYPE_ABS && whati.size() > 0)
@@ -5106,40 +5303,102 @@ namespace winrt::VisualDML::implementation
 							node->code = the_code;
                         }
                         if (it->what == TYPE_ACOSH)
+                        {
                             expr = (dml::ACosh(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ACosh(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_ADD)
+                        {
                             expr = (dml::Add(mop.Item(whati[0]), mop.Item(whati[1])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Add(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
+						}
                         if (it->what == TYPE_ASIN)
+                        {
                             expr = (dml::ASin(mop.Item(whati[0])));
+                            sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ASin(mop.Item(%i)));)", whati[0]);
+                            node->code = the_code;
+                        }
                         if (it->what == TYPE_ASINH)
+                        {
                             expr = (dml::ASinh(mop.Item(whati[0])));
+                            sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ASinh(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_ATAN)
+                        {
                             expr = (dml::ATan(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ATan(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+						}
                         if (it->what == TYPE_ATANH)
+                        {
                             expr = (dml::ATanh(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ATanh(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;  
+						}
                         if (it->what == TYPE_ATANYX)
+                        {
                             expr = (dml::ATanYX(mop.Item(whati[0]), mop.Item(whati[1])));
-						if (it->what == TYPE_AVERAGEPOOLING)
-							expr = dml::AveragePooling(mop.Item(whati[0]),TensorFromString<unsigned int>(it->Params[0]), TensorFromString<unsigned int>(it->Params[1]), TensorFromString<unsigned int>(it->Params[2]), TensorFromString<unsigned int>(it->Params[3]), TensorFromString<unsigned int>(it->Params[4]),(bool)it->Params[5], TensorFromString<unsigned int>(it->Params[6]));
-                        
-
+                            sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ATanYX(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+                            node->code = the_code;
+                        }
+                        if (it->what == TYPE_AVERAGEPOOLING)
+                        {
+                            expr = dml::AveragePooling(mop.Item(whati[0]), TensorFromString<unsigned int>(it->Params[0]), TensorFromString<unsigned int>(it->Params[1]), TensorFromString<unsigned int>(it->Params[2]), TensorFromString<unsigned int>(it->Params[3]), TensorFromString<unsigned int>(it->Params[4]), (bool)it->Params[5], TensorFromString<unsigned int>(it->Params[6]));
+                            sprintf_s(the_code, 1000, R"(mop.AddItem(dml::AveragePooling(mop.Item(%i),{%S},{%S},{%S},{%S},{%S},%s,{%S}));)", whati[0], TensorStringToString(it->Params[0].v).c_str(), TensorStringToString(it->Params[1].v).c_str(), TensorStringToString(it->Params[2].v).c_str(), TensorStringToString(it->Params[3].v).c_str(), TensorStringToString(it->Params[4].v).c_str(), it->Params[5] ? "true" : "false", TensorStringToString(it->Params[6].v).c_str());
+                            node->code = the_code;
+                        }
 
                         if (it->what == TYPE_BITCOUNT)
+                        {
                             expr = (dml::BitCount(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::BitCount(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_BITNOT)
+                        {
                             expr = (dml::BitNot(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::BitNot(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_BITAND)
+                        {
                             expr = (dml::BitAnd(mop.Item(whati[0]), mop.Item(whati[1])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::BitAnd(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_BITOR)
+                        {
                             expr = (dml::BitOr(mop.Item(whati[0]), mop.Item(whati[1])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::BitOr(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_BITSL)
+                        {
                             expr = (dml::BitShiftLeft(mop.Item(whati[0]), mop.Item(whati[1])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::BitShiftLeft(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_BITSR)
+                        {
                             expr = (dml::BitShiftRight(mop.Item(whati[0]), mop.Item(whati[1])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::BitShiftRight(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_BITXOR)
+                        {
                             expr = (dml::BitXor(mop.Item(whati[0]), mop.Item(whati[1])));
-						if (it->what == TYPE_BATCHNORMALIZATION)
+                            sprintf_s(the_code, 1000, R"(mop.AddItem(dml::BitXor(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_BATCHNORMALIZATION)
+                        {
                             expr = dml::BatchNormalization(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[2]), mop.Item(whati[3]), mop.Item(whati[4]), it->Params[0], it->Params[1]);
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::BatchNormalization(mop.Item(%i),mop.Item(%i),mop.Item(%i),mop.Item(%i),mop.Item(%i),%.2f,%.2f));)", whati[0], whati[1], whati[2], whati[3], whati[4], (float)it->Params[0], (float)it->Params[1]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_BATCHNORMALIZATIONGRAD)
                         {
                             if (!it->MultipleOpOutputData.has_value())
@@ -5176,20 +5435,47 @@ namespace winrt::VisualDML::implementation
                         }
                         
                         if (it->what == TYPE_CAST)
-                            expr = (dml::Cast(mop.Item(whati[0]),(DML_TENSOR_DATA_TYPE)it->OpType));
+                        {
+                            expr = (dml::Cast(mop.Item(whati[0]), (DML_TENSOR_DATA_TYPE)it->OpType));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Cast(mop.Item(%i),%S));)", whati[0], optypes2[it->OpType].c_str());
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_CEIL)
+                        {
                             expr = (dml::Ceil(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Ceil(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_CLIP)
-                            expr = (dml::Clip(mop.Item(whati[0]),it->Params[0], it->Params[1]));
+                        {
+                            expr = (dml::Clip(mop.Item(whati[0]), it->Params[0], it->Params[1]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Clip(mop.Item(%i),%.2f,%.2f));)", whati[0], (float)it->Params[0], (float)it->Params[1]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_CLIPGRAD)
+                        {
                             expr = (dml::ClipGrad(mop.Item(whati[0]), mop.Item(whati[1]), it->Params[0], it->Params[1]));
-
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ClipGrad(mop.Item(%i),mop.Item(%i),%.2f,%.2f));)", whati[0], whati[1], (float)it->Params[0], (float)it->Params[1]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_CONVOLUTION)
                         {
                             dml::Optional<dml::Expression> e3;
                             if (whati.size() > 2)
                                 e3 = mop.Item(whati[2]);
                             expr = (dml::Convolution(mop.Item(whati[0]), mop.Item(whati[1]), e3, (DML_CONVOLUTION_MODE)(int)it->Params[0]));
+                        }
+
+                        if (it->what == TYPE_CONVOLUTIONINTEGER)
+                        {
+                            dml::Optional<dml::Expression> e1,e2;
+                            if (whati.size() > 1)
+                                e1 = mop.Item(whati[1]);
+                            if (whati.size() > 2)
+                                e2 = mop.Item(whati[2]);
+                            expr = dml::ConvolutionInteger(mop.Item(whati[0]), e1,mop.Item(whati[1]),e2,
+                                TensorFromString<unsigned int>(it->Params[0]), TensorFromString<unsigned int>(it->Params[1]), TensorFromString<unsigned int>(it->Params[2]), TensorFromString<unsigned int>(it->Params[3]), 
+                                it->Params[4], TensorFromString<unsigned int>(it->Params[5]));
                         }
                         
                         if (it->what == TYPE_COS)
@@ -5205,15 +5491,30 @@ namespace winrt::VisualDML::implementation
 							node->code = the_code;
                         }
                         if (it->what == TYPE_CUMPROD)
-							expr = dml::CumulativeProduct(mop.Item(whati[0]),it->Params[0],(DML_AXIS_DIRECTION)(int)it->Params[1],(bool)it->Params[2]);
-						if (it->what == TYPE_CUMSUM)
+                        {
+                            expr = dml::CumulativeProduct(mop.Item(whati[0]), it->Params[0], (DML_AXIS_DIRECTION)(int)it->Params[1], (bool)it->Params[2]);
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::CumulativeProduct(mop.Item(%i),%i,(DML_AXIS_DIRECTION)%i,%s));)", whati[0], (uint32_t)it->Params[0], (int)it->Params[1], it->Params[2] ? "true" : "false");
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_CUMSUM)
+                        {
                             expr = dml::CumulativeSummation(mop.Item(whati[0]), it->Params[0], (DML_AXIS_DIRECTION)(int)it->Params[1], (bool)it->Params[2]);
-
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::CumulativeSummation(mop.Item(%i),%i,(DML_AXIS_DIRECTION)%i,%s));)", whati[0], (uint32_t)it->Params[0], (int)it->Params[1], it->Params[2] ? "true" : "false");
+							node->code = the_code;
+                        }
 
                         if (it->what == TYPE_DIVIDE)
+                        {
                             expr = (dml::Divide(mop.Item(whati[0]), mop.Item(whati[1])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Divide(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_DEPTHTOSPACE)
-                            expr = (dml::DepthToSpace(mop.Item(whati[0]),(unsigned int)it->Params[0],(DML_DEPTH_SPACE_ORDER)(int)it->Params[1]));
+                        {
+                            expr = (dml::DepthToSpace(mop.Item(whati[0]), (unsigned int)it->Params[0], (DML_DEPTH_SPACE_ORDER)(int)it->Params[1]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::DepthToSpace(mop.Item(%i),%u,(DML_DEPTH_SPACE_ORDER)%i));)", whati[0], (unsigned int)it->Params[0], (int)it->Params[1]);
+							node->code = the_code;
+                        }
 
                         if (it->what == TYPE_DEQUANTIZE)
                         {
@@ -5225,55 +5526,93 @@ namespace winrt::VisualDML::implementation
                             expr = dml::Dequantize(mop.Item(whati[0]), ll,(DML_QUANTIZATION_TYPE)jt);
                         }
                         if (it->what == TYPE_DEQUANTIZELINEAR)
+                        {
                             expr = (dml::DequantizeLinear(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[2])));
-
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::DequantizeLinear(mop.Item(%i),mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1], whati[2]);
+							node->code = the_code;
+                        }
 
 
                         if (it->what == TYPE_DIFFERENCESQUARE)
+                        {
                             expr = (dml::DifferenceSquare(mop.Item(whati[0]), mop.Item(whati[1])));
-
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::DifferenceSquare(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+                        }
 
                         if (it->what == TYPE_ERF)
+                        {
                             expr = (dml::Erf(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Erf(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_EXP)
+                        {
                             expr = (dml::Exp(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Exp(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_EQUALS)
+                        {
                             expr = (dml::Equals(mop.Item(whati[0]), mop.Item(whati[1])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Equals(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
+                        }
 
 
                         if (it->what == TYPE_FLOOR)
+                        {
                             expr = (dml::Floor(mop.Item(whati[0])));
-
-						if (it->what == TYPE_GATHER)
-							expr = dml::Gather(mop.Item(whati[0]), mop.Item(whati[1]),it->Params[0],it->Params[1]);
-
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Floor(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_GATHER)
+                        {
+                            expr = dml::Gather(mop.Item(whati[0]), mop.Item(whati[1]), it->Params[0], it->Params[1]);
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Gather(mop.Item(%i),mop.Item(%i),%i,%i));)", whati[0], whati[1], (int)it->Params[0], (int)it->Params[1]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_GATHERELEMENTS)
-							expr = (dml::GatherElements(mop.Item(whati[0]), mop.Item(whati[1]), it->Params[0]));
+                        {
+                            expr = (dml::GatherElements(mop.Item(whati[0]), mop.Item(whati[1]), it->Params[0]));
+                            sprintf_s(the_code, 1000, R"(mop.AddItem(dml::GatherElements(mop.Item(%i),mop.Item(%i),%i));)", whati[0], whati[1], (int)it->Params[0]);
+							node->code = the_code;
+                        }
 
-						if (it->what == TYPE_GATHERND)
-							expr = dml::GatherND(mop.Item(whati[0]), mop.Item(whati[1]),it->Params[0],it->Params[1],it->Params[2]);
-
+                        if (it->what == TYPE_GATHERND)
+                        {
+                            expr = dml::GatherND(mop.Item(whati[0]), mop.Item(whati[1]), it->Params[0], it->Params[1], it->Params[2]);
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::GatherND(mop.Item(%i),mop.Item(%i),%i,%i,%i));)", whati[0], whati[1], (int)it->Params[0], (int)it->Params[1], (int)it->Params[2]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_GEMM)
                         {
-							DML_MATRIX_TRANSFORM t1 = DML_MATRIX_TRANSFORM_NONE;
-							DML_MATRIX_TRANSFORM t2 = DML_MATRIX_TRANSFORM_NONE;
-                            float alpha = 0.0f;
-                            float beta = 0.0f;
-
-							t1 = (DML_MATRIX_TRANSFORM)(int)it->Params[0];
-							t2 = (DML_MATRIX_TRANSFORM)(int)it->Params[1];
-							alpha = it->Params[2];
-							beta = it->Params[3];
-
                             dml::Optional<dml::Expression> e3;
 							if (whati.size() > 2)
 								e3 = mop.Item(whati[2]);
-                            expr = (dml::Gemm(mop.Item(whati[0]), mop.Item(whati[1]),  e3, t1, t2, alpha, beta));
+                            expr = (dml::Gemm(mop.Item(whati[0]), mop.Item(whati[1]),  e3, (DML_MATRIX_TRANSFORM)(int)it->Params[0], (DML_MATRIX_TRANSFORM)(int)it->Params[1], it->Params[2], it->Params[3]));
+                            if (whati.size() > 2)
+                                sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Gemm(mop.Item(%i),mop.Item(%i),mop.Item(%i),(DML_MATRIX_TRANSFORM)%i,(DML_MATRIX_TRANSFORM)%i,%.2f,%.2f));)", whati[0], whati[1], whati[2], (int)it->Params[0], (int)it->Params[1], (float)it->Params[2], (float)it->Params[3]);
+                            else
+                                sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Gemm(mop.Item(%i),mop.Item(%i),{},(DML_MATRIX_TRANSFORM)%i,(DML_MATRIX_TRANSFORM)%i,%.2f,%.2f));)", whati[0], whati[1],  (int)it->Params[0], (int)it->Params[1], (float)it->Params[2], (float)it->Params[3]);
+                            node->code = the_code;
                         }
-						if (it->what == TYPE_GREATERTHAN)
-							expr = (dml::GreaterThan(mop.Item(whati[0]), mop.Item(whati[1]),(DML_TENSOR_DATA_TYPE)it->OpType));
+                        if (it->what == TYPE_GREATERTHAN)
+                        {
+                            expr = (dml::GreaterThan(mop.Item(whati[0]), mop.Item(whati[1]), (DML_TENSOR_DATA_TYPE)it->OpType));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::GreaterThan(mop.Item(%i),mop.Item(%i),%S));)", whati[0], whati[1], optypes2[it->OpType].c_str());
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_GREATERTHANOREQUAL)
+                        {
                             expr = (dml::GreaterThanOrEqual(mop.Item(whati[0]), mop.Item(whati[1]), (DML_TENSOR_DATA_TYPE)it->OpType));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::GreaterThanOrEqual(mop.Item(%i),mop.Item(%i),%S));)", whati[0], whati[1], optypes2[it->OpType].c_str());  
+							node->code = the_code;
+                        }
+
+                        if (it->what == TYPE_GRU)
+                        {
+                             // TODO
+                        }
 
                         if (it->what == TYPE_IDENTITY)
                         {
@@ -5282,13 +5621,23 @@ namespace winrt::VisualDML::implementation
 							node->code = the_code;
                         }
                         if (it->what == TYPE_IF)
+                        {
                             expr = (dml::If(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[2])));
-
-						if (it->what == TYPE_ISINFINITY)
-							expr = dml::IsInfinity(mop.Item(whati[0]),(DML_IS_INFINITY_MODE)(int)(it->Params[0]), (DML_TENSOR_DATA_TYPE)it->OpType);
-						if (it->what == TYPE_ISNAN)
-							expr = (dml::IsNaN(mop.Item(whati[0]), (DML_TENSOR_DATA_TYPE)it->OpType));
-
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::If(mop.Item(%i),mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1], whati[2]);
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ISINFINITY)
+                        {
+                            expr = dml::IsInfinity(mop.Item(whati[0]), (DML_IS_INFINITY_MODE)(int)(it->Params[0]), (DML_TENSOR_DATA_TYPE)it->OpType);
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::IsInfinity(mop.Item(%i),(DML_IS_INFINITY_MODE)%i,%S));)", whati[0], (int)it->Params[0], optypes2[it->OpType].c_str());
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_ISNAN)
+                        {
+                            expr = (dml::IsNaN(mop.Item(whati[0]), (DML_TENSOR_DATA_TYPE)it->OpType));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::IsNaN(mop.Item(%i),%S));)", whati[0], optypes2[it->OpType].c_str());
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_JOIN)
                         {
 							std::vector<dml::Expression> v;
@@ -5301,24 +5650,60 @@ namespace winrt::VisualDML::implementation
 
 
                         if (it->what == TYPE_LAND)
+                        {
                             expr = (dml::LogicalAnd(mop.Item(whati[0]), mop.Item(whati[1])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::LogicalAnd(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_LOR)
+                        {
                             expr = (dml::LogicalOr(mop.Item(whati[0]), mop.Item(whati[1])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::LogicalOr(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_LXOR)
+                        {
                             expr = (dml::LogicalXor(mop.Item(whati[0]), mop.Item(whati[1])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::LogicalXor(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_LNOT)
+                        {
                             expr = (dml::LogicalNot(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::LogicalNot(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_LOG)
+                        {
                             expr = (dml::Log(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Log(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_LESSTHAN)
+                        {
                             expr = (dml::LessThan(mop.Item(whati[0]), mop.Item(whati[1]), (DML_TENSOR_DATA_TYPE)it->OpType));
+                            sprintf_s(the_code, 1000, R"(mop.AddItem(dml::LessThan(mop.Item(%i),mop.Item(%i),%S));)", whati[0], whati[1], optypes2[it->OpType].c_str());
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_LESSTHANOREQUAL)
+                        {
                             expr = (dml::LessThanOrEqual(mop.Item(whati[0]), mop.Item(whati[1]), (DML_TENSOR_DATA_TYPE)it->OpType));
-						if (it->what == TYPE_LOCALRESPONSENORMALIZATION)
-							expr = (dml::LocalResponseNormalization(mop.Item(whati[0]), it->Params[0], it->Params[1], it->Params[2], it->Params[3], it->Params[4]));
-
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::LessThanOrEqual(mop.Item(%i),mop.Item(%i),%S));)", whati[0], whati[1], optypes2[it->OpType].c_str());
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_LOCALRESPONSENORMALIZATION)
+                        {
+                            expr = (dml::LocalResponseNormalization(mop.Item(whati[0]), it->Params[0], it->Params[1], it->Params[2], it->Params[3], it->Params[4]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::LocalResponseNormalization(mop.Item(%i),%.2f,%.2f,%.2f,%.2f,%.2f));)", whati[0], (float)it->Params[0], (float)it->Params[1], (float)it->Params[2], (float)it->Params[3], (float)it->Params[4]);
+							node->code = the_code;
+                                
+                        }
                         if (it->what == TYPE_MAX)
+                        {
                             expr = (dml::Max(mop.Item(whati[0]), mop.Item(whati[1])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Max(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_MAXPOOLING)
                         {
                             if (!it->MultipleOpOutputData.has_value())
@@ -5332,8 +5717,11 @@ namespace winrt::VisualDML::implementation
                         }
 
                         if (it->what == TYPE_MEAN)
+                        {
                             expr = (dml::Mean(mop.Item(whati[0]), mop.Item(whati[1])));
-
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Mean(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
+                        }
                         
 
                         if (it->what == TYPE_MEANVARIANCENORMALIZATION)
@@ -5349,20 +5737,36 @@ namespace winrt::VisualDML::implementation
                         }
 
                         if (it->what == TYPE_MIN)
+                        {
                             expr = (dml::Min(mop.Item(whati[0]), mop.Item(whati[1])));
-
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Min(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
+                        }
 
                         if (it->what == TYPE_MULTIPLY)
+                        {
                             expr = (dml::Multiply(mop.Item(whati[0]), mop.Item(whati[1])));
-
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Multiply(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_MODULUSFLOOR)
+                        {
                             expr = (dml::ModulusFloor(mop.Item(whati[0]), mop.Item(whati[1])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ModulusFloor(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+                        }
                         if (it->what == TYPE_MODULUSTRUNCATE)
+                        {
                             expr = (dml::ModulusTruncate(mop.Item(whati[0]), mop.Item(whati[1])));
-
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ModulusTruncate(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
+                        }
 
                         if (it->what == TYPE_NEGATE)
+                        {
                             expr = (dml::Negate(mop.Item(whati[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Negate(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_NONZEROCOORDINATES)
                         {
                             if (!it->MultipleOpOutputData.has_value())
@@ -5377,13 +5781,30 @@ namespace winrt::VisualDML::implementation
 
 
                         if (it->what == TYPE_ONEHOT)
-							expr = dml::OneHot(mop.Item(whati[0]), mop.Item(whati[1]), it->Params[0], it->Params[1]);
-
+                        {
+                            expr = dml::OneHot(mop.Item(whati[0]), mop.Item(whati[1]), it->Params[0], it->Params[1]);
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::OneHot(mop.Item(%i),mop.Item(%i),%i,%i));)", whati[0], whati[1], (int)it->Params[0], (int)it->Params[1]); 
+							node->code = the_code;  
+                        }
+                        if (it->what == TYPE_PADDING)
+                        {
+							expr = dml::Padding(mop.Item(whati[0]),
+                                (DML_PADDING_MODE)(int)it->Params[0], it->Params[1], TensorFromString<unsigned int>(it->Params[2]), TensorFromString<unsigned int>(it->Params[3]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Padding(mop.Item(%i),(DML_PADDING_MODE)%i,%.2f,{%S},{%S}));)", whati[0], (int)it->Params[0], (float)it->Params[1], TensorStringToString(it->Params[2].v).c_str(), TensorStringToString(it->Params[3].v).c_str());
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_POW)
-                            expr = (dml::Pow(mop.Item(whati[0]),it->Params[0]));
-
+                        {
+                            expr = (dml::Pow(mop.Item(whati[0]), it->Params[0]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Pow(mop.Item(%i),%.2f));)", whati[0], (float)it->Params[0]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_QUANTIZELINEAR)
+                        {
                             expr = (dml::QuantizeLinear(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[2]), (DML_TENSOR_DATA_TYPE)it->OpType));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::QuantizeLinear(mop.Item(%i),mop.Item(%i),mop.Item(%i),%S));)", whati[0], whati[1], whati[2], optypes2[it->OpType].c_str());
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_QUANTIZEDLINEARCONVOLUTION)
                         {
                             expr = dml::QuantizedLinearConvolution(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[5]), mop.Item(whati[2]), mop.Item(whati[3]), mop.Item(whati[6]), mop.Item(whati[7]), mop.Item(whati[4]), mop.Item(whati[8]),
@@ -5407,11 +5828,17 @@ namespace winrt::VisualDML::implementation
 
 
                         if (it->what == TYPE_RECIP)
+                        {
                             expr = (dml::Recip(mop.Item(whati[0])));
-
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Recip(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_ROUND)
-                            expr = (dml::Round(mop.Item(whati[0]),(DML_ROUNDING_MODE)(int)(it->Params[0])));
-
+                        {
+                            expr = (dml::Round(mop.Item(whati[0]), (DML_ROUNDING_MODE)(int)(it->Params[0])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Round(mop.Item(%i),(DML_ROUNDING_MODE)%i));)", whati[0], (int)it->Params[0]);
+							node->code = the_code;
+                        }
 
                         if (it->what == TYPE_ROIALIGN)
                         {
@@ -5438,31 +5865,44 @@ namespace winrt::VisualDML::implementation
                         }
 
                         if (it->what == TYPE_REDUCE)
-                            expr = dml::Reduce(mop.Item(whati[0]), (DML_REDUCE_FUNCTION)(int)(it->Params[0]),TensorFromString<unsigned int>(it->Params[1]),(DML_TENSOR_DATA_TYPE)it->OpType);
-
+                        {
+                            expr = dml::Reduce(mop.Item(whati[0]), (DML_REDUCE_FUNCTION)(int)(it->Params[0]), TensorFromString<unsigned int>(it->Params[1]), (DML_TENSOR_DATA_TYPE)it->OpType);
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Reduce(mop.Item(%i),(DML_REDUCE_FUNCTION)%i,{%S},%S));)", whati[0], (int)it->Params[0], TensorStringToString(it->Params[1].v).c_str(), optypes2[it->OpType].c_str());
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_RESAMPLE)
                         {
                             expr = dml::Resample(mop.Item(whati[0]), TensorFromString<unsigned int>(it->Params[0]),(DML_INTERPOLATION_MODE)(int)it->Params[1],
                                 (DML_AXIS_DIRECTION)(int)it->Params[2],TensorFromString<float>(it->Params[3]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Resample(mop.Item(%i),{%S},(DML_INTERPOLATION_MODE)%i,(DML_AXIS_DIRECTION)%i,{%S}));)", whati[0], TensorStringToString(it->Params[0].v).c_str(), (int)it->Params[1], (int)it->Params[2], TensorStringToString(it->Params[3].v).c_str());
+							node->code = the_code;
                         }
                         if (it->what == TYPE_RESAMPLEGRAD)
                         {
                             expr = dml::ResampleGrad(mop.Item(whati[0]), TensorFromString<unsigned int>(it->Params[0]), (DML_INTERPOLATION_MODE)(int)it->Params[1],
                                 TensorFromString<float>(it->Params[2]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ResampleGrad(mop.Item(%i),{%S},(DML_INTERPOLATION_MODE)%i,{%S}));)", whati[0], TensorStringToString(it->Params[0].v).c_str(), (int)it->Params[1], TensorStringToString(it->Params[2].v).c_str());
+							node->code = the_code;
                         }
 
                         if (it->what == TYPE_REINTERPRET)
                         {
-                            std::vector<unsigned int> newSizes = TensorFromString(it->Params[0].v.c_str());
-                            expr = (dml::Reinterpret(mop.Item(whati[0]), (DML_TENSOR_DATA_TYPE)it->OpType, newSizes, {}));
+                            expr = (dml::Reinterpret(mop.Item(whati[0]), (DML_TENSOR_DATA_TYPE)it->OpType, TensorFromString(it->Params[0].v.c_str()), {}));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Reinterpret(mop.Item(%i),%S,{%S},{}));)", whati[0], optypes2[it->OpType].c_str(), TensorStringToString(it->Params[0].v).c_str());
+							node->code = the_code;
                         }
                         if (it->what == TYPE_REVERSESUBSEQUENCES)
-							expr = (dml::ReverseSubsequences(mop.Item(whati[0]), mop.Item(whati[1]), it->Params[0]));
-
+                        {
+                            expr = (dml::ReverseSubsequences(mop.Item(whati[0]), mop.Item(whati[1]), it->Params[0]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ReverseSubsequences(mop.Item(%i),mop.Item(%i),%i));)", whati[0], whati[1], (int)it->Params[0]);
+							node->code = the_code;
+                        }
 
                         if (it->what == TYPE_SCATTERELEMENTS)
                         {
 							expr = dml::ScatterElements(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[2]), it->Params[0]);
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ScatterElements(mop.Item(%i),mop.Item(%i),mop.Item(%i),%i));)", whati[0], whati[1], whati[2], (int)it->Params[0]);
+							node->code = the_code;
                         }
 
                         if (it->what == TYPE_SLICE)
@@ -5483,28 +5923,50 @@ namespace winrt::VisualDML::implementation
                         }
 
                         if (it->what == TYPE_SUBTRACT)
+                        {
                             expr = (dml::Subtract(mop.Item(whati[0]), mop.Item(whati[1])));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Subtract(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
+                        }
 
                         if (it->what == TYPE_SQRT)
+                        {
                             expr = (dml::Sqrt(mop.Item(whati[0])));
-
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Sqrt(mop.Item(%i)));)", whati[0]);
+                            node->code = the_code;
+                        }
                         if (it->what == TYPE_SIGN)
+                        {
                             expr = (dml::Sign(mop.Item(whati[0])));
-                        
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Sign(mop.Item(%i)));)", whati[0]);
+							node->code = the_code;
+                        }
                         if (it->what == TYPE_THRESHOLD)
+                        {
                             expr = (dml::Threshold(mop.Item(whati[0]), it->Params[0]));
-
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Threshold(mop.Item(%i),%.2f));)", whati[0], (float)it->Params[0]);
+							node->code = the_code;
+                        }
 
                         if (it->what == TYPE_VALUESCALE2D)
-							expr = dml::ValueScale2D(mop.Item(whati[0]), it->Params[0], TensorFromString<float>(it->Params[1]));
-
-						if (it->what == TYPE_UPSAMLPLE2D)
+                        {
+                            expr = dml::ValueScale2D(mop.Item(whati[0]), it->Params[0], TensorFromString<float>(it->Params[1]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::ValueScale2D(mop.Item(%i),%i,{%S}));)", whati[0], (int)it->Params[0], TensorStringToString(it->Params[1].v).c_str());
+							node->code = the_code;
+                        }
+                        if (it->what == TYPE_UPSAMLPLE2D)
+                        {
                             expr = dml::Upsample2D(mop.Item(whati[0]), DML_SIZE_2D{ (unsigned int)(it->Params[0]), (unsigned int)(it->Params[1]) }, (DML_INTERPOLATION_MODE)(int)it->Params[2]);
-
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Upsample2D(mop.Item(%i),{ %i,%i },(DML_INTERPOLATION_MODE)%i));)", whati[0], (int)it->Params[0], (int)it->Params[1], (int)it->Params[2]);
+							node->code = the_code;
+                        }
 
                         if (it->what == TYPE_SPACETODEPTH)
-							expr = (dml::SpaceToDepth(mop.Item(whati[0]), (unsigned int)it->Params[0], (DML_DEPTH_SPACE_ORDER)(int)it->Params[1]));
-
+                        {
+                            expr = (dml::SpaceToDepth(mop.Item(whati[0]), (unsigned int)it->Params[0], (DML_DEPTH_SPACE_ORDER)(int)it->Params[1]));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::SpaceToDepth(mop.Item(%i),%i,(DML_DEPTH_SPACE_ORDER)%i));)", whati[0], (int)it->Params[0], (int)it->Params[1]);
+							node->code = the_code;
+                        }
                         
                         if (it->what == TYPE_TOPK)
                         {

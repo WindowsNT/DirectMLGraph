@@ -149,18 +149,18 @@ enum XLNODE_TYPE
     TYPE_ACT_IDENTITY,TYPE_ACT_CELU,TYPE_ACT_ELU,TYPE_ACT_GELU,TYPE_ACT_HARDMAX,TYPE_ACT_HARDSIGMOID,TYPE_ACT_LEAKYRELU,TYPE_ACT_LINEAR,TYPE_ACT_LOGSOFTMAX,TYPE_ACT_PRELU, TYPE_ACT_PSOFTPLUS, TYPE_ACT_RELU, TYPE_ACT_SELU, TYPE_ACT_STANH, TYPE_ACT_SHRINK, TYPE_ACT_SIGMOID, TYPE_ACT_SOFTMAX, TYPE_ACT_SOFTPLUS, TYPE_ACT_SOFTSIGN, TYPE_ACT_TANH, TYPE_ACT_TRELU,
     TYPE_ABS,TYPE_ACOS,TYPE_ACOSH, TYPE_ADD,TYPE_ASIN,TYPE_ASINH,TYPE_ATAN,TYPE_ATANH, TYPE_ATANYX,TYPE_AVERAGEPOOLING,
 	TYPE_BITAND, TYPE_BITCOUNT, TYPE_BITNOT, TYPE_BITOR, TYPE_BITSL, TYPE_BITSR, TYPE_BITXOR, TYPE_BATCHNORMALIZATION, TYPE_BATCHNORMALIZATIONGRAD,TYPE_BATCHNORMALIZATIONTRAINING, TYPE_BATCHNORMALIZATIONTRAININGGRAD,
-	TYPE_CAST,TYPE_CEIL, TYPE_CLIP, TYPE_CLIPGRAD, TYPE_CONSTANT, TYPE_COS, TYPE_COSH, TYPE_CONVOLUTION,TYPE_CUMSUM, TYPE_CUMPROD,
+	TYPE_CAST,TYPE_CEIL, TYPE_CLIP, TYPE_CLIPGRAD, TYPE_CONSTANT, TYPE_CONVOLUTIONINTEGER,TYPE_COS, TYPE_COSH, TYPE_CONVOLUTION,TYPE_CUMSUM, TYPE_CUMPROD,
     TYPE_DIVIDE,TYPE_DEPTHTOSPACE,TYPE_DEQUANTIZE,TYPE_DEQUANTIZELINEAR,TYPE_DIFFERENCESQUARE,
     TYPE_ERF,TYPE_EXP,TYPE_EQUALS,
     TYPE_FLOOR,
-	TYPE_GATHER,TYPE_GATHERELEMENTS,TYPE_GATHERND,TYPE_GEMM, TYPE_GREATERTHAN, TYPE_GREATERTHANOREQUAL,
+	TYPE_GATHER,TYPE_GATHERELEMENTS,TYPE_GATHERND,TYPE_GEMM, TYPE_GREATERTHAN, TYPE_GREATERTHANOREQUAL,TYPE_GRU,
     TYPE_IDENTITY,TYPE_IF,TYPE_ISINFINITY,TYPE_ISNAN,
     TYPE_JOIN,
 	TYPE_LAND, TYPE_LOR, TYPE_LXOR, TYPE_LNOT, TYPE_LOG, TYPE_LESSTHAN, TYPE_LESSTHANOREQUAL, TYPE_LOCALRESPONSENORMALIZATION,
     TYPE_MAX,TYPE_MAXPOOLING,TYPE_MEAN,TYPE_MEANVARIANCENORMALIZATION, TYPE_MIN,TYPE_MULTIPLY,TYPE_MODULUSFLOOR,TYPE_MODULUSTRUNCATE,
     TYPE_NEGATE,TYPE_NONZEROCOORDINATES,
     TYPE_ONEHOT,
-    TYPE_POW,
+    TYPE_PADDING,TYPE_POW,
     TYPE_QUANTIZELINEAR,TYPE_QUANTIZEDLINEARCONVOLUTION,
     TYPE_RANDOMGENERATOR,TYPE_REINTERPRET,TYPE_RECIP,TYPE_REDUCE,TYPE_RESAMPLE,TYPE_RESAMPLEGRAD, TYPE_REVERSESUBSEQUENCES,TYPE_ROUND,TYPE_ROIALIGN,TYPE_ROIALIGNGRAD,
     TYPE_SCATTERELEMENTS,TYPE_SLICE,TYPE_SLICEGRAD,TYPE_SUBTRACT,TYPE_SQRT,TYPE_SIGN,TYPE_SPACETODEPTH,
@@ -222,6 +222,7 @@ inline std::map<int, std::string> TypesToNames = {
     {TYPE_CLIP,"Clip"},
     {TYPE_CLIPGRAD,"ClipGrad"},
     {TYPE_CONSTANT,"Constant"},
+	{TYPE_CONVOLUTIONINTEGER,"ConvolutionInteger"},
     {TYPE_COS,"Cos"},
     {TYPE_COSH,"Cosh"},
     {TYPE_CONVOLUTION,"Convolution"},
@@ -243,6 +244,7 @@ inline std::map<int, std::string> TypesToNames = {
     {TYPE_GEMM,"Gemm"},
     {TYPE_GREATERTHAN,"GreaterThan"},
     {TYPE_GREATERTHANOREQUAL,"GreaterThanOrEqual"},
+	{TYPE_GRU,"Gru"},
     {TYPE_IDENTITY,"Identity"},
     {TYPE_IF,"If"},
     {TYPE_ISINFINITY,"IsInfinity"},
@@ -268,6 +270,7 @@ inline std::map<int, std::string> TypesToNames = {
     {TYPE_NEGATE,"Negate"},
     {TYPE_NONZEROCOORDINATES,"NonZeroCoordinates"},
     {TYPE_ONEHOT,"OneHot"},
+	{TYPE_PADDING,"Padding"},
     {TYPE_POW,"Pow"},
     {TYPE_QUANTIZELINEAR,"QuantizeLinear"},
     {TYPE_QUANTIZEDLINEARCONVOLUTION,"QuantizedLinearConvolution"},
@@ -321,6 +324,8 @@ struct XLNODE_ANY : public XLNODE
             return nin() - 1;
         if (what == TYPE_JOIN)
             return 1;
+        if (what == TYPE_CONVOLUTIONINTEGER)
+            return 2;
         if (what == TYPE_DEQUANTIZE)
             return 2;
         if (what == TYPE_QUANTIZEDLINEARCONVOLUTION)
@@ -329,6 +334,8 @@ struct XLNODE_ANY : public XLNODE
             return 1;
         if (what == TYPE_ROIALIGNGRAD)
             return 3;
+		if (what == TYPE_GRU)
+			return 3;
         return nin();
     }
     virtual int nin() { return howi; }
@@ -397,7 +404,11 @@ struct XLNODE_ANY : public XLNODE
 		{
 			return { L"Input",L"Filter",L"Bias" };
 		}
-		if (w == TYPE_DEQUANTIZELINEAR)
+        if (w == TYPE_CONVOLUTIONINTEGER)
+        {
+            return { L"Input",L"Filter",L"Input ZP",L"Filter ZP"};
+        }
+        if (w == TYPE_DEQUANTIZELINEAR)
 		{
 			return { L"Input",L"Scale",L"Zero Point"};
 		}
@@ -416,6 +427,10 @@ struct XLNODE_ANY : public XLNODE
         if (w == TYPE_GEMM)
         {
             return { L"Matrix 1",L"Matrix 2",L"Optional C" };
+        }
+        if (w == TYPE_GRU)
+        {
+			return { L"Input",L"Weights",L"Recurrence",L"Bias",L"Hidden Init",L"Sequence Lengths" };
         }
         if (w == TYPE_MAXPOOLING)
         {
@@ -573,6 +588,8 @@ struct XLNODE_ANY : public XLNODE
 
         if (what == TYPE_CONSTANT)
             return L"Constant";
+		if (what == TYPE_CONVOLUTIONINTEGER)
+			return L"ConvolutionInteger";
         if (what == TYPE_COS)
             return L"Cos";
         if (what == TYPE_COSH)
@@ -618,7 +635,10 @@ struct XLNODE_ANY : public XLNODE
 			return L"GreaterThan";
 		if (what == TYPE_GREATERTHANOREQUAL)
 			return L"GreaterThanOrEqual";
+		if (what == TYPE_GRU)
+			return L"Gru";
 
+            
 		if (what == TYPE_IDENTITY)
 			return L"Identity";
 		if (what == TYPE_IF)
@@ -675,6 +695,8 @@ struct XLNODE_ANY : public XLNODE
 		if (what == TYPE_ONEHOT)
 			return L"OneHot";
 
+		if (what == TYPE_PADDING)
+			return L"Padding";
         if (what == TYPE_POW)
             return L"Pow";
 
@@ -1281,6 +1303,8 @@ namespace winrt::VisualDML::implementation
         void Dirty(bool Cl = 1);
         void OnAddOp(IInspectable const&, IInspectable const&);
         void OnAddSet(IInspectable const&, IInspectable const&);
+        XL ADefXL();
+
         void Tip(const wchar_t*);
         void OnAddVariable(IInspectable const&, IInspectable const&);
         void OnAddInput(IInspectable const&, IInspectable const&);

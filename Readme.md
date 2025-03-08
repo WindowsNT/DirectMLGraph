@@ -14,6 +14,7 @@ Uses my [DirectML Lib](https://github.com/WindowsNT/directmllib).
 * Show Adapter Memory Consumed
 * Generate C++ Code or VS Solution (in progress).
 
+
 ## Features for NN design
 
 * Design a neural network
@@ -36,18 +37,18 @@ Uses my [DirectML Lib](https://github.com/WindowsNT/directmllib).
 * Comparison Operators: If, IsInfinity, IsNaN
 * A: Abs,ACos,ACosh,Add,And,ASin,ASinh,ATan,ATanh,ATanYX,AveragePooling
 * B: BitAnd, BitCount, BitOr, BitNot, BitShiftLeft, BitShiftRight, BitXor
-* C: Cast, Ceil, Clip, ClipGrad, Constant, Cos, Cosh, Cummulative Sum/Product, Convolution
+* C: Cast, Ceil, Clip, ClipGrad, Constant, ConvolutionInteger, Cos, Cosh, Cummulative Sum/Product, Convolution
 * D: DepthToSpace, Dequantize, DequantizeLinear, DifferenceSquare, Divide
 * E: Erf, Exp, Equals
 * F: Floor
-* G: Gather, GatherElemends, GatherND, Gemm, GreaterThan, GreaterThanOrEqual
+* G: Gather, GatherElemends, GatherND, Gemm, GreaterThan, GreaterThanOrEqual, Gru
 * I: Identity, 
 * J: Join
 * L: Log, LessThan, LessThanOrEqual, LocalResponseNormalization
 * M: Max,MaxPooling,Mean,MeanVarianceNormalization,Min,Multiply,Modulus Floor,Modulus Truncate
 * N: Neg, NonZeroCoordinates, Not
 * O: OneHot, Or
-* P: Pow
+* P: Padding, Pow
 * Q: QuantizedLinearConvolution, QuantizeLinear
 * R: RandomGenerator, Recip, Reduce, Resample, ResampleGrad, Round, RoiAlign, RoiAlignGrad, Reintrerpret, ReverseSubsequences
 * S: ScatterElements, Slice, SliceGrad, Subtract, Sqrt, Sign, SpaceToDepth
@@ -64,15 +65,14 @@ Uses my [DirectML Lib](https://github.com/WindowsNT/directmllib).
 
 ### ToDo
 
-A few more operators: 
-
-	dml::ConvolutionInteger;
-	dml::Padding;
-
-Complete VS project generation support 
+Complete VS project generation support :
+	TYPE_BATCHNORMALIZATIONGRAD
+	TYPE_BATCHNORMALIZATIONTRAINING
+	TYPE_BATCHNORMALIZATIONTRAININGGRAD
+	TYPE_CONVOLUTION
+	TYPE_CONVOLUTIONINTEGER_
 
 Recurrent NN training
-
 Usage of batch DML operations for faster training
 
 

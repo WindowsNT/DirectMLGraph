@@ -224,3 +224,15 @@ bool BrowseFolder(HWND hh, const TCHAR* tit, const TCHAR* root, const TCHAR* sel
     return true;
 }
 
+
+
+std::wstring TensorStringToString(std::wstring v)
+{
+    return TensorToString<unsigned int>(TensorFromString<unsigned int>(v.c_str()));
+}
+
+bool Hit(float x, float y, D2D1_RECT_F rc)
+{
+    return x >= rc.left && x <= rc.right && y >= rc.top && y <= rc.bottom;
+}
+

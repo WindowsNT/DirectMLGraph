@@ -13,6 +13,7 @@ extern std::vector<CComPtr<IDXGIAdapter1>> all_adapters;
 
 extern bool TrainCancel;
 extern std::wstring fil;
+extern float ScaleX;
 
 extern std::map<HWND, winrt::Windows::Foundation::IInspectable> windows;
 std::wstring TempFile3();
@@ -516,7 +517,7 @@ namespace winrt::VisualDML::implementation
                 UpdateVideoMemory();
             }
 
-            swprintf_s(wt, L"Adapter: %s - Video Memory: %I64u MB, Usage: %I64u MB", vdesc.Description ? vdesc.Description : L"Default Adapter", vmi.Budget / (1024 * 1024), vmi.CurrentUsage / (1024 * 1024));
+            swprintf_s(wt, L"%s - Video Memory: %I64u MB, Usage: %I64u MB", vdesc.Description ? vdesc.Description : L"Default Adapter", vmi.Budget / (1024 * 1024), vmi.CurrentUsage / (1024 * 1024));
             auto msr = d2d->MeasureString(d2d->WriteFa.get(), d2d->Text2, wt, -1);
             if (rfull.right > std::get<0>(msr))
             {
@@ -526,7 +527,7 @@ namespace winrt::VisualDML::implementation
                 d2d->CyanBrush->SetOpacity(0.2f);
                 r->FillRoundedRectangle(D2D1::RoundedRect(r1, 5, 5), d2d->CyanBrush);
                 d2d->CyanBrush->SetOpacity(1.0f);
-                TEXTALIGNPUSH textalign(d2d->Text2, DWRITE_TEXT_ALIGNMENT_LEADING, DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+                TEXTALIGNPUSH textalign(d2d->Text2, ScaleX <= 1 ? DWRITE_TEXT_ALIGNMENT_CENTER : DWRITE_TEXT_ALIGNMENT_LEADING, DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
                 r1.left += 5;
                 r->DrawText(wt, (UINT32)wcslen(wt), d2d->Text2, r1, d2d->BlackBrush);
             }

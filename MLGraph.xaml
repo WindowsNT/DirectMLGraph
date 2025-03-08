@@ -213,7 +213,7 @@
                 </MenuFlyoutItem>
                 <MenuFlyoutItem Text="Generate Visual Studio Solution" Click="OnGCV" >
                     <MenuFlyoutItem.Icon>
-                        <FontIcon Glyph="&#xE943;"/>
+                        <FontIcon Glyph="&#xE7B8;"/>
                     </MenuFlyoutItem.Icon>
                     <MenuFlyoutItem.KeyboardAccelerators>
                         <KeyboardAccelerator Key="F9" Modifiers="Shift" />

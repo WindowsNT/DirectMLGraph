@@ -292,8 +292,5 @@ std::wstring TensorToString(std::vector<T> in)
 		x.pop_back();
 	return x;
 }
-
-inline bool Hit(float x, float y, D2D1_RECT_F rc)
-{
-	return x >= rc.left && x <= rc.right && y >= rc.top && y <= rc.bottom;
-}
+bool Hit(float x, float y, D2D1_RECT_F rc);
+std::wstring TensorStringToString(std::wstring v);

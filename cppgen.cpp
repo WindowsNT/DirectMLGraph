@@ -60,11 +60,12 @@ int main()
 	// std::vector<float> data(100);
 	// ml.ops[0].Item(0).buffer->Upload(&ml, data.data(), data.size() * sizeof(float));
 
+    // Run the operators
 	ml.Run();
 
 	// Download data example
     // std::vector<char> cdata;
-	// ml.ops[ml.ops.size() - 1].buffer->Download(&ml, 400, cdata);
+	// ml.ops[0].Item[ml.ops[0].Item.size() - 1].buffer->Download(&ml, 400, cdata);
     
 )");
 	r += buf;
