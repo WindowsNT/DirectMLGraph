@@ -14,7 +14,7 @@
 								<Dimension Size="10"/>
 							</Dimensions>
 						</Node>
-						<Node xx="274.442383" yy="80.968750" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="0" no="1" Type="46" Name="Constant">
+						<Node xx="274.442383" yy="80.968750" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="0" no="1" Type="48" Name="Constant">
 							<Children>
 								<Child idx="0" io="1" u="34"/>
 							</Children>
@@ -51,13 +51,13 @@
 								<Dimension Size="10"/>
 							</Dimensions>
 						</Node>
-						<Node xx="733.000000" yy="398.107422" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="1" no="1" Type="60" Name="Identity">
+						<Node xx="733.000000" yy="398.107422" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="1" no="1" Type="71" Name="Identity">
 							<Children>
 								<Child idx="0" io="0" u="30"/>
 								<Child idx="0" io="1" u="135"/>
 							</Children>
 						</Node>
-						<Node xx="881.648438" yy="370.599609" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="1" no="1" Type="79" Name="Pow">
+						<Node xx="881.648438" yy="370.599609" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="1" no="1" Type="96" Name="Pow">
 							<Children>
 								<Child idx="0" io="0" u="135"/>
 								<Child idx="0" io="1" u="136"/>
@@ -97,7 +97,7 @@
 								<Dimension Size="2"/>
 							</Dimensions>
 						</Node>
-						<Node xx="556.353760" yy="629.337891" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="3" no="1" Type="57" Name="Gemm">
+						<Node xx="556.353760" yy="629.337891" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="3" no="1" Type="67" Name="Gemm">
 							<Children>
 								<Child idx="0" io="0" u="127"/>
 								<Child idx="0" io="0" u="128"/>
@@ -138,7 +138,7 @@
 								<Dimension Size="4"/>
 							</Dimensions>
 						</Node>
-						<Node xx="380.938477" yy="583.460938" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="0" no="1" Type="46" Name="Constant">
+						<Node xx="380.938477" yy="583.460938" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="0" no="1" Type="48" Name="Constant">
 							<Children>
 								<Child idx="0" io="1" u="153"/>
 							</Children>
@@ -152,13 +152,13 @@
 								<Dimension Size="4"/>
 							</Dimensions>
 						</Node>
-						<Node xx="457.000000" yy="185.599609" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="1" no="1" Type="47" Name="Cos">
+						<Node xx="457.000000" yy="185.599609" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="1" no="1" Type="50" Name="Cos">
 							<Children>
 								<Child idx="0" io="0" u="149"/>
 								<Child idx="0" io="1" u="155,166,175"/>
 							</Children>
 						</Node>
-						<Node xx="814.000000" yy="256.599609" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="2" no="1" Type="52" Name="Divide">
+						<Node xx="814.000000" yy="256.599609" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="2" no="1" Type="55" Name="Divide">
 							<Children>
 								<Child idx="0" io="0" u="155"/>
 								<Child idx="0" io="0" u="153"/>
@@ -193,7 +193,7 @@
 								<Dimension Size="10"/>
 							</Dimensions>
 						</Node>
-						<Node xx="494.909912" yy="365.599609" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="5" no="3" Type="40" Name="BatchNormalizationGrad">
+						<Node xx="494.909912" yy="365.599609" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="5" no="3" Type="41" Name="BatchNormalizationGrad">
 							<Children>
 								<Child idx="0" io="0" u="201"/>
 								<Child idx="0" io="0" u="200"/>
@@ -231,19 +231,117 @@
 			<Operators>
 				<Operator DataType="1" Zoom="1.000000" Active="1">
 					<Nodes>
-						<Node Name="Input" xx="306.821533" yy="198.722656" CSV="" CSVI="" bf="0" sm="0" optype="1" Type="1">
+						<Node Name="Input" xx="67.842773" yy="145.460938" CSV="" CSVI="&quot;Sequence&quot;" bf="0" sm="0" optype="1" Type="1">
 							<Children>
-								<Child idx="0" io="1" u="218"/>
+								<Child idx="0" io="1" u="231,234"/>
 							</Children>
 							<Dimensions>
-								<Dimension Size="10"/>
+								<Dimension Size="1"/>
 								<Dimension Size="10"/>
 							</Dimensions>
 						</Node>
-						<Node xx="832.000000" yy="398.107422" CSV="" CSVI="" bf="0" sm="0" optype="1" Name="Output" Type="999999">
+						<Node Name="Input" xx="50.842773" yy="496.460938" CSV="" CSVI="&quot;Sequence&quot;" bf="0" sm="0" optype="1" Type="1">
 							<Children>
-								<Child idx="0" io="0" u="218"/>
+								<Child idx="0" io="1" u="232"/>
 							</Children>
+							<Dimensions>
+								<Dimension Size="1"/>
+								<Dimension Size="1"/>
+							</Dimensions>
+						</Node>
+						<Node xx="641.000000" yy="193.599609" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="1" no="1" Type="71" Name="Identity">
+							<Children>
+								<Child idx="0" io="0" u="231"/>
+								<Child idx="0" io="1" u="221"/>
+							</Children>
+						</Node>
+						<Node xx="284.065674" yy="621.460938" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="1" no="1" Type="100" Name="Reinterpret">
+							<Children>
+								<Child idx="0" io="0" u="232"/>
+								<Child idx="0" io="1" u="233,237"/>
+							</Children>
+							<Params>
+								<Param Name="New Size" Value="1x1x1x1" Min="-1.000000" Max="-1.000000"/>
+							</Params>
+						</Node>
+						<Node xx="320.112549" yy="323.460938" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="1" no="1" Type="100" Name="Reinterpret">
+							<Children>
+								<Child idx="0" io="0" u="234"/>
+								<Child idx="0" io="1" u="235,236"/>
+							</Children>
+							<Params>
+								<Param Name="New Size" Value="1x1x1x10" Min="-1.000000" Max="-1.000000"/>
+							</Params>
+						</Node>
+						<Node xx="627.353760" yy="555.830078" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="3" no="1" Type="67" Name="Gemm">
+							<Children>
+								<Child idx="0" io="0" u="236"/>
+								<Child idx="0" io="0" u="237"/>
+								<Child idx="0" io="0" u=""/>
+								<Child idx="0" io="1" u="238"/>
+							</Children>
+							<Params>
+								<Param Name="Transpose 1" Value="1" Min="0.000000" Max="1.000000"/>
+								<Param Name="Transpose 2" Value="" Min="0.000000" Max="1.000000"/>
+								<Param Name="Alpha" Value="1" Min="0.000000" Max="340282346638528859811704183484516925440.000000"/>
+								<Param Name="Beta" Value="1" Min="0.000000" Max="340282346638528859811704183484516925440.000000"/>
+							</Params>
+						</Node>
+						<Node xx="857.596680" yy="303.845703" CSV="&quot;Screen&quot;" CSVI="" bf="0" sm="0" optype="1" Name="Output" Type="999999">
+							<Children>
+								<Child idx="0" io="0" u="221"/>
+							</Children>
+						</Node>
+						<Node xx="987.596680" yy="631.353516" CSV="&quot;Screen&quot;" CSVI="" bf="0" sm="0" optype="1" Name="Output" Type="999999">
+							<Children>
+								<Child idx="0" io="0" u="238"/>
+							</Children>
+						</Node>
+					</Nodes>
+				</Operator>
+			</Operators>
+		</Page>
+		<Page n="">
+			<Operators>
+				<Operator DataType="1" Zoom="1.000000" Active="1">
+					<Nodes>
+						<Node Name="Input" xx="100.000000" yy="100.000000" CSV="" CSVI="" bf="0" sm="0" optype="1" Type="1">
+							<Children>
+								<Child idx="0" io="1" u=""/>
+							</Children>
+							<Dimensions>
+								<Dimension Size="16"/>
+								<Dimension Size="1"/>
+								<Dimension Size="1"/>
+								<Dimension Size="784"/>
+							</Dimensions>
+						</Node>
+						<Node xx="537.000000" yy="366.107422" CSV="" CSVI="" bf="0" sm="0" optype="1" Name="Output" Type="999999">
+							<Children>
+								<Child idx="0" io="0" u=""/>
+							</Children>
+						</Node>
+						<Node Name="Input" xx="96.230469" yy="324.722656" CSV="" CSVI="" bf="0" sm="0" optype="1" Type="1">
+							<Children>
+								<Child idx="0" io="1" u=""/>
+							</Children>
+							<Dimensions>
+								<Dimension Size="1"/>
+								<Dimension Size="1"/>
+								<Dimension Size="784"/>
+								<Dimension Size="10"/>
+							</Dimensions>
+						</Node>
+						<Node Name="Input" xx="95.183594" yy="557.722656" CSV="" CSVI="" bf="0" sm="0" optype="1" Type="1">
+							<Children>
+								<Child idx="0" io="1" u=""/>
+							</Children>
+							<Dimensions>
+								<Dimension Size="1"/>
+								<Dimension Size="1"/>
+								<Dimension Size="1"/>
+								<Dimension Size="784"/>
+							</Dimensions>
 						</Node>
 					</Nodes>
 				</Operator>

@@ -392,6 +392,11 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildNodeRightMenu(std::shared_
         }
         if (1)
         {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"\"Sequence\""); O.Click(fooo);
+            A.Items().Append(O);
+        }
+        if (1)
+        {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"Clear input"); O.Click(fooo);
             A.Items().Append(O);
         }
@@ -1511,6 +1516,8 @@ namespace winrt::VisualDML::implementation
         return xln;
     }
 
+
+
     void MLGraph::OnLoaded(IInspectable, IInspectable)
     {
         ActiveOperator2 = 0;
@@ -1907,6 +1914,13 @@ namespace winrt::VisualDML::implementation
                                             Push();
                                             auto it = std::dynamic_pointer_cast<XLNODE_INPUT>(nod);
                                             it->csv_input = L"\"Random\"";
+                                            FullRefresh();
+                                        }
+                                        if (t == L"\"Sequence\"")
+                                        {
+                                            Push();
+                                            auto it = std::dynamic_pointer_cast<XLNODE_INPUT>(nod);
+                                            it->csv_input = L"\"Sequence\"";
                                             FullRefresh();
                                         }
                                         if (t == L"Visible Buffer")
@@ -2718,6 +2732,8 @@ namespace winrt::VisualDML::implementation
                                     node->Params[1].maxv = 1;
                                     node->Params[2].n = L"Alpha";
                                     node->Params[3].n = L"Beta";
+                                    node->Params[2].v = L"1";
+                                    node->Params[3].v = L"1";
                                     Push();
                                     op.nodes.push_back(node);
                                 }
@@ -4521,6 +4537,10 @@ namespace winrt::VisualDML::implementation
 							{
 								continue;
 							}
+                            if (it->csv_input == L"\"Sequence\"")
+                            {
+                                continue;
+                            }
                             auto inf = it->csv_input;
                             if (GetFileAttributes(inf.c_str()) == 0xFFFFFFFF)
                             {
@@ -4606,6 +4626,20 @@ namespace winrt::VisualDML::implementation
                                     {
                                         extern std::mt19937 grand_mt;
 										fv[i] = dist(grand_mt);
+                                    }
+                                    wh.buffer->Upload(&ml, fv.data(), bs);
+                                    continue;
+                                }
+
+                                if (it->ShareMemory >= 0 && it->csv_input == L"\"Sequence\"")
+                                {
+                                    long long bs = (long long)wh.buffer->b.sz();
+                                    std::vector<float> fv(bs / 4);
+                                    float nf = 0.0f;
+                                    for (size_t i = 0; i < fv.size(); i++)
+                                    {
+                                        fv[i] = nf;
+                                        nf += 0.01f;
                                     }
                                     wh.buffer->Upload(&ml, fv.data(), bs);
                                     continue;
@@ -5078,7 +5112,7 @@ namespace winrt::VisualDML::implementation
 
                                 node->code = "\t";
                                 node->code += the_code2;
-                                node->code += "\r\n \t";
+                                node->code += "\r\n\t";
                                 node->code += the_code3;
                                 node->code += "\r\n\t";
                                 node->code += the_code;
@@ -5409,6 +5443,8 @@ namespace winrt::VisualDML::implementation
                                 mop.AddItem(ope, 0, false, BINDING_MODE::NONE);
                                 node->tidxs.push_back(tidx++);
                             }
+
+                            node->code = "// Graph includes BatchNormalizationGrad has not yet implemented in the generator. Please use dml::BatchNormalizationGrad.";
                         }
                         if (it->what == TYPE_BATCHNORMALIZATIONTRAINING)
                         {
@@ -5420,7 +5456,7 @@ namespace winrt::VisualDML::implementation
                                 mop.AddItem(ope, 0, false, BINDING_MODE::NONE);
                                 node->tidxs.push_back(tidx++);
                             }
-
+                            node->code = "// Graph includes BatchNormalizationTraining has not yet implemented in the generator. Please use dml::BatchNormalizationTraining.";
                         }
                         if (it->what == TYPE_BATCHNORMALIZATIONTRAININGGRAD)
                         {
@@ -5432,6 +5468,7 @@ namespace winrt::VisualDML::implementation
                                 mop.AddItem(ope, 0, false, BINDING_MODE::NONE);
                                 node->tidxs.push_back(tidx++);
                             }
+                            node->code = "// Graph includes BatchNormalizationTrainingGrad has not yet implemented in the generator. Please use dml::BatchNormalizationTrainingGrad.";
                         }
                         
                         if (it->what == TYPE_CAST)
@@ -5464,6 +5501,11 @@ namespace winrt::VisualDML::implementation
                             if (whati.size() > 2)
                                 e3 = mop.Item(whati[2]);
                             expr = (dml::Convolution(mop.Item(whati[0]), mop.Item(whati[1]), e3, (DML_CONVOLUTION_MODE)(int)it->Params[0]));
+                            if (whati.size() > 2)
+    							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Convolution(mop.Item(%i),mop.Item(%i),mop.Item(%i),(DML_CONVOLUTION_MODE)%i));)", whati[0], whati[1], whati[2], (int)it->Params[0]);
+                            else
+                                sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Convolution(mop.Item(%i),mop.Item(%i),{},(DML_CONVOLUTION_MODE)%i));)", whati[0], whati[1], (int)it->Params[0]);
+							node->code = the_code;
                         }
 
                         if (it->what == TYPE_CONVOLUTIONINTEGER)
@@ -5476,6 +5518,7 @@ namespace winrt::VisualDML::implementation
                             expr = dml::ConvolutionInteger(mop.Item(whati[0]), e1,mop.Item(whati[1]),e2,
                                 TensorFromString<unsigned int>(it->Params[0]), TensorFromString<unsigned int>(it->Params[1]), TensorFromString<unsigned int>(it->Params[2]), TensorFromString<unsigned int>(it->Params[3]), 
                                 it->Params[4], TensorFromString<unsigned int>(it->Params[5]));
+                            node->code = "// Graph includes ConvolutionInteger has not yet implemented in the generator. Please use dml::ConvolutionInteger.";
                         }
                         
                         if (it->what == TYPE_COS)
@@ -5524,6 +5567,7 @@ namespace winrt::VisualDML::implementation
                             int jt = it->Params[0];
                             jt++;
                             expr = dml::Dequantize(mop.Item(whati[0]), ll,(DML_QUANTIZATION_TYPE)jt);
+                            node->code = "// Graph includes Dequantize has not yet implemented in the generator. Please use dml::Dequantize.";
                         }
                         if (it->what == TYPE_DEQUANTIZELINEAR)
                         {
@@ -5532,11 +5576,11 @@ namespace winrt::VisualDML::implementation
 							node->code = the_code;
                         }
 
-
                         if (it->what == TYPE_DIFFERENCESQUARE)
                         {
                             expr = (dml::DifferenceSquare(mop.Item(whati[0]), mop.Item(whati[1])));
 							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::DifferenceSquare(mop.Item(%i),mop.Item(%i)));)", whati[0], whati[1]);
+							node->code = the_code;
                         }
 
                         if (it->what == TYPE_ERF)
@@ -5646,6 +5690,7 @@ namespace winrt::VisualDML::implementation
 								v.push_back(mop.Item(whati[fi]));
 							}
                             expr = dml::Join(v, (UINT)it->Params[0]);
+                            node->code = "// Graph includes Join has not yet implemented in the generator. Please use dml::Join.";
                         }
 
 
@@ -5714,6 +5759,7 @@ namespace winrt::VisualDML::implementation
                                 mop.AddItem(ope, 0, false, BINDING_MODE::NONE);
                                 node->tidxs.push_back(tidx++);
                             }
+                            node->code = "// Graph includes MaxPooling has not yet implemented in the generator. Please use dml::MaxPooling.";
                         }
 
                         if (it->what == TYPE_MEAN)
@@ -5734,6 +5780,7 @@ namespace winrt::VisualDML::implementation
                                 e3 = mop.Item(whati[2]);
 
 							expr = (dml::MeanVarianceNormalization(mop.Item(whati[0]), e2, e3, TensorFromString(it->Params[0]), it->Params[1],it->Params[2],it->Params[3]));
+                            node->code = "// Graph includes MeanVarianceNormalization has not yet implemented in the generator. Please use dml::MeanVarianceNormalization.";
                         }
 
                         if (it->what == TYPE_MIN)
@@ -5777,6 +5824,7 @@ namespace winrt::VisualDML::implementation
                                 mop.AddItem(ope, 0, false, BINDING_MODE::NONE);
                                 node->tidxs.push_back(tidx++);
                             }
+                            node->code = "// Graph includes NonZeroCoordinates has not yet implemented in the generator. Please use dml::NonZeroCoordinates.";
                         }
 
 
@@ -5811,6 +5859,7 @@ namespace winrt::VisualDML::implementation
                                 (DML_TENSOR_DATA_TYPE)it->OpType,
                                 TensorFromString<unsigned int>(it->Params[0]), TensorFromString<unsigned int>(it->Params[1]), TensorFromString<unsigned int>(it->Params[2]), TensorFromString<unsigned int>(it->Params[3]),
                                 it->Params[4], TensorFromString<unsigned int>(it->Params[5]));
+                            node->code = "// Graph includes QuantizedLinearConvolution has not yet implemented in the generator. Please use dml::QuantizedLinearConvolution.";
                         }
 
 
@@ -5824,6 +5873,7 @@ namespace winrt::VisualDML::implementation
                                 mop.AddItem(ope, 0, false, BINDING_MODE::NONE);
                                 node->tidxs.push_back(tidx++);
                             }
+                            node->code = "// Graph includes RandomGenerator has not yet implemented in the generator. Please use dml::RandomGenerator.";
                         }
 
 
@@ -5845,6 +5895,7 @@ namespace winrt::VisualDML::implementation
                             expr = dml::RoiAlign(mop.Item(whati[0]), mop.Item(whati[1]), mop.Item(whati[2]), (DML_REDUCE_FUNCTION)(int)(it->Params[0]),
                                 (DML_INTERPOLATION_MODE)(int)(it->Params[1]), it->Params[2], it->Params[3], it->Params[4], it->Params[5], it->Params[6], it->Params[7], it->Params[8],
                                 it->Params[9], it->Params[10], it->Params[11]);
+							node->code = "// Graph includes RoiAlign has not yet implemented in the generator. Please use dml::RoiAlign.";
                         }
 
                         if (it->what == TYPE_ROIALIGNGRAD)
@@ -5861,6 +5912,7 @@ namespace winrt::VisualDML::implementation
                                 mop.AddItem(ope, 0, false, BINDING_MODE::NONE);
                                 node->tidxs.push_back(tidx++);
                             }
+                            node->code = "// Graph includes RoiAlignGrad has not yet implemented in the generator. Please use dml::RoiAlignGrad.";
 
                         }
 
@@ -5911,6 +5963,8 @@ namespace winrt::VisualDML::implementation
                             std::vector<unsigned int> sizes = TensorFromString(it->Params[1].v.c_str());
                             std::vector<int> strides = TensorFromString<int>(it->Params[2].v.c_str());
                             expr = (dml::Slice(mop.Item(whati[0]),offsets,sizes,strides));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::Slice(mop.Item(%i),{%S},{%S},{%S}));)", whati[0], TensorStringToString(it->Params[0].v).c_str(), TensorStringToString(it->Params[1].v).c_str(), TensorStringToString(it->Params[2].v).c_str());
+							node->code = the_code;
                         }
                         if (it->what == TYPE_SLICEGRAD)
                         {
@@ -5919,6 +5973,8 @@ namespace winrt::VisualDML::implementation
                             std::vector<unsigned int> sizes = TensorFromString(it->Params[2].v.c_str());
                             std::vector<int> strides = TensorFromString<int>(it->Params[3].v.c_str());
 							expr = (dml::SliceGrad(mop.Item(whati[0]), yo, offsets, sizes, strides));
+							sprintf_s(the_code, 1000, R"(mop.AddItem(dml::SliceGrad(mop.Item(%i),{%S},{%S},{%S},{%S}));)", whati[0], TensorStringToString(it->Params[0].v).c_str(), TensorStringToString(it->Params[1].v).c_str(), TensorStringToString(it->Params[2].v).c_str(), TensorStringToString(it->Params[3].v).c_str());
+							node->code = the_code;
 
                         }
 
@@ -5978,6 +6034,7 @@ namespace winrt::VisualDML::implementation
                                 mop.AddItem(ope, 0, false, BINDING_MODE::NONE);
                                 node->tidxs.push_back(tidx++);
                             }
+                            node->code = "// Graph includes TopK has not yet implemented in the generator. Please use dml::TopK.";
                         }
 
 
@@ -6036,9 +6093,9 @@ namespace winrt::VisualDML::implementation
     {
         prj.Unser(e);
     }
-    void MLGraph::Export(XML3::XMLElement& e)
+    void MLGraph::Export(XML3::XMLElement& e, int idx )
     {
-        prj.Ser(e);
+        prj.Ser(e,idx);
     }
 
 
@@ -6067,6 +6124,27 @@ namespace winrt::VisualDML::implementation
 		Import(XML3::XML(fnx.data()).GetRootElement());
         FullRefresh();
     }
+
+    void MLGraph::OnSaveSet(IInspectable const&, IInspectable const&)
+    {
+        OPENFILENAME of = { 0 };
+        of.lStructSize = sizeof(of);
+        of.hwndOwner = (HWND)wnd();
+        of.lpstrFilter = L"*.dml\0\0*.dml";
+        std::vector<wchar_t> fnx(10000);
+        of.lpstrFile = fnx.data();
+        of.nMaxFile = 10000;
+        of.lpstrDefExt = L"dml";
+        of.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+        if (!GetSaveFileName(&of))
+            return;
+
+        DeleteFile(fnx.data());
+        XML3::XML x(fnx.data());
+        Export(x.GetRootElement(),(int)prj.iActive);
+        x.Save();
+    }
+
     void MLGraph::OnSave(IInspectable const&, IInspectable const&)
     {
 		if (current_file.empty())

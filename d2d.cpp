@@ -92,9 +92,9 @@ bool D2D::CreateD2(IDXGIAdapter* wad, HWND hh, D3D_DRIVER_TYPE de, int wi, int h
         SizeCreated.cy = he;
         D3D_FEATURE_LEVEL featureLevels[] =
         {
-                        D3D_FEATURE_LEVEL_12_2,
-                        D3D_FEATURE_LEVEL_12_1,
-                        D3D_FEATURE_LEVEL_12_0,
+//                        D3D_FEATURE_LEVEL_12_2,
+ //                       D3D_FEATURE_LEVEL_12_1,
+  //                      D3D_FEATURE_LEVEL_12_0,
                         D3D_FEATURE_LEVEL_11_1,
                         D3D_FEATURE_LEVEL_11_0,
                         D3D_FEATURE_LEVEL_10_1,

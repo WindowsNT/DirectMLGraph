@@ -23,6 +23,7 @@
     <ClCompile Include="nn.cpp" />
     <ClCompile Include="python.cpp" />
     <ClCompile Include="cppgen.cpp" />
+    <ClCompile Include="examples.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

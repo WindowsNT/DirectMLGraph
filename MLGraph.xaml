@@ -51,6 +51,14 @@
                         <KeyboardAccelerator Key="S" Modifiers="Control,Shift"/>
                     </MenuFlyoutItem.KeyboardAccelerators>
                 </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Save this set..." Click="OnSaveSet" >
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon Glyph="&#xE74E;"/>
+                    </MenuFlyoutItem.Icon>
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="S" Modifiers="Shift"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
                 <MenuFlyoutSeparator/>
                 <MenuFlyoutItem Text="Exit" Click="OnExit" >
                     <MenuFlyoutItem.Icon>
@@ -105,6 +113,11 @@
 
 
             <MenuBarItem Title="Adapter"  x:Name="AdapterMenu">
+            </MenuBarItem>
+
+            <MenuBarItem Title="Examples">
+                <MenuFlyoutItem Text="Simple Add" Click="OnExample1" />
+                <MenuFlyoutItem Text="Multiple outputs and Gemm operator" Click="OnExample2" />
             </MenuBarItem>
 
             <MenuBarItem Title="Set" >

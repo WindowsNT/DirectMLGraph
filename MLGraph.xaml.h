@@ -1184,10 +1184,13 @@ struct PROJECT
         return xls[0];
     }
 
-	void Ser(XML3::XMLElement& e)
+	void Ser(XML3::XMLElement& e, int idx = -1)
 	{
-		for (auto& xl : xls)
+		for (size_t ii = 0 ; ii < xls.size() ; ii++)
 		{
+            auto& xl = xls[ii];
+			if (idx >= 0 && idx != ii)
+				continue;
 			auto& xe = e["Pages"].AddElement("Page");
 			xl.Ser(xe);
 		}
@@ -1284,6 +1287,11 @@ namespace winrt::VisualDML::implementation
         void Unselect();
         void Key(long long k,bool FromCmd = 0);
         void RefreshMenu();
+
+        void OnExample(const char*);
+        void OnExample1(IInspectable, IInspectable);
+        void OnExample2(IInspectable, IInspectable);
+
         void OnLoaded(IInspectable, IInspectable);
         void OnCopy(IInspectable const&, IInspectable const&);
         void OnPaste(IInspectable const&, IInspectable const&);
@@ -1313,10 +1321,11 @@ namespace winrt::VisualDML::implementation
         void OnNew(IInspectable const&, IInspectable const&);
         void OnOpen(IInspectable const&, IInspectable const&);
         void OnSave(IInspectable const&, IInspectable const&);
+        void OnSaveSet(IInspectable const&, IInspectable const&);
         void OnExit(IInspectable const&, IInspectable const&);
         void OnSaveAs(IInspectable const&, IInspectable const&);
         void Import(XML3::XMLElement& e);
-        void Export(XML3::XMLElement& e);
+        void Export(XML3::XMLElement& e,int idx = -1);
         std::wstring current_file;
         void Paint();
         void Resize();

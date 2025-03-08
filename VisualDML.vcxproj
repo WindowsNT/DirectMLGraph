@@ -154,6 +154,7 @@
     <ClCompile Include="cppgen.cpp" />
     <ClCompile Include="d2d.cpp" />
     <ClCompile Include="dmllib.cpp" />
+    <ClCompile Include="examples.cpp" />
     <ClCompile Include="func.cpp" />
     <ClCompile Include="Item.cpp" />
     <ClCompile Include="MLGraph.xaml.cpp">
