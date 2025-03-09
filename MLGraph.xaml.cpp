@@ -4,6 +4,8 @@
 #include "MLGraph.g.cpp"
 #endif
 
+#include "dmlextensions.hpp"
+
 using namespace winrt;
 using namespace winrt::Microsoft::UI::Xaml;
 using namespace winrt::Microsoft::UI::Xaml::Controls;
@@ -26,6 +28,75 @@ XLNODE* WhatNode = 0;
 VARIABLE* WhatVariable = 0;
 float ScaleX = 1.0f;
 bool MustStop = 0;
+
+class PUSHPOPVAR
+{
+public:
+    XL* xl;
+    int State = 0;
+    PUSHPOPVAR(XL* x)
+    {
+        xl = x;
+        On();
+    }
+    void On()
+    {
+        if (State == 1)
+            return;
+        State = 1;
+        // Replace variables
+        for (auto& op : xl->ops)
+        {
+            for (auto& node : op.nodes)
+            {
+                if (auto it = std::dynamic_pointer_cast<XLNODE>(node))
+                {
+                    for (auto& p : it->Params)
+                    {
+                        p.save_v = p.v;
+                        for (auto& v : xl->variables)
+                        {
+
+                            auto n = L"$" + v.n;
+                            while (p.v.find(n) != std::string::npos)
+                            {
+                                p.v.replace(p.v.find(n), n.length(), v.v);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    ~PUSHPOPVAR()
+    {
+        Off();
+    }
+
+    void Off()
+    {
+        // Replace variables
+        if (State == 0)
+            return;
+        State = 0;
+        for (auto& op : xl->ops)
+        {
+            for (auto& node : op.nodes)
+            {
+                if (auto it = std::dynamic_pointer_cast<XLNODE>(node))
+                {
+                    for (auto& p : it->Params)
+                    {
+                        p.v = p.save_v;
+                    }
+                }
+            }
+        }
+    }
+
+};
+
 
 D2D1_POINT_2F red_from = { 0,0 }, red_to = { 0,0 };
 void XLNODE::Ser(XML3::XMLElement& e)
@@ -350,168 +421,6 @@ void XLNODE::Draw(MLOP* mlop,bool Active,bool Enabled,ID2D1DeviceContext5* r, si
 
 
 
-winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildNodeRightMenu(std::shared_ptr<XLNODE> nd,int Type,std::function<void(const winrt::Windows::Foundation::IInspectable, const winrt::Windows::Foundation::IInspectable)> fooo)
-{
-    winrt::Microsoft::UI::Xaml::Controls::MenuFlyout r1;
-
-    auto SepIf = [&]()
-        {
-            if (r1.Items().Size())
-            {
-                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSeparator s;
-                r1.Items().Append(s);
-            }
-        };
-
-    if (Type == 1)
-    {
-        SepIf();
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"Tensor shape..."); O.Click(fooo);
-        r1.Items().Append(O);
-    }
-    if (Type == 1)
-    {
-        SepIf();
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
-        A.Text(L"Input");
-
-        if (1)
-        {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"CSV input..."); O.Click(fooo);
-            A.Items().Append(O);
-        }
-        if (1)
-        {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"Binary input..."); O.Click(fooo);
-            A.Items().Append(O);
-        }
-        if (1)
-        {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"\"Random\""); O.Click(fooo);
-            A.Items().Append(O);
-        }
-        if (1)
-        {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"\"Sequence\""); O.Click(fooo);
-            A.Items().Append(O);
-        }
-        if (1)
-        {
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"Clear input"); O.Click(fooo);
-            A.Items().Append(O);
-        }
-
-        r1.Items().Append(A);
-    }
-
-    if (nd->AsksType())
-    {
-        SepIf();
-        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
-        A.Text(L"Type");
-        for(int i = 1 ; i <= MAX_OP_TYPES ; i++)
-        {
-            winrt::Microsoft::UI::Xaml::Controls::ToggleMenuFlyoutItem O; O.Text(optypes[i]); O.Click(fooo);
-			if (nd->OpType == i)
-				O.IsChecked(true);
-            A.Items().Append(O);
-        }
-        r1.Items().Append(A);
-    }
-
-    if (nd->Params.size())
-    {
-        SepIf();
-        for (size_t i = 0; i < nd->Params.size(); i++)
-        {
-            if (nd->Params[i].list_names.size())
-            {
-                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
-                A.Text(nd->Params[i].n.c_str());
-
-                for (size_t ii = 0; ii < nd->Params[i].list_names.size(); ii++)
-                {
-                    winrt::Microsoft::UI::Xaml::Controls::ToggleMenuFlyoutItem O;
-                    O.Text(nd->Params[i].list_names[ii].c_str());
-                    ULARGE_INTEGER ul = {};
-					ul.LowPart = (int)i + 2000;
-					ul.HighPart = (int)ii + 1;
-                    O.Tag(winrt::box_value(ul.QuadPart));
-                    O.Click(fooo);
-                    if ((size_t)nd->Params[i] == ii)
-                        O.IsChecked(true);
-                    A.Items().Append(O);
-
-                }
-                r1.Items().Append(A);
-            }
-            else
-            if (nd->Params[i].minv == 0 && nd->Params[i].maxv == 1)
-            {
-                winrt::Microsoft::UI::Xaml::Controls::ToggleMenuFlyoutItem O;
-                O.Text(nd->Params[i].n.c_str());
-                O.Tag(winrt::box_value(i + 2000));
-                O.Click(fooo);
-				if ((int)nd->Params[i] == 1)
-					O.IsChecked(true);
-                r1.Items().Append(O);
-            }
-            else
-            {
-                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O;
-                O.Text(nd->Params[i].n.c_str());
-                O.Tag(winrt::box_value(i + 2000));
-                O.Click(fooo);
-                r1.Items().Append(O);
-            }
-        }
-    }
-
-    if (Type == 2)
-    {
-    }
-
-    if (Type  == 1 || Type == 2 || Type == 3)
-    {
-        if (Type != 1 && Type != 2)
-        {
-            SepIf();
-            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
-            A.Text(L"Output");
-
-            if (1)
-            {
-                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"CSV output..."); O.Click(fooo);
-                A.Items().Append(O);
-            }
-            if (1)
-            {
-                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"Binary output..."); O.Click(fooo);
-                A.Items().Append(O);
-            }
-            if (1)
-            {
-                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"\"Screen\""); O.Click(fooo);
-                A.Items().Append(O);
-            }
-            if (1)
-            {
-                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"Clear output"); O.Click(fooo);
-                A.Items().Append(O);
-            }
-
-            r1.Items().Append(A);
-        }
-        if (Type != 1 && Type != 3 && nd->nout() == 1)
-        {
-            SepIf();
-            winrt::Microsoft::UI::Xaml::Controls::ToggleMenuFlyoutItem O1; O1.Text(L"Visible Buffer"); O1.Click(fooo); O1.IsChecked(nd->BufferVisible);
-            r1.Items().Append(O1);
-        }
-    }
-
-    return r1;
-}
 
 
 
@@ -1316,6 +1225,234 @@ extern std::wstring fil;
 DWORD MainTID = 0;
 namespace winrt::VisualDML::implementation
 {
+
+    winrt::Microsoft::UI::Xaml::Controls::MenuFlyout MLGraph::BuildNodeRightMenu(XL& xl, std::shared_ptr<XLNODE> nd, int Type, std::function<void(const winrt::Windows::Foundation::IInspectable, const winrt::Windows::Foundation::IInspectable)> fooo)
+    {
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyout r1;
+
+        auto SepIf = [&]()
+            {
+                if (r1.Items().Size())
+                {
+                    winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSeparator s;
+                    r1.Items().Append(s);
+                }
+            };
+
+        if (Type == 1)
+        {
+            SepIf();
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"Tensor shape..."); O.Click(fooo);
+            r1.Items().Append(O);
+        }
+        if (Type == 1)
+        {
+            SepIf();
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
+            A.Text(L"Input");
+
+            if (1)
+            {
+                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"CSV input..."); O.Click(fooo);
+                A.Items().Append(O);
+            }
+            if (1)
+            {
+                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"Binary input..."); O.Click(fooo);
+                A.Items().Append(O);
+            }
+            if (1)
+            {
+                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"\"Random\""); O.Click(fooo);
+                A.Items().Append(O);
+            }
+            if (1)
+            {
+                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"\"Sequence\""); O.Click(fooo);
+                A.Items().Append(O);
+            }
+            if (1)
+            {
+                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"Clear input"); O.Click(fooo);
+                A.Items().Append(O);
+            }
+
+            r1.Items().Append(A);
+        }
+
+        if (nd->AsksType())
+        {
+            SepIf();
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
+            A.Text(L"Type");
+            for (int i = 1; i <= MAX_OP_TYPES; i++)
+            {
+                winrt::Microsoft::UI::Xaml::Controls::ToggleMenuFlyoutItem O; O.Text(optypes[i]); O.Click(fooo);
+                if (nd->OpType == i)
+                    O.IsChecked(true);
+                A.Items().Append(O);
+            }
+            r1.Items().Append(A);
+        }
+
+        if (nd->Params.size())
+        {
+            SepIf();
+            for (size_t i = 0; i < nd->Params.size(); i++)
+            {
+                if (nd->Params[i].list_names.size())
+                {
+                    winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
+                    A.Text(nd->Params[i].n.c_str());
+
+                    for (size_t ii = 0; ii < nd->Params[i].list_names.size(); ii++)
+                    {
+                        winrt::Microsoft::UI::Xaml::Controls::ToggleMenuFlyoutItem O;
+                        O.Text(nd->Params[i].list_names[ii].c_str());
+                        ULARGE_INTEGER ul = {};
+                        ul.LowPart = (int)i + 2000;
+                        ul.HighPart = (int)ii + 1;
+                        O.Tag(winrt::box_value(ul.QuadPart));
+                        O.Click(fooo);
+                        if ((size_t)nd->Params[i] == ii)
+                            O.IsChecked(true);
+                        A.Items().Append(O);
+
+                    }
+                    r1.Items().Append(A);
+                }
+                else
+                    if (nd->Params[i].minv == 0 && nd->Params[i].maxv == 1)
+                    {
+                        winrt::Microsoft::UI::Xaml::Controls::ToggleMenuFlyoutItem O;
+                        O.Text(nd->Params[i].n.c_str());
+                        O.Tag(winrt::box_value(i + 2000));
+                        O.Click(fooo);
+                        if ((int)nd->Params[i] == 1)
+                            O.IsChecked(true);
+                        r1.Items().Append(O);
+                    }
+                    else
+                    {
+                        winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O;
+                        O.Text(nd->Params[i].n.c_str());
+                        O.Tag(winrt::box_value(i + 2000));
+                        O.Click(fooo);
+                        r1.Items().Append(O);
+                    }
+            }
+        }
+
+        if (Type == 2)
+        {
+        }
+
+        if (Type == 1 || Type == 2 || Type == 3)
+        {
+            if (Type != 1 && Type != 2)
+            {
+                SepIf();
+                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
+                A.Text(L"Output");
+
+                if (1)
+                {
+                    winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"CSV output..."); O.Click(fooo);
+                    A.Items().Append(O);
+                }
+                if (1)
+                {
+                    winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"Binary output..."); O.Click(fooo);
+                    A.Items().Append(O);
+                }
+                if (1)
+                {
+                    winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"\"Screen\""); O.Click(fooo);
+                    A.Items().Append(O);
+                }
+                if (1)
+                {
+                    winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem O; O.Text(L"Clear output"); O.Click(fooo);
+                    A.Items().Append(O);
+                }
+
+                r1.Items().Append(A);
+            }
+            if (Type != 1 && Type != 3 && nd->nout() == 1)
+            {
+                SepIf();
+                winrt::Microsoft::UI::Xaml::Controls::ToggleMenuFlyoutItem O1; O1.Text(L"Visible Buffer"); O1.Click(fooo); O1.IsChecked(nd->BufferVisible);
+                r1.Items().Append(O1);
+            }
+            if (xl.variables.size())
+            {
+                SepIf();
+                winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutSubItem A;
+                A.Text(L"Variable Change");
+
+                for (size_t iv = 0; iv < xl.variables.size(); iv++)
+                {
+                    winrt::Microsoft::UI::Xaml::Controls::ToggleMenuFlyoutItem O1; O1.Text(xl.variables[iv].n);
+
+                    // Check if there already
+                    bool F = 0;
+					auto it = std::dynamic_pointer_cast<XLNODE_ANY>(nd);
+                    if (it)
+                    {
+                        for (size_t i = 0; i < it->VariableChanges.size(); i++)
+                        {
+                            if (it->VariableChanges[i].n == xl.variables[iv].n)
+                            {
+                                F = 1;
+                                break;
+                            }
+                        }
+                    }
+					O1.IsChecked(F);
+                    O1.Click([&,iv,nd](IInspectable wh, IInspectable)
+                        {
+                            auto mf = wh.as< ToggleMenuFlyoutItem>();
+                            if (!mf.IsChecked())
+                            {
+                                Push();
+                                Dirty(1);
+                                auto it = std::dynamic_pointer_cast<XLNODE_ANY>(nd);
+                                if (it)
+                                {
+                                    for (size_t i = 0; i < it->VariableChanges.size(); i++)
+                                    {
+                                        if (it->VariableChanges[i].n == xl.variables[iv].n)
+                                        {
+											it->VariableChanges.erase(it->VariableChanges.begin() + i);
+                                            break;
+                                        }
+                                    }
+                                }
+                                FullRefresh();
+                            }
+                            else
+                            {
+                                Refresh({ L"i1",L"i0" });
+                                WhatInput = 11;
+                                WhatNode = nd.get();
+                                WhatVariable = &xl.variables[iv];
+                                auto sp = Content().as<Panel>();
+                                auto ct = sp.FindName(L"InputVariableChange").as<ContentDialog>();
+                                ct.ShowAsync();
+                            }
+
+                        });
+                    A.Items().Append(O1);
+                }
+
+                r1.Items().Append(A);
+            }
+        }
+
+        return r1;
+    }
+
+
     void MLGraph::FullRefresh()
     {
 		if (GetCurrentThreadId() != MainTID)
@@ -1499,14 +1636,14 @@ namespace winrt::VisualDML::implementation
         // Add some defaults
         if (1)
         {
-            auto t = std::make_shared<XLNODE_INPUT>();
+            auto t = std::make_shared<XLNODE_ANY>(0,TYPE_INPUT,1);
             t->hit = D2D1_RECT_F({ 100,100,100,100 });
-            t->tensor_dims = { 10,10 };
+            t->tensor_dims2 = { "10","10" };
             xlop.nodes.push_back(t);
         }
         if (1)
         {
-            auto t = std::make_shared<XLNODE_OUTPUT>();
+            auto t = std::make_shared<XLNODE_ANY>(1,TYPE_OUTPUT,0);
             t->hit = D2D1_RECT_F({ 400,400,100,100 });
             xlop.nodes.push_back(t);
         }
@@ -1746,7 +1883,7 @@ namespace winrt::VisualDML::implementation
 									ty = 1;
                                 if (nod->IsOutput())
                                     ty = 3;
-                                auto m = BuildNodeRightMenu(nod,ty,[this, i,ii](const winrt::Windows::Foundation::IInspectable from, const winrt::Windows::Foundation::IInspectable)
+                                auto m = BuildNodeRightMenu(xl,nod,ty,[this, i,ii](const winrt::Windows::Foundation::IInspectable from, const winrt::Windows::Foundation::IInspectable)
                                     {
                                         auto& xl = prj.xl();
                                         auto& op = xl.ops[i];
@@ -1836,30 +1973,17 @@ namespace winrt::VisualDML::implementation
                                         {
                                             WhatInput = 6;
                                             _i0 = L"Enter Input Tensor Shape:";
-											auto inp = std::dynamic_pointer_cast<XLNODE_INPUT>(nod);
-                                            if (inp)
+                                            if (auto inp = std::dynamic_pointer_cast<XLNODE_ANY>(nod))
                                             {
                                                 _i1 = L"";
-                                                for (auto& s : inp->tensor_dims)
+                                                for (auto& s : inp->tensor_dims())
                                                 {
                                                     _i1 += std::to_wstring(s);
                                                     _i1 += L"x";
                                                 }
                                             }
-                                            else
-                                            {
-                                                auto inp2 = std::dynamic_pointer_cast<XLNODE_CONSTANT>(nod);
-                                                if (inp2)
-                                                {
-                                                    _i1 = L"";
-                                                    for (auto& s : inp2->tensor_dims)
-                                                    {
-                                                        _i1 += std::to_wstring(s);
-                                                        _i1 += L"x";
-                                                    }
-                                                }
-                                            }
-											_i1.pop_back();
+											if (_i1.size())
+												_i1.pop_back(); 
                                             WhatNode = nod.get();
                                             Refresh({ L"i1",L"i0" });
                                             auto sp = Content().as<Panel>();
@@ -1870,13 +1994,13 @@ namespace winrt::VisualDML::implementation
                                         if (t == L"Clear input")
                                         {
                                             Push();
-                                            auto it = std::dynamic_pointer_cast<XLNODE_INPUT>(nod);
+                                            auto it = std::dynamic_pointer_cast<XLNODE_ANY>(nod);
 											it->csv_input.clear();
 											FullRefresh();
                                         }
                                         if (t == L"Binary input...")
                                         {
-                                            auto it = std::dynamic_pointer_cast<XLNODE_INPUT>(nod);
+                                            auto it = std::dynamic_pointer_cast<XLNODE_ANY>(nod);
                                             wcscpy_s(fnx.data(), 10000, it->csv_input.c_str());
                                             OPENFILENAME of = { 0 };
                                             of.lStructSize = sizeof(of);
@@ -1894,7 +2018,7 @@ namespace winrt::VisualDML::implementation
 
                                         if (t == L"CSV input...")
                                         {
-											auto it = std::dynamic_pointer_cast<XLNODE_INPUT>(nod);
+											auto it = std::dynamic_pointer_cast<XLNODE_ANY>(nod);
 											wcscpy_s(fnx.data(), 10000, it->csv_input.c_str()); 
                                             OPENFILENAME of = { 0 };
                                             of.lStructSize = sizeof(of);
@@ -1912,14 +2036,14 @@ namespace winrt::VisualDML::implementation
                                         if (t == L"\"Random\"")
                                         {
                                             Push();
-                                            auto it = std::dynamic_pointer_cast<XLNODE_INPUT>(nod);
+                                            auto it = std::dynamic_pointer_cast<XLNODE_ANY>(nod);
                                             it->csv_input = L"\"Random\"";
                                             FullRefresh();
                                         }
                                         if (t == L"\"Sequence\"")
                                         {
                                             Push();
-                                            auto it = std::dynamic_pointer_cast<XLNODE_INPUT>(nod);
+                                            auto it = std::dynamic_pointer_cast<XLNODE_ANY>(nod);
                                             it->csv_input = L"\"Sequence\"";
                                             FullRefresh();
                                         }
@@ -3445,7 +3569,7 @@ namespace winrt::VisualDML::implementation
 
                                 if (t == L"Output")
                                 {
-                                    auto node = std::make_shared<XLNODE_OUTPUT>();
+                                    auto node = std::make_shared<XLNODE_ANY>(1,TYPE_OUTPUT,0);
                                     node->hit.left = pos.X;
                                     node->hit.top = pos.Y;
                                     Push();
@@ -3669,6 +3793,13 @@ namespace winrt::VisualDML::implementation
     void MLGraph::OnPaste(IInspectable const&, IInspectable const&)
     {
         bool p1 = 0;
+        POINT pos = {};
+        GetCursorPos(&pos);
+        ScreenToClient((HWND)wnd(), &pos);
+        if (pos.x > 50)
+            pos.x -= 50;
+        if (pos.y > 50)
+            pos.y -= 50;
         for (auto& e : clipboard)
         {
 			if (!p1)
@@ -3684,6 +3815,8 @@ namespace winrt::VisualDML::implementation
 			for (auto& e3 : n->children)
 				e3.g.clear();
             n->hit.left = 0; n->hit.top = 0;
+			n->hit.left = (float)pos.x;
+			n->hit.top = (float)pos.y;
             op.nodes.push_back(n);
         }
 		FullRefresh();
@@ -4271,6 +4404,41 @@ namespace winrt::VisualDML::implementation
         }
 
     }
+    void MLGraph::Input2_Completed(IInspectable, IInspectable)
+    {
+		RadioButtons rb = Content().as<Panel>().FindName(L"Input4a").as<RadioButtons>();
+        if (WhatInput == 11 && WhatNode && WhatVariable)
+        {
+			try
+			{
+				auto it = dynamic_cast<XLNODE_ANY*>(WhatNode);
+                if (it)
+                {
+                    VARIABLECHANGE vc;
+					vc.n = WhatVariable->n;
+                    vc.V = std::stof(_i1.c_str());
+					vc.Type = rb.SelectedIndex();   
+
+                    Push();
+                    // Remove existing variable
+                    for (size_t i = 0; i < it->VariableChanges.size(); i++)
+                    {
+                        if (it->VariableChanges[i].n == WhatVariable->n)
+                        {
+                            it->VariableChanges.erase(it->VariableChanges.begin() + i);
+                            break;
+                        }
+                    }
+                    it->VariableChanges.push_back(vc);
+                    Dirty(1);
+                }
+			}
+			catch (...)
+			{
+			}
+			FullRefresh();
+        }
+    }
 
     void MLGraph::Input_Completed(IInspectable, IInspectable)
     {
@@ -4278,29 +4446,11 @@ namespace winrt::VisualDML::implementation
         if (WhatInput == 6 && WhatNode)
         {
             //Tensor Shape
-            auto* node = dynamic_cast<XLNODE_INPUT*>(WhatNode);
-            if (node)
+          if (auto* node = dynamic_cast<XLNODE_ANY*>(WhatNode))
             {
-                auto dims = TensorFromString(_i1.c_str());
-                if (dims.empty())
-                    return;
-                Dirty(1);
-                Push();
-                node->tensor_dims = dims;
-            }
-            else
-            {
-                auto node2 = dynamic_cast<XLNODE_CONSTANT*>(WhatNode);
-                if (node2)
-                {
-                    auto dims = TensorFromString(_i1.c_str());
-                    if (dims.empty())
-                        return;
-                    Dirty(1);
-                    Push();
-                    node2->tensor_dims = dims;
 
-                }
+                auto dims = StringTensorFromString(XML3::XMLU(_i1.c_str()));
+                node->tensor_dims2 = dims;
             }
 			FullRefresh();
             return;
@@ -4353,7 +4503,18 @@ namespace winrt::VisualDML::implementation
             {
                 Push();
                 Dirty(1);
-                if (WhatParam->minv <= -1 && WhatParam->maxv <= -1)
+                bool Number = 0;
+                try
+                {
+                    [[maybe_unused]] auto j = std::stoi(_i1);
+                    Number = 1;
+                }
+                catch (...)
+                {
+
+                }
+
+                if (Number == 0 || (WhatParam->minv <= -1 && WhatParam->maxv <= -1))
                     WhatParam->v = _i1;
 				else
                     WhatParam->v =  std::to_wstring(std::clamp(std::stof(_i1),WhatParam->minv,WhatParam->maxv));
@@ -4386,20 +4547,21 @@ namespace winrt::VisualDML::implementation
 
                 if (WhatInput == 3)
                 {
-                    auto t = std::make_shared<XLNODE_CONSTANT>();
+                    auto t = std::make_shared<XLNODE_ANY>(0,TYPE_CONSTANT,1);
+					t->Params.push_back({ L"Value",L"0"});
                     t->hit = D2D1_RECT_F({ 10,10,100,100 });
                     t->hit.left = (float)pos.x;
                     t->hit.top = (float)pos.y;
-                    t->tensor_dims = dims;
+                    t->SetTensorDims(dims);
                     op.nodes.push_back(t);
                 }
                 if (WhatInput == 1)
                 {
-                    auto t = std::make_shared<XLNODE_INPUT>();
+                    auto t = std::make_shared<XLNODE_ANY>(0,TYPE_INPUT,1);
                     t->hit = D2D1_RECT_F({ 10,10,100,100 });
                     t->hit.left = (float)pos.x;
                     t->hit.top = (float)pos.y;
-                    t->tensor_dims = dims;
+                    t->SetTensorDims(dims);
                     op.nodes.push_back(t);
                 }
             }
@@ -4439,7 +4601,7 @@ namespace winrt::VisualDML::implementation
         Dirty(1);
         auto& xl = prj.xl();
         auto& op = xl.ops[ActiveOperator2];
-        auto node = std::make_shared<XLNODE_OUTPUT>();
+        auto node = std::make_shared<XLNODE_ANY>(1,TYPE_OUTPUT,0);
         POINT pos = {};
         GetCursorPos(&pos);
 		ScreenToClient((HWND)wnd(), &pos);  
@@ -4467,8 +4629,15 @@ namespace winrt::VisualDML::implementation
     {
         auto& xl = prj.xl();
         if (xl.running)
-        {
             return;
+
+        if (!xl.ml)
+            xl.ml = std::make_shared<ML>();
+        if (xl.ml->d3D12Device == 0)
+        {
+            auto hr = Compile();
+            if (FAILED(hr))
+                return;
         }
 
         MustStop = 0;
@@ -4527,46 +4696,49 @@ namespace winrt::VisualDML::implementation
 
                 for (auto& node : op.nodes)
                 {
-                    if (auto it = std::dynamic_pointer_cast<XLNODE_INPUT>(node))
+                    if (auto it = std::dynamic_pointer_cast<XLNODE_ANY>(node))
                     {
-                        if (it->ShareMemory < 0)
-                            continue;
-                        if (it->csv_input.length())
+                        if (it->what == TYPE_INPUT)
                         {
-							if (it->csv_input == L"\"Random\"")
-							{
-								continue;
-							}
-                            if (it->csv_input == L"\"Sequence\"")
-                            {
+                            if (it->ShareMemory < 0)
                                 continue;
-                            }
-                            auto inf = it->csv_input;
-                            if (GetFileAttributes(inf.c_str()) == 0xFFFFFFFF)
+                            if (it->csv_input.length())
                             {
-                                std::vector<wchar_t> mf(1000);
-                                wcscpy_s(mf.data(), 1000, current_file.c_str());
-                                std::wstring mfs = mf.data();
-                                auto p = mfs.find_last_of(L"\\");
-                                mfs = mfs.substr(0, p);
-                                mfs += L"\\";
-                                mfs += it->csv_input;
-								inf = mfs;
-                            }
+                                if (it->csv_input == L"\"Random\"")
+                                {
+                                    continue;
+                                }
+                                if (it->csv_input == L"\"Sequence\"")
+                                {
+                                    continue;
+                                }
+                                auto inf = it->csv_input;
+                                if (GetFileAttributes(inf.c_str()) == 0xFFFFFFFF)
+                                {
+                                    std::vector<wchar_t> mf(1000);
+                                    wcscpy_s(mf.data(), 1000, current_file.c_str());
+                                    std::wstring mfs = mf.data();
+                                    auto p = mfs.find_last_of(L"\\");
+                                    mfs = mfs.substr(0, p);
+                                    mfs += L"\\";
+                                    mfs += it->csv_input;
+                                    inf = mfs;
+                                }
 
-                            // Actually csv?
-                            auto ch = wcsrchr(inf.c_str(), L'.');
-                            if (ch && _wcsicmp(ch, L".csv") == 0)
-                            {
-                                std::wstring TempFile3();
-                                auto tf = TempFile3();
-                                void CsvToBinary(const wchar_t* csv, const wchar_t* binout);
-                                CsvToBinary(inf.c_str(), tf.c_str());
-                                it->mapin.Map(tf.c_str());
-                            }
-                            else
-                            {
-                                it->mapin.Map(inf.c_str());
+                                // Actually csv?
+                                auto ch = wcsrchr(inf.c_str(), L'.');
+                                if (ch && _wcsicmp(ch, L".csv") == 0)
+                                {
+                                    std::wstring TempFile3();
+                                    auto tf = TempFile3();
+                                    void CsvToBinary(const wchar_t* csv, const wchar_t* binout);
+                                    CsvToBinary(inf.c_str(), tf.c_str());
+                                    it->mapin.Map(tf.c_str());
+                                }
+                                else
+                                {
+                                    it->mapin.Map(inf.c_str());
+                                }
                             }
                         }
                     }
@@ -4591,6 +4763,7 @@ namespace winrt::VisualDML::implementation
                 }
             }
 
+            PUSHPOPVAR ppv(&xl);
             for (int iRun = 0; ; iRun++)
             {
                 if (WillBeLast == 1)
@@ -4609,55 +4782,81 @@ namespace winrt::VisualDML::implementation
                     auto& mlop = ml.ops[iop];
                     for (auto& node : op.nodes)
                     {
-                        if (auto it = std::dynamic_pointer_cast<XLNODE_INPUT>(node))
+                        if (auto it = std::dynamic_pointer_cast<XLNODE_ANY>(node))
                         {
-                            for (auto& a_tid : it->tidxs)
+                            if (it->VariableChanges.size())
                             {
-                                auto& wh = mlop.Item(a_tid);
-                                if (!wh.buffer)
-                                    continue;
-
-                                if (it->ShareMemory >= 0 && it->csv_input == L"\"Random\"")
+                                ppv.Off();
+                                for (auto& vc : it->VariableChanges)
                                 {
-                                    long long bs = (long long)wh.buffer->b.sz();
-                                    std::vector<float> fv(bs / 4);
-                                    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-                                    for (size_t i = 0; i < fv.size(); i++)
+                                    // Find variable
+                                    for (auto& varx : xl.variables)
                                     {
-                                        extern std::mt19937 grand_mt;
-										fv[i] = dist(grand_mt);
+                                        if (varx.n == vc.n)
+                                        {
+                                            // Change it
+                                            if (vc.Type == 0)
+                                                varx.v = std::to_wstring(vc.V);
+                                            if (vc.Type == 1)
+                                                varx.v = std::to_wstring(std::stof(varx.v) + vc.V);
+                                            break;
+                                        }
                                     }
-                                    wh.buffer->Upload(&ml, fv.data(), bs);
-                                    continue;
                                 }
 
-                                if (it->ShareMemory >= 0 && it->csv_input == L"\"Sequence\"")
+                                ppv.On();
+                            }
+
+                            if (it->what == TYPE_INPUT)
+                            {
+                                for (auto& a_tid : it->tidxs)
                                 {
-                                    long long bs = (long long)wh.buffer->b.sz();
-                                    std::vector<float> fv(bs / 4);
-                                    float nf = 0.0f;
-                                    for (size_t i = 0; i < fv.size(); i++)
+                                    auto& wh = mlop.Item(a_tid);
+                                    if (!wh.buffer)
+                                        continue;
+
+                                    if (it->ShareMemory >= 0 && it->csv_input == L"\"Random\"")
                                     {
-                                        fv[i] = nf;
-                                        nf += 0.01f;
+                                        long long bs = (long long)wh.buffer->b.sz();
+                                        std::vector<float> fv(bs / 4);
+                                        std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+                                        for (size_t i = 0; i < fv.size(); i++)
+                                        {
+                                            extern std::mt19937 grand_mt;
+                                            fv[i] = dist(grand_mt);
+                                        }
+                                        wh.buffer->Upload(&ml, fv.data(), bs);
+                                        continue;
                                     }
-                                    wh.buffer->Upload(&ml, fv.data(), bs);
-                                    continue;
-                                }
 
-                                if (it->ShareMemory < 0 || it->mapin.p() == 0)
-                                    continue;
+                                    if (it->ShareMemory >= 0 && it->csv_input == L"\"Sequence\"")
+                                    {
+                                        long long bs = (long long)wh.buffer->b.sz();
+                                        std::vector<float> fv(bs / 4);
+                                        float nf = 0.0f;
+                                        for (size_t i = 0; i < fv.size(); i++)
+                                        {
+                                            fv[i] = nf;
+                                            nf += 0.01f;
+                                        }
+                                        wh.buffer->Upload(&ml, fv.data(), bs);
+                                        continue;
+                                    }
 
-                                long long bs = (long long)wh.buffer->b.sz();
-                                long long szfu = (long long)(it->mapin.size()) - (long long)(iRun * bs);
-                                if (szfu <= 0)
-                                    continue;
-                                if (szfu <= bs)
-                                    wh.buffer->Upload(&ml, it->mapin.p() + (iRun * bs), szfu);
-                                else
-                                {
-                                    wh.buffer->Upload(&ml, it->mapin.p() + (iRun * bs), bs);
-                                    WillBeLast = 0;
+                                    if (it->ShareMemory < 0 || it->mapin.p() == 0)
+                                        continue;
+
+                                    long long bs = (long long)wh.buffer->b.sz();
+                                    long long szfu = (long long)(it->mapin.size()) - (long long)(iRun * bs);
+                                    if (szfu <= 0)
+                                        continue;
+                                    if (szfu <= bs)
+                                        wh.buffer->Upload(&ml, it->mapin.p() + (iRun * bs), szfu);
+                                    else
+                                    {
+                                        wh.buffer->Upload(&ml, it->mapin.p() + (iRun * bs), bs);
+                                        WillBeLast = 0;
+                                    }
                                 }
                             }
                         }
@@ -4883,59 +5082,6 @@ namespace winrt::VisualDML::implementation
         Clean();
     }
 
-    class PUSHPOPVAR
-    {
-    public:
-        XL* xl;
-        PUSHPOPVAR(XL* x)
-        {
-            xl = x;
-            // Replace variables
-            for (auto& op : xl->ops)
-            {
-                for (auto& node : op.nodes)
-                {
-                    if (auto it = std::dynamic_pointer_cast<XLNODE>(node))
-                    {
-                        for (auto& p : it->Params)
-                        {
-                            p.save_v = p.v;
-                            for (auto& v : xl->variables)
-                            {
-                               
-                                auto n = L"$" + v.n;
-                                while (p.v.find(n) != std::string::npos)
-                                {
-                                    p.v.replace(p.v.find(n), n.length(), v.v);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-
-        }
-
-        ~PUSHPOPVAR()
-        {
-            // Replace variables
-            for (auto& op : xl->ops)
-            {
-                for (auto& node : op.nodes)
-                {
-                    if (auto it = std::dynamic_pointer_cast<XLNODE>(node))
-                    {
-                        for (auto& p : it->Params)
-                        {
-                            p.v = p.save_v;
-                        }
-                    }
-                }
-            }
-        }
-
-    };
     void MLGraph::OnCompile(IInspectable const&, IInspectable const&)
     {
         Compile();
@@ -4951,7 +5097,6 @@ namespace winrt::VisualDML::implementation
             xl.ml = std::make_shared<ML>();
         auto& ml = *xl.ml;
         PUSHPOPVAR ppv(&xl);
-
         try
         {
 #ifdef _DEBUG
@@ -4971,12 +5116,12 @@ namespace winrt::VisualDML::implementation
                 auto& op = xl.ops[i];
                 MLOP mop(&ml);
 
-                // test 2 nodes and input outpt
+                // test 2 nodes and input output
                 if (op.nodes.size() == 2)
                 {
-					auto first = std::dynamic_pointer_cast<XLNODE_INPUT>(op.nodes[0]);
-					auto second = std::dynamic_pointer_cast<XLNODE_OUTPUT>(op.nodes[1]);
-                    if (first && second)
+					auto first = std::dynamic_pointer_cast<XLNODE_ANY>(op.nodes[0]);
+					auto second = std::dynamic_pointer_cast<XLNODE_ANY>(op.nodes[1]);
+                    if (first && second && first->what == TYPE_INPUT && second->what == TYPE_OUTPUT)
                     {
                         if (first->children.size() == 1 && second->children.size() == 1)
                         {
@@ -5004,11 +5149,15 @@ namespace winrt::VisualDML::implementation
                     }
                 }
 
-				std::sort(op.nodes.begin(), op.nodes.end(), [](auto& a, auto& b) 
+				std::sort(op.nodes.begin(), op.nodes.end(), [](std::shared_ptr<XLNODE> a, std::shared_ptr<XLNODE> b) 
                     { 
+                        auto aa = dynamic_cast<XLNODE_ANY*>(a.get());
+                        auto bb = dynamic_cast<XLNODE_ANY*>(b.get());
 						if (a->IsInput() && !b->IsInput())
 							return 1;   
                         if (!a->IsOutput() && b->IsOutput())
+                            return 1;
+                        if (a->IsInput() && b->IsInput() && aa->what == TYPE_INPUT && bb->what != TYPE_INPUT)
                             return 1;
                         return 0;
                     });    
@@ -5020,6 +5169,33 @@ namespace winrt::VisualDML::implementation
                     char the_code3[1000] = {};
                     auto& node = op.nodes[ii];
                     [[maybe_unused]] auto str = node->name();
+
+                    // Variable
+					auto node2 = std::dynamic_pointer_cast<XLNODE_ANY>(node);
+                    if (node2 && node2->VariableChanges.size())
+                    {
+                        ppv.Off();
+                        for (auto& vc : node2->VariableChanges)
+                        {
+                            // Find variable
+							for (auto& varx : xl.variables)
+							{
+								if (varx.n == vc.n)
+								{
+                                    // Change it
+									if (vc.Type == 0)
+										varx.v = std::to_wstring(vc.V);  
+                                    if (vc.Type == 1)
+                                        varx.v = std::to_wstring(std::stof(varx.v) + vc.V);
+ 									break;
+								}
+							}
+                        }
+
+                        ppv.On();
+                    }
+
+
                     if (node->IsInput())
                     {
                         std::optional<MLRESOURCE> mlr;
@@ -5057,17 +5233,9 @@ namespace winrt::VisualDML::implementation
                             }
                         }
 
-                        auto it = std::dynamic_pointer_cast<XLNODE_INPUT>(node);
-                        if (it)
+                        if (auto it2 = std::dynamic_pointer_cast<XLNODE_ANY>(node))
                         {
-                            mop.AddInput({ (DML_TENSOR_DATA_TYPE)it->OpType, it->tensor_dims }, 0, mlr ? false : true, BINDING_MODE::BIND_IN, mlr);
-                            sprintf_s(the_code, 1000, R"(mop.AddInput({ %S, {%S} }, 0, %s, BINDING_MODE::BIND_IN,%s);)",optypes2[it->OpType].c_str(), TensorToString(it->tensor_dims).c_str(), mlr ? "false" : "true",mlr ? emlr : "{}");
-							node->code = the_code;  
-                        }
-                        else
-                        {
-                            auto it2 = std::dynamic_pointer_cast<XLNODE_CONSTANT>(node);
-                            if (it2)
+                            if (it2->what == TYPE_CONSTANT)
                             {
                                 DML_SCALAR_UNION scalar2 = {};
 
@@ -5086,29 +5254,29 @@ namespace winrt::VisualDML::implementation
                                 if (it2->OpType == DML_TENSOR_DATA_TYPE_INT4)	scalar2.Int32 = it2->Params[0];
 
 
-                                auto expr = dml::FillValueConstant(*mop.GetGraph(), it2->tensor_dims, (DML_TENSOR_DATA_TYPE)it2->OpType, scalar2);
+                                auto expr = dml::FillValueConstant(*mop.GetGraph(), it2->tensor_dims(), (DML_TENSOR_DATA_TYPE)it2->OpType, scalar2);
                                 mop.AddItem(expr, 0, false, BINDING_MODE::NONE);
 
 
                                 sprintf_s(the_code2, 1000, R"(DML_SCALAR_UNION scalar2 = {};)");
-                                if (it2->OpType == DML_TENSOR_DATA_TYPE_FLOAT32) sprintf_s(the_code3, R"(scalar2.Float32 = %.2f;)",(float)it2->Params[0]);
-								if (it2->OpType == DML_TENSOR_DATA_TYPE_FLOAT16) sprintf_s(the_code3, R"(scalar2.Float16 = %.2f;)", (float)it2->Params[0]);
-								if (it2->OpType == DML_TENSOR_DATA_TYPE_UINT32) sprintf_s(the_code3, R"(scalar2.UInt32 = %u;)", (unsigned int)it2->Params[0]);
-								if (it2->OpType == DML_TENSOR_DATA_TYPE_UINT16) sprintf_s(the_code3, R"(scalar2.UInt16 = %u;)", (unsigned short)(unsigned int)it2->Params[0]);
-								if (it2->OpType == DML_TENSOR_DATA_TYPE_UINT8) sprintf_s(the_code3, R"(scalar2.UInt8 = %u;)", (unsigned char)(unsigned int)it2->Params[0]);
-								if (it2->OpType == DML_TENSOR_DATA_TYPE_INT32) sprintf_s(the_code3, R"(scalar2.Int32 = %i;)", (int)it2->Params[0]);
-								if (it2->OpType == DML_TENSOR_DATA_TYPE_INT16) sprintf_s(the_code3, R"(scalar2.Int16 = %i;)", (short)(int)it2->Params[0]);
-								if (it2->OpType == DML_TENSOR_DATA_TYPE_INT8) sprintf_s(the_code3, R"(scalar2.Int8 = %i;)", (char)(int)it2->Params[0]);
-								if (it2->OpType == DML_TENSOR_DATA_TYPE_FLOAT64) sprintf_s(the_code3, R"(scalar2.Float64 = %.2f;)", (double)it2->Params[0]);
-								if (it2->OpType == DML_TENSOR_DATA_TYPE_UINT64) sprintf_s(the_code3, R"(scalar2.UInt64 = %llu;)", (unsigned long long)it2->Params[0]);
-								if (it2->OpType == DML_TENSOR_DATA_TYPE_INT64) sprintf_s(the_code3, R"(scalar2.Int64 = %lli;)", (long long)it2->Params[0]);
-								if (it2->OpType == DML_TENSOR_DATA_TYPE_UINT4) sprintf_s(the_code3, R"(scalar2.UInt32 = %u;)", (unsigned int)it2->Params[0]);
-								if (it2->OpType == DML_TENSOR_DATA_TYPE_INT4) sprintf_s(the_code3, R"(scalar2.Int32 = %i;)", (int)it2->Params[0]);
+                                if (it2->OpType == DML_TENSOR_DATA_TYPE_FLOAT32) sprintf_s(the_code3, R"(scalar2.Float32 = %.2f;)", (float)it2->Params[0]);
+                                if (it2->OpType == DML_TENSOR_DATA_TYPE_FLOAT16) sprintf_s(the_code3, R"(scalar2.Float16 = %.2f;)", (float)it2->Params[0]);
+                                if (it2->OpType == DML_TENSOR_DATA_TYPE_UINT32) sprintf_s(the_code3, R"(scalar2.UInt32 = %u;)", (unsigned int)it2->Params[0]);
+                                if (it2->OpType == DML_TENSOR_DATA_TYPE_UINT16) sprintf_s(the_code3, R"(scalar2.UInt16 = %u;)", (unsigned short)(unsigned int)it2->Params[0]);
+                                if (it2->OpType == DML_TENSOR_DATA_TYPE_UINT8) sprintf_s(the_code3, R"(scalar2.UInt8 = %u;)", (unsigned char)(unsigned int)it2->Params[0]);
+                                if (it2->OpType == DML_TENSOR_DATA_TYPE_INT32) sprintf_s(the_code3, R"(scalar2.Int32 = %i;)", (int)it2->Params[0]);
+                                if (it2->OpType == DML_TENSOR_DATA_TYPE_INT16) sprintf_s(the_code3, R"(scalar2.Int16 = %i;)", (short)(int)it2->Params[0]);
+                                if (it2->OpType == DML_TENSOR_DATA_TYPE_INT8) sprintf_s(the_code3, R"(scalar2.Int8 = %i;)", (char)(int)it2->Params[0]);
+                                if (it2->OpType == DML_TENSOR_DATA_TYPE_FLOAT64) sprintf_s(the_code3, R"(scalar2.Float64 = %.2f;)", (double)it2->Params[0]);
+                                if (it2->OpType == DML_TENSOR_DATA_TYPE_UINT64) sprintf_s(the_code3, R"(scalar2.UInt64 = %llu;)", (unsigned long long)it2->Params[0]);
+                                if (it2->OpType == DML_TENSOR_DATA_TYPE_INT64) sprintf_s(the_code3, R"(scalar2.Int64 = %lli;)", (long long)it2->Params[0]);
+                                if (it2->OpType == DML_TENSOR_DATA_TYPE_UINT4) sprintf_s(the_code3, R"(scalar2.UInt32 = %u;)", (unsigned int)it2->Params[0]);
+                                if (it2->OpType == DML_TENSOR_DATA_TYPE_INT4) sprintf_s(the_code3, R"(scalar2.Int32 = %i;)", (int)it2->Params[0]);
 
 
 
 
-                                sprintf_s(the_code, 1000, R"(mop.AddItem(dml::FillValueConstant(*mop.GetGraph(), {%S},%S,scalar2), 0, false, BINDING_MODE::NONE);)", TensorToString(it2->tensor_dims).c_str(), optypes2[it2->OpType].c_str());
+                                sprintf_s(the_code, 1000, R"(mop.AddItem(dml::FillValueConstant(*mop.GetGraph(), {%S},%S,scalar2), 0, false, BINDING_MODE::NONE);)", TensorToString(it2->tensor_dims()).c_str(), optypes2[it2->OpType].c_str());
 
                                 node->code = "\t";
                                 node->code += the_code2;
@@ -5117,7 +5285,16 @@ namespace winrt::VisualDML::implementation
                                 node->code += "\r\n\t";
                                 node->code += the_code;
                             }
+                            else
+                            if (it2->what == TYPE_INPUT)
+                            {
+                                mop.AddInput({ (DML_TENSOR_DATA_TYPE)it2->OpType, it2->tensor_dims()}, 0, mlr ? false : true, BINDING_MODE::BIND_IN, mlr);
+                                sprintf_s(the_code, 1000, R"(mop.AddInput({ %S, {%S} }, 0, %s, BINDING_MODE::BIND_IN,%s);)", optypes2[it2->OpType].c_str(), TensorToString(it2->tensor_dims()).c_str(), mlr ? "false" : "true", mlr ? emlr : "{}");
+                                node->code = the_code;
+
+                            }
                         }
+
                         node->tidxs.push_back(tidx++);
                         continue;
                     }
@@ -5159,29 +5336,22 @@ namespace winrt::VisualDML::implementation
                         }
                     }
 
-                    // For operators that have multiple outputs
-                    std::vector<int> whato;
-                    for (size_t ci = 0; ci < node->children.size(); ci++)
+                    if (auto it = std::dynamic_pointer_cast<XLNODE_ANY>(node))
                     {
-                        if (node->children[ci].O != 1)
+                        if (it->what == TYPE_OUTPUT)
+                        {
+                            if (whati.size() != 1)
+                                continue;
+                            if (whati[0] == -1)
+                                continue;
+                            mop.AddOutput(mop.Item(whati[0]));
+                            node->tidxs.push_back(tidx++);
+
+                            sprintf_s(the_code, 1000, R"(mop.AddOutput(mop.Item(%i));)", whati[0]);
+                            node->code = the_code;
+
                             continue;
-                    }
-
-
-
-                    if (auto it = std::dynamic_pointer_cast<XLNODE_OUTPUT>(node))
-                    {
-						if (whati.size() != 1)
-							continue;
-                        if (whati[0] == -1)
-                            continue;
-                        mop.AddOutput(mop.Item(whati[0]));
-                        node->tidxs.push_back(tidx++);
-
-                        sprintf_s(the_code, 1000, R"(mop.AddOutput(mop.Item(%i));)", whati[0]);
-                        node->code = the_code;
-
-                        continue;
+                        }
                     }
 
                     dml::Expression expr;

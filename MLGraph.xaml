@@ -16,7 +16,13 @@
         <ContentDialog x:Name="Input1" PrimaryButtonStyle="{StaticResource AccentButtonStyle}" IsPrimaryButtonEnabled="True" PrimaryButtonText="OK" SecondaryButtonText="Cancel" IsSecondaryButtonEnabled="True" PrimaryButtonClick="Input_Completed" >            <StackPanel Orientation="Vertical">                <TextBlock  Name="Input2"  Margin="10,0,0,10" Text="{x:Bind i0,Mode=TwoWay}" />
                 <TextBox Name="Input3" Text="{x:Bind i1,Mode=TwoWay}"/>            </StackPanel>        </ContentDialog>
 
-        
+        <ContentDialog x:Name="InputVariableChange" PrimaryButtonStyle="{StaticResource AccentButtonStyle}" IsPrimaryButtonEnabled="True" PrimaryButtonText="OK" SecondaryButtonText="Cancel" IsSecondaryButtonEnabled="True" PrimaryButtonClick="Input2_Completed" >            <StackPanel Orientation="Vertical">                <TextBlock  Name="Input2a"  Margin="10,0,0,10" Text="{x:Bind i0,Mode=TwoWay}" />
+                <TextBox Name="Input3a" Text="{x:Bind i1,Mode=TwoWay}"/>                <RadioButtons x:Name="Input4a" SelectedIndex="0" >
+                    <x:String>Absolute Change</x:String>
+                    <x:String>Relative Change</x:String>
+                </RadioButtons>
+            </StackPanel>        </ContentDialog>
+
         <MenuBar HorizontalAlignment="Left" x:Name="menu">
             <MenuBarItem Title="File" >
                 <MenuFlyoutItem Text="New" Click="OnNew" >

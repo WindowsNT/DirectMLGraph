@@ -279,14 +279,31 @@ std::vector<T> TensorFromString(const wchar_t* str)
 	return newSizes;
 }
 
+inline std::vector<std::string> StringTensorFromString(const char* str)
+{
+	std::vector<std::string> newSizes;
+	try
+	{
+		std::vector<std::string> split(const std::string & s, char delim);
+		auto sp = split(str, 'x');
+		for (auto& s : sp)
+			newSizes.push_back(s);
+	}
+	catch (...)
+	{
+
+	}
+	return newSizes;
+}
+
 template <typename T = unsigned int>
-std::wstring TensorToString(std::vector<T> in)
+std::wstring TensorToString(std::vector<T> in,const wchar_t* sep = L",")
 {
 	std::wstring x;
 	for (auto& i : in)
 	{
 		x += std::to_wstring(i);
-		x += L",";
+		x += sep;
 	}
 	if (x.length())
 		x.pop_back();

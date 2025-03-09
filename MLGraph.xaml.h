@@ -42,6 +42,49 @@ struct VARIABLE
     }
 };
 
+struct VARIABLECHANGE
+{
+	std::wstring n; 
+    int Type = 0; // 0 abs, 1 relative
+    float V = 0.0f; 
+
+    std::wstring str()
+    {
+        std::wstring d;
+        d = L"$";
+        d += n;
+        d += L" ";
+        if (Type == 0)
+        {
+            d += L"= ";
+            d += std::to_wstring(fabs(V));
+        }
+        else
+        {
+            if (V < 0)
+                d += L"-= ";
+            else
+                d += L"+= ";
+            d += std::to_wstring(fabs(V));
+        }
+        return d;
+    }
+
+	void Ser(XML3::XMLElement& e)
+	{
+		e.vv("n").SetWideValue(n.c_str());
+		e.vv("Type").SetValueInt(Type);
+		e.vv("V").SetValueFloat(V);
+	}
+
+	void Unser(XML3::XMLElement& e)
+	{
+		n = e.vv("n").GetWideValue();
+		Type = e.vv("Type").GetValueInt(0);
+		V = e.vv("V").GetValueFloat(0);
+	}
+};
+
 struct PARAM
 {
     std::wstring n;
@@ -61,45 +104,93 @@ struct PARAM
     }
     operator float()
     {
-		if (v.empty())
-			return 0;
-		return std::stof(v.c_str());
+        if (v.empty())
+            return 0;
+        try
+        {
+            return std::stof(v.c_str());
+        }
+        catch (...)
+        {
+            return 0;
+        }
     }
     operator double()
     {
         if (v.empty())
             return 0;
-        return std::stod(v.c_str());
+        try
+        {
+            return std::stod(v.c_str());
+        }
+		catch (...)
+		{
+			return 0;
+		}
     }
     operator int()
     {
         if (v.empty())
             return 0;
-        return std::stoi(v.c_str());
+        try {
+            return std::stoi(v.c_str());
+        }
+        catch (...)
+        {
+            return 0;
+        }
     }
     operator unsigned int()
     {
         if (v.empty())
             return 0;
-        return std::stoul(v.c_str());
+        try
+        {
+            return std::stoul(v.c_str());
+        }
+        catch (...)
+        {
+            return 0;
+        }
     }
     operator bool()
 	{
         if (v.empty())
             return 0;
-        return std::stoi(v.c_str()) == 1;
+        try
+        {
+            return std::stoi(v.c_str()) == 1;
+        }
+		catch (...)
+		{
+			return 0;
+		}
 	}
     operator long long()
     {
         if (v.empty())
             return 0;
-        return std::stoll(v.c_str());
+        try
+        {
+            return std::stoll(v.c_str());
+        }
+		catch (...)
+		{
+			return 0;
+		}
     }
     operator unsigned long long()
     {
         if (v.empty())
             return 0;
-        return std::stoull(v.c_str());
+        try
+        {
+            return std::stoull(v.c_str());
+        }
+        catch (...)
+        {
+            return 0;
+        }
     }
 };
 
@@ -150,7 +241,7 @@ enum XLNODE_TYPE
     TYPE_ABS,TYPE_ACOS,TYPE_ACOSH, TYPE_ADD,TYPE_ASIN,TYPE_ASINH,TYPE_ATAN,TYPE_ATANH, TYPE_ATANYX,TYPE_AVERAGEPOOLING,
 	TYPE_BITAND, TYPE_BITCOUNT, TYPE_BITNOT, TYPE_BITOR, TYPE_BITSL, TYPE_BITSR, TYPE_BITXOR, TYPE_BATCHNORMALIZATION, TYPE_BATCHNORMALIZATIONGRAD,TYPE_BATCHNORMALIZATIONTRAINING, TYPE_BATCHNORMALIZATIONTRAININGGRAD,
 	TYPE_CAST,TYPE_CEIL, TYPE_CLIP, TYPE_CLIPGRAD, TYPE_CONSTANT, TYPE_CONVOLUTIONINTEGER,TYPE_COS, TYPE_COSH, TYPE_CONVOLUTION,TYPE_CUMSUM, TYPE_CUMPROD,
-    TYPE_DIVIDE,TYPE_DEPTHTOSPACE,TYPE_DEQUANTIZE,TYPE_DEQUANTIZELINEAR,TYPE_DIFFERENCESQUARE,
+    TYPE_DIVIDE,TYPE_DEPTHTOSPACE,TYPE_DEQUANTIZE,TYPE_DEQUANTIZELINEAR,TYPE_DIAGONALMATRIX,TYPE_DIFFERENCESQUARE,
     TYPE_ERF,TYPE_EXP,TYPE_EQUALS,
     TYPE_FLOOR,
 	TYPE_GATHER,TYPE_GATHERELEMENTS,TYPE_GATHERND,TYPE_GEMM, TYPE_GREATERTHAN, TYPE_GREATERTHANOREQUAL,TYPE_GRU,
@@ -232,6 +323,7 @@ inline std::map<int, std::string> TypesToNames = {
     {TYPE_DEPTHTOSPACE,"DepthToSpace"},
     {TYPE_DEQUANTIZE,"Dequantize"},
     {TYPE_DEQUANTIZELINEAR,"DequantizeLinear"},
+	{TYPE_DIAGONALMATRIX,"DiagonalMatrix"},
     {TYPE_DIFFERENCESQUARE,"DifferenceSquare"},
 
     {TYPE_ERF,"Erf"},
@@ -311,12 +403,23 @@ struct XLNODE_ANY : public XLNODE
     std::any MultipleOpOutputData;
 
     virtual bool AsksType() {
-        if (what == TYPE_CAST || what == TYPE_LESSTHAN || what == TYPE_LESSTHANOREQUAL || what == TYPE_GREATERTHAN || what == TYPE_GREATERTHANOREQUAL || what == TYPE_REINTERPRET || what == TYPE_ISINFINITY || what == TYPE_ISNAN || what == TYPE_REDUCE || what == TYPE_QUANTIZELINEAR || what == TYPE_QUANTIZEDLINEARCONVOLUTION)
+        if (what == TYPE_INPUT || what == TYPE_CAST || what == TYPE_LESSTHAN || what == TYPE_LESSTHANOREQUAL || what == TYPE_GREATERTHAN || what == TYPE_GREATERTHANOREQUAL || what == TYPE_REINTERPRET || what == TYPE_ISINFINITY || what == TYPE_ISNAN || what == TYPE_REDUCE || what == TYPE_QUANTIZELINEAR || what == TYPE_QUANTIZEDLINEARCONVOLUTION)
             return true;
         return false;
     }
 
+    virtual bool IsInput() 
+    { 
+        if (what == TYPE_CONSTANT || what == TYPE_INPUT)
+            return true;
+        return false; 
+    }
 
+    virtual bool IsOutput() { 
+        if (what == TYPE_OUTPUT)
+            return true; 
+        return false;
+    }
 
     virtual int ninreq() 
     {
@@ -487,6 +590,8 @@ struct XLNODE_ANY : public XLNODE
 
     virtual std::wstring opname()
     {
+        if (what == TYPE_INPUT)
+            return L"Input";
 		if (what == TYPE_ACT_IDENTITY)
 			return L"ActivationIdentity";
 		if (what == TYPE_ACT_CELU)
@@ -609,6 +714,8 @@ struct XLNODE_ANY : public XLNODE
 			return L"Dequantize";
 		if (what == TYPE_DEQUANTIZELINEAR)
 			return L"DequantizeLinear";
+		if (what == TYPE_DIAGONALMATRIX)
+			return L"DiagonalMatrix";
 		if (what == TYPE_DIFFERENCESQUARE)
 			return L"DifferenceSquare";
 
@@ -752,17 +859,46 @@ struct XLNODE_ANY : public XLNODE
 		if (what == TYPE_VALUESCALE2D)
 			return L"ValueScale2D";
 
+        if (what == TYPE_OUTPUT)
+            return L"Output";
 
         return L"Unknown";
     }
 
 
+    std::vector<std::string> tensor_dims2; // for inputs
+
+	void SetTensorDims(std::vector<unsigned int> d)
+	{
+		tensor_dims2.clear();
+		for (auto& s : d)
+		{
+			tensor_dims2.push_back(std::to_string(s));
+		}
+	}
+
+    std::vector<unsigned int> tensor_dims()
+    {
+        std::vector<unsigned int> d;
+		for (auto& s : tensor_dims2)
+		{
+			d.push_back(std::stoi(s));
+		}
+		return d;
+    }
+
     virtual std::wstring subname()
     {
         std::wstring n;
         wchar_t t[1000] = {};
+        if (csv_input.length())
+        {
+            n += L"\r\n";
+            n += csv_input;
+        }
         if (csv_output.length())
         {
+            n += L"\r\n";
             n += csv_output;
         }
         for (auto& p : Params)
@@ -772,18 +908,35 @@ struct XLNODE_ANY : public XLNODE
                 swprintf_s(t, 1000, L"\r\n%s: %s", p.n.c_str(), p.list_names[p].c_str());
             }
             else
-            if (p.minv <= -1 && p.maxv <= -1)
             {
-                swprintf_s(t, 1000, L"\r\n%s: %s", p.n.c_str(), p.w());
+                bool N = 0;
+                try
+                {
+                    [[maybe_unused]] float j = std::stof(p.w());
+                    N = 1;
+                }
+                catch (...)
+                {
+
+                }
+                if (N == 0 || (p.minv <= -1 && p.maxv <= -1))
+                {
+                    swprintf_s(t, 1000, L"\r\n%s: %s", p.n.c_str(), p.w());
+                }
+                else
+                    if (p.minv == 0 && p.maxv == 1)
+                    {
+                        swprintf_s(t, 1000, L"\r\n%s: %s", p.n.c_str(), p ? L"True" : L"False");
+                    }
+                    else
+                        swprintf_s(t, 1000, L"\r\n%s: %.2f", p.n.c_str(), (float)p);
             }
-            else
-            if (p.minv == 0 && p.maxv == 1)
-            {
-                swprintf_s(t, 1000, L"\r\n%s: %s", p.n.c_str(), p  ? L"True" : L"False");
-            }
-            else
-                swprintf_s(t, 1000, L"\r\n%s: %.2f", p.n.c_str(), (float)p);
             n += t;
+        }
+        for (auto& v : VariableChanges)
+        {
+			n += L"\r\n";
+			n += v.str();
         }
         return n;
     }
@@ -796,10 +949,15 @@ struct XLNODE_ANY : public XLNODE
             n += L"\r\n";
             n += optypes[OpType];
         }
+        if (IsInput())
+        {
+			n += L"\r\n";
+			n += TensorToString(tensor_dims(),L"x");
+        }
         return n;
     }
 
-
+    std::vector<VARIABLECHANGE> VariableChanges;
 
     virtual void Ser(XML3::XMLElement& ee)
     {
@@ -818,6 +976,17 @@ struct XLNODE_ANY : public XLNODE
 			for (auto& s : p.list_names)
 				pe["list"].AddElement("l").vv("n").SetWideValue(s.c_str());
 		}
+
+        for (auto& d : tensor_dims2)
+        {
+            auto& de = ee["Dimensions"].AddElement("Dimension");
+            de.vv("Size").SetValue(d);
+        }
+		for (auto& vc : VariableChanges)
+		{
+			auto& vce = ee["VariableChanges"].AddElement("VariableChange");
+			vc.Ser(vce);
+		}
     }
 
     virtual void Unser(XML3::XMLElement& e)
@@ -835,183 +1004,27 @@ struct XLNODE_ANY : public XLNODE
 				p.list_names.push_back(le.vv("n").GetWideValue());
 			Params.push_back(p);
         }
+
+        auto& ee = e["Dimensions"];
+        for (size_t i = 0; i < ee.GetChildrenNum(); i++)
+        {
+            auto& de = ee.GetChildren()[i];
+            tensor_dims2.push_back(de->vv("Size").GetValue());
+        }
+
+		VariableChanges.clear();
+		for (auto& ve : e["VariableChanges"])
+		{
+			VARIABLECHANGE vc;
+			vc.Unser(ve);
+			VariableChanges.push_back(vc);
+		}
+
         LoadNames();
     }
-
-
-};
-
-struct XLNODE_CONSTANT : public XLNODE_ANY
-{
-
-
-    XLNODE_CONSTANT() : XLNODE_ANY(0, TYPE_CONSTANT)
-    {
-        PARAM p;
-        p.n = L"Value";
-        p.minv = -1;
-		p.maxv = -1;
-		Params.push_back(p);
-    }
-    std::vector<unsigned int> tensor_dims;
-
-    virtual bool IsInput() { return true; }
-    virtual bool AsksType() { return true; }
-
-    virtual std::wstring subname()
-    {
-        std::wstring dr;
-        for (auto& d : tensor_dims)
-        {
-            dr += std::to_wstring(d) + L"x";
-        }
-        dr.pop_back();
-        if (csv_input.length())
-        {
-            dr += L"\r\n";
-            dr += csv_input;
-        }
-        dr += XLNODE_ANY::subname();
-        return dr;
-    }
-
-
-    virtual void Ser(XML3::XMLElement& ee)
-    {
-        XLNODE_ANY::Ser(ee);
-        for (auto& d : tensor_dims)
-        {
-            auto& de = ee["Dimensions"].AddElement("Dimension");
-            de.vv("Size").SetValueInt(d);
-        }
-    }
-
-    virtual void Unser(XML3::XMLElement& e)
-    {
-        auto& ee = e["Dimensions"];
-        for (size_t i = 0; i < ee.GetChildrenNum(); i++)
-        {
-            auto& de = ee.GetChildren()[i];
-            tensor_dims.push_back(de->vv("Size").GetValueInt());
-        }
-        XLNODE_ANY::Unser(e);
-    }
 };
 
 
-
-struct XLNODE_OUTPUT : public XLNODE
-{
-    virtual int nin() { return 1; }
-    virtual int nout() { return 0; }
-
-    virtual bool IsOutput() { return true; }
-
-    XLNODE_OUTPUT()
-    {
-        XLNODEBULLET bu;
-        bu.O = 0;
-        children.push_back(bu);
-    }
-
-    virtual std::wstring subname()
-    {
-        std::wstring dr;
-        if (csv_output.length())
-            dr += csv_output;
-        return dr;
-    }
-
-    virtual std::wstring name()
-    {
-        std::wstring dr = L"Output";
-        return dr;
-    }
-
-
-    virtual void Ser(XML3::XMLElement& ee)
-    {
-        XLNODE::Ser(ee);
-        ee.vv("Name").SetWideValue(L"Output");
-        ee.vv("Type").SetValueInt(TYPE_OUTPUT);
-    }
-
-    virtual void Unser(XML3::XMLElement& e)
-    {
-        XLNODE::Unser(e);
-    }
-
-
-};
-
-struct XLNODE_INPUT : public XLNODE
-{
-    std::vector<unsigned int> tensor_dims;
-
-    virtual bool IsInput() { return true; }
-    virtual bool AsksType() { return true; }
-
-
-    XLNODE_INPUT()
-    {
-        XLNODEBULLET bu;
-        bu.O = 1;
-    	children.push_back(bu);
-    }
-
-    virtual std::wstring subname()
-    {
-        std::wstring dr;
-        for (auto& d : tensor_dims)
-        {
-            dr += std::to_wstring(d) + L"x";
-        }
-        dr.pop_back();
-        if (csv_input.length())
-        {
-            dr += L"\r\n";
-            dr += csv_input;
-        }
-        return dr;
-    }
-
-
-    virtual std::wstring name()
-    {
-        std::wstring dr = L"Input";
-        dr += L"\r\n";
-        dr += optypes[OpType];
-		return dr;
-    }
-
-    virtual int nin() { return 0; }
-    virtual int nout() { return 1; }
-
-    virtual void Ser(XML3::XMLElement& ee)
-    {
-        ee.vv("Name").SetWideValue(L"Input");
-        XLNODE::Ser(ee);
-        ee.vv("Type").SetValueInt(TYPE_INPUT);
-        for (auto& d : tensor_dims)
-        {
-            auto& de = ee["Dimensions"].AddElement("Dimension");
-            de.vv("Size").SetValueInt(d);
-        }
-
-    }
-    virtual void Unser(XML3::XMLElement& e)
-    {
-        auto& ee = e["Dimensions"];
-		csv_input = e.vv("CSV").GetWideValue();
-        for (size_t i = 0; i < ee.GetChildrenNum(); i++)
-        {
-            auto& de = ee.GetChildren()[i];
-            tensor_dims.push_back(de->vv("Size").GetValueInt());
-        }
-        XLNODE::Unser(e);
-    }
-
-};
 
 struct XLOP : public XLNODE
 {
@@ -1056,21 +1069,21 @@ struct XLOP : public XLNODE
 
         if (nty == TYPE_INPUT)
         {
-            auto n = std::make_shared<XLNODE_INPUT>();
-            n->Unser(ne);
-            return n;
-        }
-        else
-        if (nty == TYPE_OUTPUT)
-        {
-            auto n = std::make_shared<XLNODE_OUTPUT>();
+            auto n = std::make_shared<XLNODE_ANY>(0,TYPE_INPUT,1);
             n->Unser(ne);
             return n;
         }
         else
         if (nty == TYPE_CONSTANT)
         {
-            auto n = std::make_shared<XLNODE_CONSTANT>();
+            auto n = std::make_shared<XLNODE_ANY>(0, TYPE_CONSTANT,1);
+            n->Unser(ne);
+            return n;
+        }
+        else
+        if (nty == TYPE_OUTPUT)
+        {
+            auto n = std::make_shared<XLNODE_ANY>(1,TYPE_OUTPUT,0);
             n->Unser(ne);
             return n;
         }
@@ -1281,6 +1294,7 @@ namespace winrt::VisualDML::implementation
 
 
         void Input_Completed(IInspectable, IInspectable);
+        void Input2_Completed(IInspectable, IInspectable);
 
         void Push();
         void Undo();
@@ -1307,6 +1321,7 @@ namespace winrt::VisualDML::implementation
         void Run();
         void Stop();
         HRESULT Compile();
+        winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildNodeRightMenu(XL& xl, std::shared_ptr<XLNODE> nd, int Type, std::function<void(const winrt::Windows::Foundation::IInspectable, const winrt::Windows::Foundation::IInspectable)> fooo);
         void Clean();
         void Dirty(bool Cl = 1);
         void OnAddOp(IInspectable const&, IInspectable const&);

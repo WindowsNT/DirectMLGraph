@@ -38,7 +38,7 @@ Uses my [DirectML Lib](https://github.com/WindowsNT/directmllib).
 * A: Abs,ACos,ACosh,Add,And,ASin,ASinh,ATan,ATanh,ATanYX,AveragePooling
 * B: BitAnd, BitCount, BitOr, BitNot, BitShiftLeft, BitShiftRight, BitXor
 * C: Cast, Ceil, Clip, ClipGrad, Constant, ConvolutionInteger, Cos, Cosh, Cummulative Sum/Product, Convolution
-* D: DepthToSpace, Dequantize, DequantizeLinear, DifferenceSquare, Divide
+* D: DepthToSpace, Dequantize, DequantizeLinear, DiagonalMatrix, DifferenceSquare, Divide
 * E: Erf, Exp, Equals
 * F: Floor
 * G: Gather, GatherElemends, GatherND, Gemm, GreaterThan, GreaterThanOrEqual, Gru
