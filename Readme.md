@@ -12,7 +12,8 @@ Uses my [DirectML Lib](https://github.com/WindowsNT/directmllib).
 * Input/Output CSV or binary, Input Random, Output to MessageBox
 * Adapter Selection
 * Show Adapter Memory Consumed
-* Generate C++ Code or VS Solution (in progress).
+* Variables
+* Generate C++ Code and VS Solution
 
 
 ## Features for NN design
@@ -65,14 +66,12 @@ Uses my [DirectML Lib](https://github.com/WindowsNT/directmllib).
 
 ### ToDo
 
-Complete VS project generation support :
-	TYPE_BATCHNORMALIZATIONGRAD
-	TYPE_BATCHNORMALIZATIONTRAINING
-	TYPE_BATCHNORMALIZATIONTRAININGGRAD
-	TYPE_CONVOLUTION
-	TYPE_CONVOLUTIONINTEGER_
+Complete VS project generation support
 
 Recurrent NN training
+
 Usage of batch DML operations for faster training
+
+Implement Loops
 
 

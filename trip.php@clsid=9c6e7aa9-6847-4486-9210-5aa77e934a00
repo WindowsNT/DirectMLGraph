@@ -1,0 +1,134 @@
+<html>
+   <title>Travel Plan</title>
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   <link rel="icon" href="shde/icon.svg">
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+   <script src="https://xemantic.github.io/shader-web-background/dist/shader-web-background.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.blockUI/2.70/jquery.blockUI.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="icon" href="notes.png">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+   <link rel="stylesheet" href="https://unpkg.com/flickity@2/dist/flickity.min.css">
+   <script src="https://unpkg.com/flickity@2/dist/flickity.pkgd.min.js"></script>
+   <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+   <link href="https://cdn.datatables.net/v/bm/jszip-3.10.1/dt-2.0.8/af-2.7.0/b-3.0.2/b-colvis-3.0.2/b-html5-3.0.2/b-print-3.0.2/date-1.5.2/fc-5.0.1/fh-4.0.1/kt-2.12.1/r-3.0.2/sc-2.4.3/sb-1.7.1/sp-2.3.1/sl-2.0.3/sr-1.4.1/datatables.min.css" rel="stylesheet">
+   <script src="https://cdn.datatables.net/v/bm/jszip-3.10.1/dt-2.0.8/af-2.7.0/b-3.0.2/b-colvis-3.0.2/b-html5-3.0.2/b-print-3.0.2/date-1.5.2/fc-5.0.1/fh-4.0.1/kt-2.12.1/r-3.0.2/sc-2.4.3/sb-1.7.1/sp-2.3.1/sl-2.0.3/sr-1.4.1/datatables.min.js"></script>
+   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+   <link href="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.css" rel="stylesheet">
+   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.jquery.js"></script>
+   <link href="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.9.1/summernote-bs5.css" rel="stylesheet"><script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.9.1/summernote-bs5.js"></script>
+  
+
+
+   <script src="scripts.php"></script>
+
+   <style>
+      @media (min-width: 992px) 
+        {
+              .dropdown:hover .dropdown-menu 
+              {
+                display: block;
+              }
+        }
+
+      img
+      {
+      border-radius: 5%;
+      }
+      body
+      {
+      Font-Family: 'Noto Serif';
+      }
+      .grid-item { width: 290px; }
+      .grid-item2 { width: 450px; }
+
+      html, body {
+      height: 100%;
+      }
+      a:link { 
+      text-decoration: none; 
+      } 
+      a:visited { 
+      text-decoration: none; 
+      } 
+      a:hover { 
+      text-decoration: none; 
+      } 
+      a:active { 
+      text-decoration: none; 
+      }
+      .joo
+      {
+      transition: .3s transform cubic-bezier(.155,1.105,.295,1.12),.3s box-shadow,.3s -webkit-transform cubic-bezier(.155,1.105,.295,1.12);
+      }
+      .joo:hover
+      {
+      transform: scale(1.05);
+      box-shadow: 0 10px 20px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.06);
+      }
+
+      
+    .ribbon {
+      margin: 0;
+      padding: 0;
+      background: yellow;
+      color:black;
+      padding:1em 0;
+      position: absolute;
+      top:0;
+      right:0;
+      transform: translateX(30%) translateY(0%) rotate(45deg);
+      transform-origin: top left;
+    }
+    .ribbon:before,
+    .ribbon:after {
+      content: '';
+      position: absolute;
+      top:0;
+      margin: 0 -1px; /* tweak */
+      width: 100%;
+      height: 100%;
+      background: yellow;
+    }
+    .ribbon:before {
+      right:100%;
+    }
+
+    .ribbon:after {
+      left:100%;
+    }
+   </style>
+<div style="margin: 20px"><br><h3>Χιλή</h3><hr><div class="grid">
+<style>
+.grid-item { width: 200px; }
+</style>
+
+</div><table class="table" style="width: 100%;">
+  <thead>
+    <tr>
+      <th scope="col">Time</th>
+      <th scope="col">Transport</th>
+      <th scope="col">Hotels</th>
+      <th scope="col">Activities</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>04/08/2025</td><td><a href="https://gr.skyscanner.com/transport/flights/ath/scl/250803/250820/?adultsv2=2&cabinclass=economy&childrenv2=&inboundaltsenabled=false&outboundaltsenabled=false&preferdirects=false&rtn=1" target="_blank"><span>&#9992;</span>  ATH &#8594; MAD &#8594; SCL </a><button class="btn btn-sm btn-primary">EUR 1500</button></td><td></td><td></td><td></td><td></td><tr><tr><td>05/08/2025</td><td></td><td><a href="https://www.booking.com/hotel/cl/gran-palace-santiago.el.html?aid=304142&label=gen173nr-1FCAEoggI46AdIM1gEaFyIAQGYAQi4ARfIAQzYAQHoAQH4AQyIAgGoAgO4ArK8or4GwAIB0gIkNmUwZDU1ZWEtNzdkYy00MzA5LTgwMzEtYWY4YTA0MmRkYTE52AIG4AIB&sid=25510f45f4e48ffe79b31fab97a0f62a&all_sr_blocks=123982210_126397309_0_1_0&checkin=2025-08-05&checkout=2025-08-08&dest_id=-901202&dest_type=city&dist=0&group_adults=2&group_children=0&hapos=3&highlighted_blocks=123982210_126397309_0_1_0&hpos=3&matching_block_id=123982210_126397309_0_1_0&nflt=mealplan%3D1&no_rooms=1&req_adults=2&req_children=0&room1=A%2CA&sb_price_type=total&sr_order=distance_from_search&sr_pri_blocks=123982210_126397309_0_1_0__23603&srepoch=1741201511&srpvid=53ad8627a509003c&type=total&ucfs=1&activeTab=main" target="_blank">GRAN PALACE &mdash; Santiago </a><button class="btn btn-sm btn-primary">EUR 224</button></td><td></td><td></td><td></td><tr><tr><td>06/08/2025</td><td></td><td></td><td> <a href="https://www.getyourguide.com/santiago-l226/oloemere-ekdrome-ste-vina-del-mar-kai-valparaiso-renaca-t83961/?ranking_uuid=535fdae0-49b6-4d7b-8f8a-cffe4bcb21fb&date_from=2025-08-06&date_to=2025-08-06" target="_blank">Valparaiso, Casablanca & Reñaca Tour &mdash; SCL </a><button class="btn btn-sm btn-primary">EUR 36</button></td><td></td><td></td><td></td><tr><tr><td>07/08/2025</td><td></td><td></td><td> <a href="https://www.getyourguide.com/santiago-l226/apo-to-santiago-el-yeso-me-piknik-t430531/?ranking_uuid=98074902-9839-45ed-a21b-6b1adff0d591&date_from=2025-08-06&date_to=2025-08-06" target="_blank">Cajon del Maipo & Embalse El Yeso &mdash; SCL </a><button class="btn btn-sm btn-primary">EUR 36</button></td><td></td><td></td><td></td><tr><tr><td>08/08/2025</td><td><a href="" target="_blank"><span>&#9992;</span>  SCL &#8594; BBA </a><button class="btn btn-sm btn-primary">EUR 108</button></td><td><a href="https://www.booking.com/hotel/cl/rey-don-felipe.el.html?label=gen173nr-1FCAEoggI46AdIM1gEaFyIAQGYAQi4ARfIAQzYAQHoAQH4AQyIAgGoAgO4ArK8or4GwAIB0gIkNmUwZDU1ZWEtNzdkYy00MzA5LTgwMzEtYWY4YTA0MmRkYTE52AIG4AIB&sid=25510f45f4e48ffe79b31fab97a0f62a&aid=304142&ucfs=1&arphpl=1&checkin=2025-08-08&checkout=2025-08-10&dest_id=-897667&dest_type=city&group_adults=2&req_adults=2&no_rooms=1&group_children=0&req_children=0&hpos=1&hapos=1&sr_order=popularity&srpvid=e19b69b622b00240&srepoch=1741532528&all_sr_blocks=28623109_89157331_0_42_0_718795&highlighted_blocks=28623109_89157331_0_42_0_718795&matching_block_id=28623109_89157331_0_42_0_718795&sr_pri_blocks=28623109_89157331_0_42_0_718795_16830&from=searchresults" target="_blank">Almasur Punta Arenas &mdash; Punta Arenas </a><button class="btn btn-sm btn-primary">EUR 155</button></td><td></td><td></td><td></td><tr><tr><td>09/08/2025</td><td></td><td></td><td> <a href="https://www.getyourguide.com/pounta-arenas-l32360/pounta-arenas-pain-oloemere-ekdrome-torres-del-paine-t859627/?ranking_uuid=9f2c6773-48b2-43dc-89d4-0140547c1d68&date_from=2025-08-06&date_to=2025-08-06" target="_blank">Torres del Paine &mdash; Punta Arenas </a><button class="btn btn-sm btn-primary">EUR 82</button></td><td></td><td></td><td></td><tr><tr><td>10/08/2025</td><td><a href="https://www.busbud.com/en/bus-ushuaia-punta-arenas/r/4qr2jz-4qt9d1" target="_blank"><span>&#128664;</span>  Punta Arenas &#8594; Ushuaia </a><button class="btn btn-sm btn-primary">EUR 130</button></td><td><a href="https://www.booking.com/hotel/ar/ms.el.html?aid=304142&label=gen173nr-1FCAEoggI46AdIM1gEaFyIAQGYAQi4ARfIAQzYAQHoAQH4AQyIAgGoAgO4ArK8or4GwAIB0gIkNmUwZDU1ZWEtNzdkYy00MzA5LTgwMzEtYWY4YTA0MmRkYTE52AIG4AIB&sid=8c92ddf9ca8d9d6e5314c93de88423a4&all_sr_blocks=708042012_295641911_0_1_0&checkin=2025-08-10&checkout=2025-08-12&dest_id=-1018179&dest_type=city&dist=0&group_adults=2&group_children=0&hapos=7&highlighted_blocks=708042012_295641911_0_1_0&hpos=7&matching_block_id=708042012_295641911_0_1_0&nflt=mealplan%3D1%3Bht_id%3D204&no_rooms=1&req_adults=2&req_children=0&room1=A%2CA&sb_price_type=total&sr_order=price&sr_pri_blocks=708042012_295641911_0_1_0__16200&srepoch=1741532682&srpvid=e19b69e9110e05bc&type=total&ucfs=1&" target="_blank">MS Hotel Campos &mdash; Ushuaia </a><button class="btn btn-sm btn-primary">EUR 149</button></td><td></td><td></td><td></td><tr><tr><td>11/08/2025</td><td></td><td></td><td> <a href="https://www.getyourguide.com/ushuaia-l1851/treno-mises-emeras-sten-akre-tou-kosmou-kai-ste-ge-tou-puros-t24913/?ranking_uuid=1ff4bd52-b337-4d0c-abdd-21b754deea82&date_from=2025-08-11&date_to=2025-08-11" target="_blank">Τέλος Του Κόσμου Travel &mdash; Ushuaia </a><button class="btn btn-sm btn-primary">EUR 267</button></td><td></td><td></td><td></td><tr><tr><td>12/08/2025</td><td><span>&#128664;</span>  Ushuaia &#8594; Punta Arenas </td><td></td><td></td><td></td><td></td><tr><tr><td>13/08/2025</td><td><span>&#9992;</span>  BBA &#8594; SCL </td><td></td><td></td><td></td><td></td><tr><tr><td>14/08/2025</td><td><a href="" target="_blank"><span>&#9992;</span>  SCL &#8594; CPO </a><button class="btn btn-sm btn-primary">EUR 51</button></td><td><a href="https://www.booking.com/hotel/cl/incahuasi.el.html?label=gen173nr-1BCAEoggI46AdIM1gEaFyIAQGYAQi4ARfIAQzYAQHoAQGIAgGoAgO4ArK8or4GwAIB0gIkNmUwZDU1ZWEtNzdkYy00MzA5LTgwMzEtYWY4YTA0MmRkYTE52AIF4AIB&sid=25510f45f4e48ffe79b31fab97a0f62a&aid=304142&ucfs=1&arphpl=1&checkin=2025-08-13&checkout=2025-08-15&dest_id=-900753&dest_type=city&group_adults=2&req_adults=2&no_rooms=1&group_children=0&req_children=0&hpos=2&hapos=2&sr_order=price&nflt=mealplan%3D1%3Bht_id%3D204&srpvid=8c9d84a72b0d0f52&srepoch=1741459989&all_sr_blocks=85677912_241826139_2_33_0&highlighted_blocks=85677912_241826139_2_33_0&matching_block_id=85677912_241826139_2_33_0&sr_pri_blocks=85677912_241826139_2_33_0__18896&from=searchresults" target="_blank">Incahuasi Travelodge &mdash; San Pedro Atacama </a><button class="btn btn-sm btn-primary">EUR 174</button></td><td></td><td></td><td></td><tr><tr><td>15/08/2025</td><td></td><td></td><td> <a href="" target="_blank">Valley of the Moon, Laguna Cejar,El Tatio Geysers,Salar de Atacama,Piedras Rojas (Red Stones) 4x4 Car Rent &mdash; San Pedro Atacama </a><button class="btn btn-sm btn-primary">EUR 45</button></td><td></td><td></td><td></td><tr><tr><td>16/08/2025</td><td></td><td></td><td> <a href="" target="_blank">Atacama Tour Geysers and Lakes &mdash; San Pedro Atacama </a><button class="btn btn-sm btn-primary">EUR 100</button></td><td></td><td></td><td></td><tr><tr><td>17/08/2025</td><td><span>&#9992;</span>  CPO &#8594; SCL </td><td></td><td></td><td></td><td></td><tr><tr><td>18/08/2025</td><td><a href="" target="_blank"><span>&#9992;</span>  SCL &#8594; IPC </a><button class="btn btn-sm btn-primary">EUR 569</button></td><td><a href="https://www.booking.com/hotel/cl/atavai-rapa-nui.el.html?aid=304142&label=gen173nr-1FCAEoggI46AdIM1gEaFyIAQGYAQi4ARfIAQzYAQHoAQH4AQyIAgGoAgO4Asj0or0GwAIB0gIkNWMxNjBhOGYtMzRjNC00OWY0LTliMmItMWY3ZjFiMzkzMjBi2AIG4AIB&sid=25510f45f4e48ffe79b31fab97a0f62a&all_sr_blocks=1107105101_385549341_2_42_0&checkin=2025-08-17&checkout=2025-08-18&dest_id=-884006&dest_type=city&dist=0&group_adults=2&group_children=0&hapos=2&highlighted_blocks=1107105101_385549341_2_42_0&hpos=2&matching_block_id=1107105101_385549341_2_42_0&nflt=ht_id%3D204&no_rooms=1&req_adults=2&req_children=0&room1=A%2CA&sb_price_type=total&sr_order=price&sr_pri_blocks=1107105101_385549341_2_42_0__6205&srepoch=1741462445&srpvid=2141898e4bd90280&type=total&ucfs=1&" target="_blank">Atavai Hotel Rapa Nui &mdash; IPC </a><button class="btn btn-sm btn-primary">EUR 57</button></td><td></td><td></td><td></td><tr><tr><td>19/08/2025</td><td></td><td></td><td></td><td></td><td></td><tr><tr><td>20/08/2025</td><td><span>&#9992;</span>  IPC &#8594; SCL </td><td><a href="https://www.booking.com/hotel/cl/gran-palace-santiago.el.html?label=gen173nr-1FCAEoggI46AdIM1gEaFyIAQGYAQi4ARfIAQzYAQHoAQH4AQyIAgGoAgO4ArK8or4GwAIB0gIkNmUwZDU1ZWEtNzdkYy00MzA5LTgwMzEtYWY4YTA0MmRkYTE52AIG4AIB&sid=25510f45f4e48ffe79b31fab97a0f62a&aid=304142&ucfs=1&arphpl=1&checkin=2025-08-18&checkout=2025-08-19&dest_id=-901202&dest_type=city&group_adults=2&req_adults=2&no_rooms=1&group_children=0&req_children=0&hpos=1&hapos=1&sr_order=popularity&nflt=ht_id%3D204&srpvid=913585e36d94005a&srepoch=1741460583&all_sr_blocks=123982210_126397309_0_1_0&highlighted_blocks=123982210_126397309_0_1_0&matching_block_id=123982210_126397309_0_1_0&sr_pri_blocks=123982210_126397309_0_1_0__7868&from=searchresults" target="_blank">GRAN PALACE &mdash; SCL </a><button class="btn btn-sm btn-primary">EUR 78</button></td><td></td><td></td><td></td><tr><tr><td>21/08/2025</td><td><span>&#9992;</span>  SCL &#8594; MAD &#8594; ATH </td><td></td><td></td><td></td><td></td><tr><tr><td>22/08/2025</td><td></td><td></td><td></td><td></td><td></td><tr><tr><td><b>Total</b></td><td><button class="btn btn-danger btn-sm">EUR 2358</button> x2</td><td><button class="btn btn-danger btn-sm">EUR 837</button></td><td><button class="btn btn-danger btn-sm">EUR 566</button> x2</td><td></td></tr  </tbody>
+</table>
+
+
+<table class="table" style="width: 100%;">
+  <thead>
+    <tr>
+      <th scope="col">Michael Chourdakis</th><th scope="col">Sylvia Dremetsika</th>    </tr>
+  </thead>
+  <tbody>
+    <tr>
+<td><button class="btn btn-danger">3342.5</button></td><td><button class="btn btn-danger">3342.5</button></td>    </tr>
+  </tbody>
+</table>
