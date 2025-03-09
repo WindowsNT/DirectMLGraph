@@ -7,52 +7,27 @@
 					<Nodes>
 						<Node xx="262.000000" yy="297.845703" CSV="" CSVI="&quot;Sequence&quot;" bf="0" sm="0" optype="1" ni="0" no="1" Type="1" Name="Input">
 							<Children>
-								<Child idx="0" io="1" u="6,2"/>
+								<Child idx="0" io="1" u="6,2,2"/>
 							</Children>
 							<Dimensions>
 								<Dimension Size="10"/>
 								<Dimension Size="2"/>
 							</Dimensions>
-						</Node>
-						<Node xx="215.531006" yy="637.968750" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="0" no="1" Type="48" Name="Constant">
-							<Children>
-								<Child idx="0" io="1" u="11"/>
-							</Children>
-							<Params>
-								<Param Name="Value" Value="$BB" Min="0.000000" Max="340282346638528859811704183484516925440.000000"/>
-							</Params>
-							<Dimensions>
-								<Dimension Size="10"/>
-								<Dimension Size="2"/>
-							</Dimensions>
-						</Node>
-						<Node xx="590.000000" yy="613.107422" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="1" no="1" Type="72" Name="Identity">
-							<Children>
-								<Child idx="0" io="0" u="11"/>
-								<Child idx="0" io="1" u="12,1"/>
-							</Children>
-							<VariableChanges>
-								<VariableChange n="BB" Type="1" V="1.000000"/>
-							</VariableChanges>
-						</Node>
-						<Node xx="982.000000" yy="469.000000" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="2" no="1" Type="26" Name="Add">
-							<Children>
-								<Child idx="0" io="0" u="2"/>
-								<Child idx="0" io="0" u="1"/>
-								<Child idx="0" io="1" u="3"/>
-							</Children>
 						</Node>
 						<Node xx="1185.000000" yy="527.000000" CSV="&quot;Screen&quot;" CSVI="" bf="0" sm="0" optype="1" ni="1" no="0" Type="999999" Name="Output">
 							<Children>
 								<Child idx="0" io="0" u="3"/>
 							</Children>
 						</Node>
+						<Node xx="678.000000" yy="398.000000" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="1" no="1" Type="72" Name="Identity">
+							<Children>
+								<Child idx="0" io="0" u="2"/>
+								<Child idx="0" io="1" u="3"/>
+							</Children>
+						</Node>
 					</Nodes>
 				</Operator>
 			</Operators>
-			<Variables>
-				<Variable n="BB" v="52.000000"/>
-			</Variables>
 		</Page>
 	</Pages>
 </e>

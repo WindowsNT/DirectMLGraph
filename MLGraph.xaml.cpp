@@ -5170,31 +5170,6 @@ namespace winrt::VisualDML::implementation
                     auto& node = op.nodes[ii];
                     [[maybe_unused]] auto str = node->name();
 
-                    // Variable
-					auto node2 = std::dynamic_pointer_cast<XLNODE_ANY>(node);
-                    if (node2 && node2->VariableChanges.size())
-                    {
-                        ppv.Off();
-                        for (auto& vc : node2->VariableChanges)
-                        {
-                            // Find variable
-							for (auto& varx : xl.variables)
-							{
-								if (varx.n == vc.n)
-								{
-                                    // Change it
-									if (vc.Type == 0)
-										varx.v = std::to_wstring(vc.V);  
-                                    if (vc.Type == 1)
-                                        varx.v = std::to_wstring(std::stof(varx.v) + vc.V);
- 									break;
-								}
-							}
-                        }
-
-                        ppv.On();
-                    }
-
 
                     if (node->IsInput())
                     {
