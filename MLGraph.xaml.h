@@ -410,7 +410,7 @@ struct XLNODE_ANY : public XLNODE
 
     virtual bool IsInput() 
     { 
-        if (what == TYPE_CONSTANT || what == TYPE_INPUT)
+        if (what == TYPE_CONSTANT || what == TYPE_INPUT || what == TYPE_DIAGONALMATRIX)
             return true;
         return false; 
     }
@@ -1077,6 +1077,13 @@ struct XLOP : public XLNODE
         if (nty == TYPE_CONSTANT)
         {
             auto n = std::make_shared<XLNODE_ANY>(0, TYPE_CONSTANT,1);
+            n->Unser(ne);
+            return n;
+        }
+        else
+        if (nty == TYPE_DIAGONALMATRIX)
+        {
+            auto n = std::make_shared<XLNODE_ANY>(0, TYPE_DIAGONALMATRIX,1);
             n->Unser(ne);
             return n;
         }

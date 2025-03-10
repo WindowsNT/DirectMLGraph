@@ -14,15 +14,33 @@
 								<Dimension Size="2"/>
 							</Dimensions>
 						</Node>
-						<Node xx="1185.000000" yy="527.000000" CSV="&quot;Screen&quot;" CSVI="" bf="0" sm="0" optype="1" ni="1" no="0" Type="999999" Name="Output">
+						<Node xx="233.280273" yy="649.707031" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="0" no="1" Type="59" Name="DiagonalMatrix">
 							<Children>
-								<Child idx="0" io="0" u="3"/>
+								<Child idx="0" io="1" u="1"/>
 							</Children>
+							<Params>
+								<Param Name="Value" Value="5.000000" Min="0.000000" Max="340282346638528859811704183484516925440.000000"/>
+								<Param Name="Offset" Value="0" Min="0.000000" Max="340282346638528859811704183484516925440.000000"/>
+							</Params>
+							<Dimensions>
+								<Dimension Size="3"/>
+								<Dimension Size="3"/>
+							</Dimensions>
 						</Node>
 						<Node xx="678.000000" yy="398.000000" CSV="" CSVI="" bf="0" sm="0" optype="1" ni="1" no="1" Type="72" Name="Identity">
 							<Children>
 								<Child idx="0" io="0" u="2"/>
 								<Child idx="0" io="1" u="3"/>
+							</Children>
+						</Node>
+						<Node xx="1185.000000" yy="527.000000" CSV="&quot;Screen&quot;" CSVI="" bf="0" sm="0" optype="1" ni="1" no="0" Type="999999" Name="Output">
+							<Children>
+								<Child idx="0" io="0" u="3"/>
+							</Children>
+						</Node>
+						<Node xx="778.596680" yy="649.091797" CSV="&quot;Screen&quot;" CSVI="" bf="0" sm="0" optype="1" ni="1" no="0" Type="999999" Name="Output">
+							<Children>
+								<Child idx="0" io="0" u="1"/>
 							</Children>
 						</Node>
 					</Nodes>

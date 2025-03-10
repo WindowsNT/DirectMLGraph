@@ -789,6 +789,11 @@ winrt::Microsoft::UI::Xaml::Controls::MenuFlyout BuildTensorMenu(std::function<v
         }
         if (1)
         {
+            winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"DiagonalMatrix"); Neg.Click(fooo);
+            A.Items().Append(Neg);
+        }
+        if (1)
+        {
             winrt::Microsoft::UI::Xaml::Controls::MenuFlyoutItem Neg; Neg.Text(L"DifferenceSquare"); Neg.Click(fooo);
             A.Items().Append(Neg);
         }
@@ -2621,6 +2626,18 @@ namespace winrt::VisualDML::implementation
                                 {
                                     OnAddConstant({}, {});
                                 }
+                                if (t == L"DiagonalMatrix")
+                                {
+                                    auto node = std::make_shared<XLNODE_ANY>(0, TYPE_DIAGONALMATRIX, 1);
+                                    node->Params.push_back({ L"Value",L"0" });
+                                    node->Params.push_back({ L"Offset",L"0" });
+                                    node->hit = D2D1_RECT_F({ 10,10,100,100 });
+                                    node->hit.left = pos.X;
+                                    node->hit.top = pos.Y;
+									node->SetTensorDims({ 10,10 });   
+                                    Push();
+                                    op.nodes.push_back(node);
+                                }
                                 if (t == L"ConvolutionInteger")
                                 {
 									auto node = std::make_shared<XLNODE_ANY>(4, TYPE_CONVOLUTIONINTEGER);
@@ -2764,6 +2781,7 @@ namespace winrt::VisualDML::implementation
                                     Push();
                                     op.nodes.push_back(node);
                                 }
+                                
                                 if (t == L"DifferenceSquare")
                                 {
                                     auto node = std::make_shared<XLNODE_ANY>(2, TYPE_DIFFERENCESQUARE);
@@ -5259,6 +5277,12 @@ namespace winrt::VisualDML::implementation
                                 node->code += the_code3;
                                 node->code += "\r\n\t";
                                 node->code += the_code;
+                            }
+                            else
+                            if (it2->what == TYPE_DIAGONALMATRIX)
+                            {
+								auto expr = dml::DiagonalMatrix(*mop.GetGraph(), it2->tensor_dims(), (DML_TENSOR_DATA_TYPE)it2->OpType, it2->Params[1],it2->Params[0]);
+                                mop.AddItem(expr, 0, false, BINDING_MODE::NONE);
                             }
                             else
                             if (it2->what == TYPE_INPUT)
